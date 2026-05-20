@@ -1,0 +1,53 @@
+{
+  "updated_at": "19-May-2026 10:08 PM IST",
+  "indices": [
+    {
+      "label": "NIFTY 50",
+      "ticker": "^NSEI",
+      "close": 23618.0,
+      "prev_close": 23649.95,
+      "open": 23675.3,
+      "high": 23782.3,
+      "low": 23587.2,
+      "change": -31.95,
+      "change_pct": -0.14,
+      "date": "19-May-2026"
+    },
+    {
+      "label": "BANKNIFTY",
+      "ticker": "^NSEBANK",
+      "close": 53409.15,
+      "prev_close": 53537.0,
+      "open": 53553.75,
+      "high": 53770.65,
+      "low": 53337.05,
+      "change": -127.85,
+      "change_pct": -0.24,
+      "date": "19-May-2026"
+    },
+    {
+      "label": "SENSEX",
+      "ticker": "^BSESN",
+      "close": 75200.85,
+      "prev_close": 75315.04,
+      "open": 75441.27,
+      "high": 75746.27,
+      "low": 75115.99,
+      "change": -114.19,
+      "change_pct": -0.15,
+      "date": "19-May-2026"
+    },
+    {
+      "label": "NIFTY IT",
+      "ticker": "^CNXIT",
+      "close": 29308.0,
+      "prev_close": 28389.8,
+      "open": 28679.85,
+      "high": 29609.6,
+      "low": 28677.8,
+      "change": 918.2,
+      "change_pct": 3.23,
+      "date": "19-May-2026"
+    }
+  ]
+}
