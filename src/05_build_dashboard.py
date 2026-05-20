@@ -955,11 +955,12 @@ ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').forEach(r=>{{
     const el = document.getElementById(`idx-${key}`);
     if(!el) return;
 
-    let d = NIFTY_DATA[key];
+  // Change NIFTY_DATA to data here:
+    let d = data[key]; 
 
-    // fallback support for old array format
-    if(!d && Array.isArray(NIFTY_DATA.indices)){
-      const match = NIFTY_DATA.indices.find(x => x.label === mapping[key]);
+    // Change NIFTY_DATA to data here as well:
+    if(!d && Array.isArray(data.indices)){
+      const match = data.indices.find(x => x.label === mapping[key]);
 
       if(match){
         d = {
