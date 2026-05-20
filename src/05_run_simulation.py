@@ -8,29 +8,11 @@ Reads:
 
 Outputs (one per config):
   output/YYYY-MM/C1_Picks_YYYYMMDD_HHMMSS.xlsx
-  output/YYYY-MM/C2_Picks_YYYYMMDD_HHMMSS.xlsx
-  output/YYYY-MM/C3_Picks_YYYYMMDD_HHMMSS.xlsx
-  output/YYYY-MM/C4_Picks_YYYYMMDD_HHMMSS.xlsx
-
-Consolidated (all configs as separate sheets in one file):
+  ...
   output/YYYY-MM/Consolidated_Picks_YYYYMMDD_HHMMSS.xlsx
 
-Each Excel has sheets:
-  Pickse      - per-signal simulation result (same format as QuickRun_Picks)
-  MarketData  - latest OHLCV for all EQ symbols
-  BuyHistory  - OHLCV history for bought symbols
-
-SIMULATION RULES (same as nse-trading-simulation quick mode):
-  - Entry  : D+1 low <= signal_close -> buy at signal_close
-  - Additional buys: when buy_count < max_buys AND buy_level >= stop_price
-  - Same-day buy and sell NOT allowed
-  - Invalid (1): signal date is last available date (no D+1 data)
-  - Invalid (2): >10 consecutive calendar days gap
-  - Invalid (3): stale data (last date > 10 days ago)
-  - Pending: buy not triggered yet, within pending_window_days
-  - Expired: buy not triggered, beyond pending_window_days
-  - FE-MD  : market_days >= max_duration
-  - FE-CD  : calendar_days >= force_exit_calendar_days
+Also exports JSON for dashboard:
+  docs/data/sim_results.json
 """
 
 import os
@@ -66,7 +48,6 @@ IST = timezone(timedelta(hours=5, minutes=30))
 def load_config():
     with open(CONFIG_FILE) as f:
         cfg = json.load(f)
-    # Defaults for simulation params (can be overridden in params.json under "simulation")
     sim_cfg = cfg.get("simulation", {})
     defaults = {
         "investment_per_buy":        10000,
@@ -195,25 +176,22 @@ def simulate_trade_detailed(sym, signal_date, signal_close, price_dict,
     prevs   = pd_data["prevs"]
     day_map = pd_data["day_map"]
 
-    sig_ts    = pd.Timestamp(signal_date)
+    sig_ts = pd.Timestamp(signal_date)
     if sig_ts not in day_map:
         return invalid
 
     start_idx = day_map[sig_ts]
     last_idx  = len(dates) - 1
 
-    # INVALID 1: signal on last available date — no D+1 data
     if start_idx >= last_idx:
         inv = dict(invalid); inv["result_str"] = "Invalid: No data on signal date"
         return inv
 
-    # INVALID 2: >10 calendar day gap to next data
     next_avail = pd.Timestamp(dates[start_idx + 1])
     if (next_avail - sig_ts).days > 10:
         inv = dict(invalid); inv["result_str"] = "Invalid: Data gap detected"
         return inv
 
-    # INVALID 3: stale data (stock stopped trading)
     last_avail_ts = pd.Timestamp(dates[last_idx])
     today_ts      = pd.Timestamp("today").normalize()
     if (today_ts - last_avail_ts).days > 10:
@@ -240,9 +218,8 @@ def simulate_trade_detailed(sym, signal_date, signal_close, price_dict,
 
     prev_date_ts = pd.Timestamp(dates[start_idx])
     for i in range(start_idx + 1, len(dates)):
-        curr_ts  = pd.Timestamp(dates[i])
+        curr_ts = pd.Timestamp(dates[i])
 
-        # Mid-period data gap
         if buy_count > 0 and (curr_ts - prev_date_ts).days > 10:
             return {**invalid, "order": "Invalid", "result_str": "Invalid: Data gap detected"}
         prev_date_ts = curr_ts
@@ -309,7 +286,6 @@ def simulate_trade_detailed(sym, signal_date, signal_close, price_dict,
                             "low": low_px, "close": close_px,
                         })
 
-    # No buy triggered
     if buy_count == 0:
         ref_ts    = pd.Timestamp(global_last_date) if global_last_date else pd.Timestamp(dates[last_idx])
         days_from = (ref_ts - sig_ts).days
@@ -330,7 +306,6 @@ def simulate_trade_detailed(sym, signal_date, signal_close, price_dict,
             "buys": [], "had_buy_chance": False,
         }
 
-    # Still open
     if not exit_found:
         return {
             "order": "Executed", "status": "Open", "action": "Hold",
@@ -347,7 +322,6 @@ def simulate_trade_detailed(sym, signal_date, signal_close, price_dict,
             "buys": buys, "had_buy_chance": had_buy_chance,
         }
 
-    # Closed
     profit   = round((exit_price - avg_buy_price) * total_qty, 2)
     gain_pct = round(((exit_price - avg_buy_price) / avg_buy_price) * 100, 2) if avg_buy_price > 0 else 0.0
 
@@ -433,11 +407,6 @@ def _to_dt(ts):
 
 
 def build_picks_row(sig, sim, price_dict, max_buys, last_data_date):
-    """
-    Build one picks-sheet row.
-    sig columns: SYMBOL, SIGNAL_DATE, SIGNAL_CLOSE, MIN_5D_LOW, MIN_5D_DATE,
-                 PCT_FROM_LOW (%), PCT_FROM_ATH (%), PCT_1D_CHANGE (%)
-    """
     sym   = str(sig["SYMBOL"])
     order = sim["order"]
 
@@ -466,40 +435,39 @@ def build_picks_row(sig, sim, price_dict, max_buys, last_data_date):
             profit   = round((recent_ltp - avg_buy) * qty, 2)
             gain_pct = round(((recent_ltp - avg_buy) / avg_buy) * 100, 2)
 
-    # PCT values already stored as percent (e.g. -7.5) — use directly
     row = [
-        round(float(sig.get("PCT_1D_CHANGE", 0)), 2),   # 1DChange%
-        sym,                                              # StockName
-        round(float(sig.get("PCT_FROM_LOW", 0)), 2),    # 5DLow%
-        round(float(sig.get("MIN_5D_LOW") or 0), 2),   # 5DLowPrice
-        recent_ltp,                                       # RecentLTP
-        buy_date,                                         # BuyDate
-        buy_cl_price,                                     # BuyClPrice
-        min5d_date,                                       # 5DLowDate
-        today_date,                                       # TodayDate
-        sim.get("buy_count"),                             # BuyCount
-        sim.get("avg_buy_price"),                         # AvgBuyPrice
-        sim.get("total_qty"),                             # TotalQty
-        sim.get("target_price"),                          # TargetPrice
-        sim.get("stop_price"),                            # StoplossPrice
-        sim.get("total_investment"),                      # TotalInvestment
-        sim.get("order"),                                 # Order
-        sim.get("status"),                                # Status
-        sim.get("market_days"),                           # Duration
-        sim.get("duration_group"),                        # DurationGroup
-        profit,                                           # Profits
-        gain_pct,                                         # GainLoss%
-        sim.get("result_str"),                            # Result
-        sim.get("exit_type"),                             # ExitType
-        sim.get("action"),                                # Action
-        buy_chance_val,                                   # BuyChance
-        sold_date,                                        # SoldDate
-        sim.get("exit_price"),                            # SoldPrice
-        sim.get("sold_prev_close"),                       # SoldPrevClose
-        sim.get("sold_open"),                             # SoldOpen
-        sim.get("sold_high"),                             # SoldHigh
-        sim.get("sold_low"),                              # SoldLow
-        sim.get("sold_close"),                            # SoldClose
+        round(float(sig.get("PCT_1D_CHANGE", 0)), 2),
+        sym,
+        round(float(sig.get("PCT_FROM_LOW", 0)), 2),
+        round(float(sig.get("MIN_5D_LOW") or 0), 2),
+        recent_ltp,
+        buy_date,
+        buy_cl_price,
+        min5d_date,
+        today_date,
+        sim.get("buy_count"),
+        sim.get("avg_buy_price"),
+        sim.get("total_qty"),
+        sim.get("target_price"),
+        sim.get("stop_price"),
+        sim.get("total_investment"),
+        sim.get("order"),
+        sim.get("status"),
+        sim.get("market_days"),
+        sim.get("duration_group"),
+        profit,
+        gain_pct,
+        sim.get("result_str"),
+        sim.get("exit_type"),
+        sim.get("action"),
+        buy_chance_val,
+        sold_date,
+        sim.get("exit_price"),
+        sim.get("sold_prev_close"),
+        sim.get("sold_open"),
+        sim.get("sold_high"),
+        sim.get("sold_low"),
+        sim.get("sold_close"),
     ]
 
     buys = sim.get("buys", [])
@@ -545,7 +513,6 @@ def _style_ohlcv_header(ws):
 
 
 def write_picks_to_sheet(ws, rows, columns):
-    """Write picks data to an existing worksheet (used for consolidated Excel)."""
     thin   = Side(style="thin", color="BFBFBF")
     bdr    = Border(left=thin, right=thin, top=thin, bottom=thin)
     ncols  = len(columns)
@@ -588,7 +555,6 @@ def write_picks_excel(rows, columns, out_path, market_data=None, buy_history=Non
     ws = wb.active
     ws.title = "Pickse"
     write_picks_to_sheet(ws, rows, columns)
-
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToPage   = True
     ws.page_setup.fitToWidth  = 1
@@ -613,10 +579,6 @@ def write_picks_excel(rows, columns, out_path, market_data=None, buy_history=Non
 
 
 def write_consolidated_excel(config_data, out_path, market_data=None):
-    """
-    config_data: list of (config_id, columns, rows)
-    Creates one sheet per config in one Excel file.
-    """
     wb = Workbook()
     first = True
     for cid, columns, rows in config_data:
@@ -643,6 +605,103 @@ def write_consolidated_excel(config_data, out_path, market_data=None):
     print(f"  ✅ Saved consolidated {out_path}")
 
 
+# ─── JSON EXPORT FOR DASHBOARD ────────────────────────────────────────────────
+
+def fmt_date_str(val):
+    if val is None:
+        return None
+    try:
+        if isinstance(val, str):
+            return val
+        if hasattr(val, 'date'):
+            return str(val.date())
+        return str(val)
+    except Exception:
+        return None
+
+
+def export_sim_json(consolidated_data, price_dict, global_last_date):
+    """Export simulation results as JSON for dashboard consumption."""
+    results = {}
+    for cid, columns, rows in consolidated_data:
+        col_map = {c: i for i, c in enumerate(columns)}
+
+        def g(row, col, default=None):
+            idx = col_map.get(col)
+            if idx is None:
+                return default
+            val = row[idx] if idx < len(row) else default
+            return default if val is None else val
+
+        config_rows = []
+        for row in rows:
+            sym = str(g(row, 'StockName', ''))
+
+            # Current LTP from price dict
+            current_ltp = None
+            if sym in price_dict:
+                current_ltp = round(float(price_dict[sym]['closes'][-1]), 2)
+            if current_ltp is None:
+                current_ltp = g(row, 'RecentLTP')
+
+            profit   = g(row, 'Profits')
+            gain_pct = g(row, 'GainLoss%')
+            order    = g(row, 'Order')
+            status   = g(row, 'Status')
+
+            # Recompute unrealized P&L for open positions
+            if order == 'Executed' and status == 'Open':
+                avg_buy = g(row, 'AvgBuyPrice')
+                qty     = g(row, 'TotalQty')
+                if avg_buy and avg_buy > 0 and current_ltp and qty:
+                    profit   = round((current_ltp - avg_buy) * qty, 2)
+                    gain_pct = round(((current_ltp - avg_buy) / avg_buy) * 100, 2)
+
+            r = {
+                'CONFIG':           cid,
+                'SYMBOL':           sym,
+                'SIGNAL_DATE':      fmt_date_str(g(row, 'BuyDate')),
+                'SIGNAL_CLOSE':     g(row, 'BuyClPrice'),
+                'CHG_1D':           g(row, '1DChange%'),
+                'PCT_FROM_LOW':     g(row, '5DLow%'),
+                'MIN_5D_LOW':       g(row, '5DLowPrice'),
+                'MIN_5D_DATE':      fmt_date_str(g(row, '5DLowDate')),
+                'CURRENT_LTP':      current_ltp,
+                'BUY_COUNT':        g(row, 'BuyCount'),
+                'AVG_BUY_PRICE':    g(row, 'AvgBuyPrice'),
+                'TOTAL_QTY':        g(row, 'TotalQty'),
+                'TOTAL_INVESTMENT': g(row, 'TotalInvestment'),
+                'TARGET_PRICE':     g(row, 'TargetPrice'),
+                'STOP_PRICE':       g(row, 'StoplossPrice'),
+                'ORDER':            order,
+                'STATUS':           status,
+                'MARKET_DAYS':      g(row, 'Duration'),
+                'PROFIT':           profit,
+                'GAIN_PCT':         gain_pct,
+                'RESULT':           g(row, 'Result'),
+                'EXIT_TYPE':        g(row, 'ExitType'),
+                'ACTION':           g(row, 'Action'),
+                'EXIT_DATE':        fmt_date_str(g(row, 'SoldDate')),
+                'EXIT_PRICE':       g(row, 'SoldPrice'),
+                'TODAY_DATE':       fmt_date_str(g(row, 'TodayDate')),
+            }
+            config_rows.append(r)
+        results[cid] = config_rows
+
+    out = {
+        'meta': {
+            'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
+            'last_date':    str(global_last_date.date()),
+        },
+        'results': results,
+    }
+
+    os.makedirs('docs/data', exist_ok=True)
+    with open('docs/data/sim_results.json', 'w') as f:
+        json.dump(out, f, default=str)
+    print("✅ Exported docs/data/sim_results.json")
+
+
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -666,7 +725,6 @@ def main():
     print(f"Simulation params: invest={investment_per_buy}, "
           f"pending_window={pending_window_days}d, fe_cal={force_exit_calendar_days}d")
 
-    # ── Load EQ data ──────────────────────────────────────────────────────────
     print("\nLoading EQ data...")
     eq_df = pd.read_parquet(EQ_FILE, columns=[
         "SYMBOL", "DATE1", "PREV_CLOSE", "OPEN_PRICE",
@@ -681,13 +739,12 @@ def main():
     price_dict   = build_price_dict(eq_df)
     market_data  = build_latest_market_data(eq_df)
 
-    ts_str   = datetime.now(tz=IST).strftime("%Y%m%d_%H%M%S")
+    ts_str    = datetime.now(tz=IST).strftime("%Y%m%d_%H%M%S")
     month_dir = os.path.join(OUTPUT_DIR, global_last_date.strftime("%Y-%m"))
     os.makedirs(month_dir, exist_ok=True)
 
-    consolidated_data = []  # list of (cid, columns, rows)
+    consolidated_data = []
 
-    # ── Run simulation for each config ────────────────────────────────────────
     for c in configs:
         cid          = c["id"]
         max_buys     = c["max_buys"]
@@ -707,7 +764,6 @@ def main():
 
         sig_df = pd.read_parquet(signals_path)
         sig_df["SIGNAL_DATE"] = pd.to_datetime(sig_df["SIGNAL_DATE"])
-        # Sort by date then symbol
         sig_df = sig_df.sort_values(["SIGNAL_DATE", "SYMBOL"]).reset_index(drop=True)
         print(f"  Signals loaded: {len(sig_df):,} rows ({sig_df['SIGNAL_DATE'].min().date()} → {sig_df['SIGNAL_DATE'].max().date()})")
 
@@ -735,7 +791,6 @@ def main():
                                   global_last_date.to_pydatetime().replace(tzinfo=None))
             rows.append(row)
 
-            # Track bought ranges for BuyHistory sheet
             if sim.get("first_buy_date") is not None:
                 start_ts = pd.Timestamp(signal_date) - pd.Timedelta(days=7)
                 end_ts   = pd.Timestamp(sim["exit_date"]) if sim.get("exit_date") else global_last_date
@@ -743,29 +798,28 @@ def main():
 
         buy_history = build_buy_history(eq_df, bought_ranges)
 
-        # Summary
-        orders  = [r[15] for r in rows]  # col index 15 = Order
-        statuses = [r[16] for r in rows]  # col index 16 = Status
+        orders   = [r[15] for r in rows]
+        statuses = [r[16] for r in rows]
         executed = sum(1 for o in orders if o == "Executed")
         open_c   = sum(1 for s in statuses if s == "Open")
         closed_c = sum(1 for s in statuses if s == "Closed")
         pending  = sum(1 for o in orders if o == "Pending")
         expired  = sum(1 for o in orders if o == "Expired")
-        invalid  = sum(1 for o in orders if o == "Invalid")
+        inv_c    = sum(1 for o in orders if o == "Invalid")
         print(f"  Results: Executed={executed} (Open={open_c}, Closed={closed_c}) "
-              f"Pending={pending} Expired={expired} Invalid={invalid}")
+              f"Pending={pending} Expired={expired} Invalid={inv_c}")
 
-        # Per-config Excel
         out_path = os.path.join(month_dir, f"{cid}_Picks_{ts_str}.xlsx")
         write_picks_excel(rows, columns, out_path,
                           market_data=market_data, buy_history=buy_history)
 
         consolidated_data.append((cid, columns, rows))
 
-    # ── Consolidated Excel ────────────────────────────────────────────────────
     if consolidated_data:
         cons_path = os.path.join(month_dir, f"Consolidated_Picks_{ts_str}.xlsx")
         write_consolidated_excel(consolidated_data, cons_path, market_data=market_data)
+        # Export JSON for dashboard
+        export_sim_json(consolidated_data, price_dict, global_last_date)
     else:
         print("\n⚠️  No config data to consolidate — no signal parquets found yet")
         print("   Run the Bootstrap workflow first, then Daily Signals.")
