@@ -11,6 +11,9 @@ Output: db/signals_C1.parquet ... db/signals_C4.parquet  (deduplicated)
 
 Run this ONCE after bootstrapping historical data.
 Daily signals (04_run_daily_signals.py) will then APPEND to these parquets.
+
+SIGNAL_START_DATE can be overridden via environment variable:
+  SIGNAL_START_DATE=2025-01-01 python src/00b_historical_backfill.py
 """
 
 import os, json
@@ -18,14 +21,18 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
 
-CONFIG_FILE       = "config/params.json"
-EQ_FILE           = "db/eq_data.parquet"
-ATH_FILE          = "db/ath.parquet"
-OUTPUT_DIR        = "output"
-DB_DIR            = "db"
-SIGNAL_START_DATE = pd.Timestamp("2025-01-01")   # Generate signals from here
+CONFIG_FILE = "config/params.json"
+EQ_FILE     = "db/eq_data.parquet"
+ATH_FILE    = "db/ath.parquet"
+OUTPUT_DIR  = "output"
+DB_DIR      = "db"
 
 IST = timezone(timedelta(hours=5, minutes=30))
+
+# Read from env var (set by workflow), fallback to 2025-01-01
+_env_start = os.environ.get("SIGNAL_START_DATE", "2025-01-01")
+SIGNAL_START_DATE = pd.Timestamp(_env_start)
+print(f"Signal scan start date: {SIGNAL_START_DATE.date()}")
 
 
 def load_config():
@@ -87,7 +94,11 @@ def main():
 
     # ── All trading dates from SIGNAL_START_DATE ────────────────────────────
     all_dates = sorted(d for d in eq["DATE1"].unique() if d >= SIGNAL_START_DATE)
-    print(f"\nWill scan {len(all_dates)} trading dates from {SIGNAL_START_DATE.date()} → {all_dates[-1].date()}")
+    if not all_dates:
+        print(f"❌ No dates found from {SIGNAL_START_DATE.date()} onwards in eq_data!")
+        raise SystemExit(1)
+
+    print(f"\nWill scan {len(all_dates)} trading dates from {all_dates[0].date()} → {all_dates[-1].date()}")
 
     # ── Per-symbol pre-group (fast lookup) ──────────────────────────────────
     print("Pre-grouping by symbol...")
@@ -103,18 +114,18 @@ def main():
     print(f"  {len(symbols):,} symbols pre-grouped\n")
 
     # ── Scan every date ─────────────────────────────────────────────────────
-    # config_id -> list of signal dicts
     all_signals = {c["id"]: [] for c in configs}
 
     for date_i, date in enumerate(all_dates):
-        if (date_i + 1) % 50 == 0 or date_i == 0 or date_i == len(all_dates) - 1:
-            print(f"  [{date_i+1:3d}/{len(all_dates)}] {date.date()} …")
+        if (date_i + 1) % 20 == 0 or date_i == 0 or date_i == len(all_dates) - 1:
+            counts = {c["id"]: len(all_signals[c["id"]]) for c in configs}
+            print(f"  [{date_i+1:3d}/{len(all_dates)}] {date.date()} | signals so far: {counts}")
 
         for sym in symbols:
-            g        = groups[sym]
-            dates    = g["dates"]
-            closes   = g["closes"]
-            lows     = g["lows"]
+            g         = groups[sym]
+            dates     = g["dates"]
+            closes    = g["closes"]
+            lows      = g["lows"]
             ath_price = ath_map.get(sym, 0)
             if ath_price <= 0:
                 continue
@@ -152,7 +163,7 @@ def main():
                     continue
 
                 # ── Signal found! ──────────────────────────────────────────
-                min_idx    = int(np.argmin(lookback_lows))
+                min_idx     = int(np.argmin(lookback_lows))
                 min_5d_date = dates[idx - days_back + min_idx]
 
                 prev_close = closes[idx - 1] if idx > 0 else 0.0
@@ -160,16 +171,16 @@ def main():
                               if prev_close > 0 else 0.0)
 
                 all_signals[cfg["id"]].append({
-                    "SYMBOL":       sym,
-                    "SIGNAL_DATE":  date,
-                    "SIGNAL_CLOSE": round(float(today_close), 2),
-                    "PREV_CLOSE":   round(float(prev_close), 2),
-                    "ATH_PRICE":    round(float(ath_price), 2),
-                    "MIN_5D_LOW":   round(float(min_low), 2),
-                    "MIN_5D_DATE":  min_5d_date,
-                    "PCT_FROM_LOW": round(pct_from_low * 100, 2),
-                    "PCT_FROM_ATH": round(pct_from_ath * 100, 2),
-                    "PCT_1D_CHANGE":round(pct_1d * 100, 2),
+                    "SYMBOL":        sym,
+                    "SIGNAL_DATE":   date,
+                    "SIGNAL_CLOSE":  round(float(today_close), 2),
+                    "PREV_CLOSE":    round(float(prev_close), 2),
+                    "ATH_PRICE":     round(float(ath_price), 2),
+                    "MIN_5D_LOW":    round(float(min_low), 2),
+                    "MIN_5D_DATE":   min_5d_date,
+                    "PCT_FROM_LOW":  round(pct_from_low * 100, 2),
+                    "PCT_FROM_ATH":  round(pct_from_ath * 100, 2),
+                    "PCT_1D_CHANGE": round(pct_1d * 100, 2),
                 })
 
     # ── Save per-config parquets ─────────────────────────────────────────────
@@ -231,11 +242,11 @@ def main():
     print(f"\n{'='*60}")
     print(f"BACKFILL COMPLETE")
     print(f"{'='*60}")
-    print(f"Dates scanned   : {len(all_dates)}")
-    print(f"Total signals   : {total:,}")
+    print(f"Dates scanned    : {len(all_dates)}")
+    print(f"Total signals    : {total:,}")
     for cid, cnt in config_breakdown.items():
-        print(f"  {cid}            : {cnt:,}")
-    print(f"Latest date signals : {len(rows)}")
+        print(f"  {cid}             : {cnt:,}")
+    print(f"Latest date sigs : {len(rows)}")
 
 
 if __name__ == "__main__":
