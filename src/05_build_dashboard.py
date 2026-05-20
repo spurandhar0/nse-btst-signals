@@ -4,13 +4,14 @@ NSE BTST Signals — Dashboard Builder v3
 Full tabs: Overview, Open, Closed, Force Exit, Stock History, Daily Ledger,
            Trade History, Today's Signals, Configs, Disclaimer
 """
-import os, json, csv
+import os, json, csv, glob
 from datetime import datetime, timezone, timedelta
 
 IST  = timezone(timedelta(hours=5, minutes=30))
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CONFIG   = os.path.join(BASE, 'config', 'params.json')
+BHAV_DIR = os.path.join(BASE, 'bhav_data')
 SIM_JSON = os.path.join(BASE, 'docs',   'data', 'sim_results.json')
 SIGS_CSV = os.path.join(BASE, 'output', 'signals_latest.csv')
 NIFTY    = os.path.join(BASE, 'docs', 'data', 'nifty_index.json')
@@ -63,6 +64,85 @@ def load_signals_csv():
     return rows, sig_date
 
 
+def load_bhav_ohlc(all_rows):
+    """Build per-trade OHLC lookup from bhav CSVs."""
+    try:
+        bhav_files = sorted(glob.glob(os.path.join(BHAV_DIR, '*.csv')))
+        if not bhav_files:
+            return {}
+        # Build date -> symbol -> {o,h,l,c} mapping
+        date_sym_map = {}
+        for fpath in bhav_files:
+            fname = os.path.basename(fpath)
+            # Extract date from filename: bhav_YYYYMMDD.csv or YYYYMMDD.csv
+            dm = re.search(r'(\d{8})', fname)
+            if not dm:
+                continue
+            ds = dm.group(1)  # YYYYMMDD
+            date_str = f"{ds[:4]}-{ds[4:6]}-{ds[6:]}"
+            try:
+                with open(fpath, newline='', encoding='utf-8', errors='replace') as cf:
+                    reader = csv.DictReader(cf)
+                    hdrs = reader.fieldnames or []
+                    # Detect column names
+                    sym_col = next((h for h in hdrs if h.strip().upper() in ('SYMBOL','SC_CODE')), None)
+                    o_col   = next((h for h in hdrs if h.strip().upper() in ('OPEN','OPEN_PRICE','OP')), None)
+                    h_col   = next((h for h in hdrs if h.strip().upper() in ('HIGH','HIGH_PRICE','HP')), None)
+                    l_col   = next((h for h in hdrs if h.strip().upper() in ('LOW','LOW_PRICE','LP')), None)
+                    c_col   = next((h for h in hdrs if h.strip().upper() in ('CLOSE','CLOSE_PRICE','CP')), None)
+                    if not all([sym_col, o_col, h_col, l_col, c_col]):
+                        continue
+                    sym_map = {}
+                    for row in reader:
+                        sym = row.get(sym_col,'').strip()
+                        if not sym:
+                            continue
+                        try:
+                            sym_map[sym] = {
+                                'o': round(float(row.get(o_col,0) or 0), 2),
+                                'h': round(float(row.get(h_col,0) or 0), 2),
+                                'l': round(float(row.get(l_col,0) or 0), 2),
+                                'c': round(float(row.get(c_col,0) or 0), 2),
+                            }
+                        except:
+                            pass
+                    date_sym_map[date_str] = sym_map
+            except:
+                pass
+
+        # Build per-trade OHLC
+        trade_ohlc = {}
+        for r in all_rows:
+            if r.get('ORDER') != 'Executed':
+                continue
+            sym = r.get('SYMBOL','')
+            sig = r.get('SIGNAL_DATE','')
+            ext = r.get('EXIT_DATE','') or ''
+            cfg = r.get('CONFIG','')
+            key = f"{sym}_{sig}_{cfg}"
+            if key in trade_ohlc:
+                continue
+            end_d = ext if ext else datetime.now(tz=IST).strftime('%Y-%m-%d')
+            ohlc_list = []
+            prev_c = 0
+            for d in sorted(date_sym_map.keys()):
+                if d < sig or d > end_d:
+                    continue
+                if sym in date_sym_map[d]:
+                    rec = dict(date_sym_map[d][sym])
+                    if prev_c and prev_c > 0:
+                        rec['chg'] = round((rec['c'] - prev_c) / prev_c * 100, 2)
+                    else:
+                        rec['chg'] = 0
+                    rec['date'] = d
+                    prev_c = rec['c']
+                    ohlc_list.append(rec)
+            trade_ohlc[key] = ohlc_list
+        return trade_ohlc
+    except Exception as e:
+        return {}
+
+
 def build_html(logo, nifty, configs, sim_meta, sim_results, signals_rows, sig_date):
     generated = sim_meta.get('generated_at', datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'))
     last_date = sim_meta.get('last_date', '')
@@ -80,6 +160,8 @@ def build_html(logo, nifty, configs, sim_meta, sim_results, signals_rows, sig_da
     signals_js = json.dumps(signals_rows, default=str)
     nifty_js   = json.dumps(nifty, default=str)
     configs_js = json.dumps(configs, default=str)
+    trade_ohlc = load_bhav_ohlc(all_rows)
+    trade_ohlc_js = json.dumps(trade_ohlc, default=str)
 
     # Config table rows
     cfg_html = ''
@@ -252,7 +334,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 
 <div class="cstrip">
   <span class="slbl">Range:</span>
-  <input type="date" id="fromDate" value="2025-01-01" style="padding:6px 10px;font-size:12px;min-width:130px;">
+  <input type="date" id="fromDate" value="" placeholder="From Date" style="padding:6px 10px;font-size:12px;min-width:130px;">
   <span style="color:var(--text3);font-weight:600;">to</span>
   <input type="date" id="toDate" value="{today_date}" style="padding:6px 10px;font-size:12px;min-width:130px;">
   <button onclick="applyDateRange()" style="padding:6px 14px;font-size:12px;">Apply</button>
@@ -488,6 +570,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
      TAB: TRADE HISTORY
 ═══════════════════════════════════════════════════════════════ -->
 <div id="tab-trades" class="hidden">
+  <div class="tab-badges" id="trades-badges" style="margin-bottom:10px;"></div>
   <div class="cstrip">
     <span class="slbl">Search:</span>
     <input type="text" id="trades-search" placeholder="Search symbol..." oninput="renderTab('trades')" style="width:200px">
@@ -555,7 +638,8 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
       <table><thead><tr>
         <th onclick="srt('signals',0)">#</th>
         <th onclick="srt('signals',1)">DATE</th>
-        <th onclick="srt('signals',2)">STOCK</th>
+        <th onclick="srt('signals',2)">CFG</th>
+        <th onclick="srt('signals',10)">STOCK</th>
         <th onclick="srt('signals',3)">1D %</th>
         <th onclick="srt('signals',4)">5D %</th>
         <th onclick="srt('signals',5)">BUY PRICE &#8377;</th>
@@ -665,6 +749,12 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#9400; Avg History</h3>
       <span style="font-size:12px;color:var(--text3);">Trades with multiple buy legs (BUY_COUNT &gt; 1)</span>
+      <span class="slbl">Config:</span>
+      <button class="btn-filter active" onclick="avgHistCfgFilter('ALL',this)">All</button>
+      <button class="btn-filter" onclick="avgHistCfgFilter('C1',this)">C1</button>
+      <button class="btn-filter" onclick="avgHistCfgFilter('C2',this)">C2</button>
+      <button class="btn-filter" onclick="avgHistCfgFilter('C3',this)">C3</button>
+      <button class="btn-filter" onclick="avgHistCfgFilter('C4',this)">C4</button>
       <div style="margin-left:auto;display:flex;gap:6px;">
         <button class="btn-sm btn-green" onclick="exportTabCSV('avghistory')">Export CSV</button>
       </div>
@@ -687,6 +777,12 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128200; Market Data</h3>
       <span style="font-size:12px;color:var(--text3);">All open positions with latest price & P&amp;L</span>
+      <span class="slbl">Config:</span>
+      <button class="btn-filter active" onclick="mdCfgFilter('ALL',this)">All</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C1',this)">C1</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C2',this)">C2</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C3',this)">C3</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C4',this)">C4</button>
       <div style="display:flex;gap:6px;margin-left:auto;">
         <button class="btn-filter active" id="md-all" onclick="mdSubTab('all',this)">All</button>
         <button class="btn-filter" id="md-gain" onclick="mdSubTab('gainers',this)">&#9650; Gainers</button>
@@ -712,6 +808,12 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128202; Performance Analytics</h3>
       <span style="font-size:12px;color:var(--text3);">Deep dive into closed and open trade statistics</span>
+      <span class="slbl">Config:</span>
+      <button class="btn-filter active" onclick="perfCfgFilter('ALL',this)">All</button>
+      <button class="btn-filter" onclick="perfCfgFilter('C1',this)">C1</button>
+      <button class="btn-filter" onclick="perfCfgFilter('C2',this)">C2</button>
+      <button class="btn-filter" onclick="perfCfgFilter('C3',this)">C3</button>
+      <button class="btn-filter" onclick="perfCfgFilter('C4',this)">C4</button>
     </div>
     <div id="perf-hero" class="perf-hero"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;" class="perf-panels">
@@ -725,8 +827,13 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         </div>
       </div>
       <div class="card" style="margin:0;padding:16px;">
-        <h4 style="color:var(--navy);margin-bottom:12px;">&#9745; Open Positions Summary</h4>
-        <div id="perf-open-summary"></div>
+        <h4 style="color:var(--navy);margin-bottom:12px;">&#128200; Open Trades Breakdown (Per Config)</h4>
+        <div class="table-area">
+          <table><thead><tr>
+            <th>Config</th><th>Open Trades</th><th>Total Invested</th><th>Market Value</th>
+            <th>Unrealized P&amp;L</th><th>P&amp;L%</th>
+          </tr></thead><tbody id="perf-open-body"></tbody></table>
+        </div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
@@ -750,7 +857,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 
 <!-- ══ STOCK DETAIL MODAL ══ -->
 <div id="stockDetailModal">
-  <div class="sdm-box">
+  <div class="sdm-box" style="max-width:900px;width:96%;">
     <div class="sdm-hdr">
       <h3 id="sdm-title">Stock History</h3>
       <button class="sdm-close" onclick="closeStockDetail()">&#10005;</button>
@@ -760,8 +867,19 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
       <div class="table-area">
         <table><thead><tr>
           <th>CFG</th><th>Signal Date</th><th>Buy Price ₹</th><th>Exit Price ₹</th>
-          <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th>
+          <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th><th>OHLC</th>
         </tr></thead><tbody id="sdm-body"></tbody></table>
+      </div>
+      <div id="sdm-ohlc-panel" style="display:none;margin-top:14px;border-top:2px solid #e2e8f0;padding-top:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <strong id="sdm-ohlc-title" style="color:var(--navy);font-size:14px;">📈 OHLC Prices</strong>
+          <button onclick="document.getElementById('sdm-ohlc-panel').style.display='none'" style="font-size:11px;padding:2px 8px;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;background:#f8faff;">✕ Close</button>
+        </div>
+        <div class="table-area" style="max-height:260px;overflow-y:auto;">
+          <table><thead><tr>
+            <th>Date</th><th>Open ₹</th><th>High ₹</th><th>Low ₹</th><th>Close ₹</th><th>Chg%</th>
+          </tr></thead><tbody id="sdm-ohlc-body"></tbody></table>
+        </div>
       </div>
     </div>
   </div>
@@ -778,6 +896,7 @@ const ALL_ROWS    = {rows_js};
 const SIGNALS_RAW = {signals_js};
 const NIFTY_DATA  = {nifty_js};
 const CONFIGS_DEF = {configs_js};
+const TRADE_OHLC  = {trade_ohlc_js};
 
 // ─── OPEN POSITION MAPS ────────────────────────────────────────────────────────
 const openSymbols = new Set(ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').map(r=>r.SYMBOL));
@@ -853,6 +972,9 @@ const state = {{
   closed:  {{cfg:'ALL', res:'ALL', page:1, sort:0, asc:false}},
   fe:      {{cfg:'ALL', page:1, sort:0, asc:false}},
   hist:    {{cfg:'ALL'}},
+  avghistory: {{cfg:'ALL'}},
+  marketdata: {{cfg:'ALL'}},
+  perf:    {{cfg:'ALL'}},
   ledger:  {{cfg:'ALL', page:1, sort:0, asc:false}},
   trades:  {{cfg:'ALL', status:'ALL', page:1, sort:0, asc:false}},
   signals: {{cfg:'ALL', page:1, sort:0, asc:false}},
@@ -1089,6 +1211,14 @@ function renderTab(tab){{
   if(tab==='open') renderBadges('open-badges', rows, 'open');
   else if(tab==='closed') renderBadges('closed-badges', rows, 'closed');
   else if(tab==='fe') renderBadges('fe-badges', rows, 'closed');
+  else if(tab==='trades'){{
+    const tProfit=rows.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
+    const tLoss=rows.filter(r=>(parseFloat(r.PROFIT)||0)<0).length;
+    const tOpen=rows.filter(r=>r.STATUS==='Open').length;
+    const tNet=rows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+    const bd=document.getElementById('trades-badges');
+    if(bd) bd.innerHTML=`<span class="tbadge blue">Total: ${{rows.length}}</span><span class="tbadge">Open: ${{tOpen}}</span><span class="tbadge green">Profit: ${{tProfit}}</span><span class="tbadge red">Loss: ${{tLoss}}</span><span class="tbadge ${{tNet>=0?'green':'red'}}">Net P&L: &#8377;${{fN(tNet)}}</span>`;
+  }}
   const pgSzEl=document.getElementById(tab+'-pgsize');
   const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
   const page=state[tab].page||1;
@@ -1169,7 +1299,7 @@ function renderSignals(rows){{
   const slice=rows.slice(start,start+pgSz);
   setPager('signals',page,rows.length,pgSz);
   const body=document.getElementById('signals-body');
-  if(!slice.length){{body.innerHTML='<tr><td colspan="10" class="empty">No signals.</td></tr>';return;}}
+  if(!slice.length){{body.innerHTML='<tr><td colspan="11" class="empty">No signals.</td></tr>';return;}}
   body.innerHTML=slice.map((r,i)=>{{
     const sym=r.SYMBOL||r.symbol||'—';
     const date=r.SIGNAL_DATE||r.signal_date||'—';
@@ -1183,9 +1313,11 @@ function renderSignals(rows){{
     const isOpen=openSymbols.has(sym);
     const statusBadge=isOpen?'<span class="badge-opencall">Open Call</span>':'<span class="badge-fresh">Fresh Call</span>';
     const ltpHtml=isOpen?`<span class="green">&#8377;${{fN(ltp)}}</span>`:`&#8377;${{fN(close)}}`;
+    const sigCfg=r.CONFIG||r.config||'';
     return `<tr>
       <td>${{start+i+1}}</td>
       <td>${{date}}</td>
+      <td>${{sigCfg?cfgBadge(sigCfg):'—'}}</td>
       <td><strong>${{sym}}</strong></td>
       <td ${{pnlColor(chg1d)}}>${{chg1d>=0?'+':''}}${{f2(chg1d)}}%</td>
       <td>${{chg5d!=null?`<span ${{chg5d>=0?'class="green"':'class="red"'}}>${{chg5d>=0?'+':''}}${{f2(chg5d)}}%</span>`:'—'}}</td>
@@ -1361,6 +1493,13 @@ function renderBadges(containerId, rows, type){{
 
 // ─── MARKET DATA SUB-TAB ──────────────────────────────────────────────────────
 let mdSubFilter='all';
+let mdCfg='ALL';
+function mdCfgFilter(val,btn){{
+  mdCfg=val;
+  document.querySelectorAll('#tab-marketdata .btn-filter:not([id^="md-"])').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketData();
+}}
 function mdSubTab(type, btn){{
   mdSubFilter=type;
   document.querySelectorAll('[id^="md-"]').forEach(b=>b.classList.remove('active'));
@@ -1443,8 +1582,16 @@ function renderSellTrigger(){{
 }}
 
 // ─── AVG HISTORY ──────────────────────────────────────────────────────────────
+let avgHistCfg='ALL';
+function avgHistCfgFilter(val,btn){{
+  avgHistCfg=val;
+  document.querySelectorAll('#tab-avghistory .btn-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAvgHistory();
+}}
 function renderAvgHistory(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&parseInt(r.BUY_COUNT||0)>1);
+  if(avgHistCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgHistCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   rows.sort((a,b)=>parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0));
   renderBadges('avghistory-badges', rows, 'closed');
@@ -1471,6 +1618,7 @@ function renderAvgHistory(){{
 // ─── MARKET DATA ──────────────────────────────────────────────────────────────
 function renderMarketData(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(mdCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===mdCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   if(mdSubFilter==='gainers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)>0);
   else if(mdSubFilter==='losers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)<0);
@@ -1502,10 +1650,19 @@ function renderMarketData(){{
 }}
 
 // ─── PERFORMANCE ──────────────────────────────────────────────────────────────
+let perfCfg='ALL';
+function perfCfgFilter(val,btn){{
+  perfCfg=val;
+  document.querySelectorAll('#tab-performance .btn-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPerformance();
+}}
 function renderPerformance(){{
-  const cfgIds=['C1','C2','C3','C4'];
+  const allCfgIds=['C1','C2','C3','C4'];
+  const cfgIds=perfCfg==='ALL'?allCfgIds:[perfCfg];
   let closed=ALL_ROWS.filter(r=>r.STATUS==='Closed'&&r.RESULT&&!r.RESULT.includes('FE'));
   let open=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(perfCfg!=='ALL'){{ closed=closed.filter(r=>r.CONFIG===perfCfg); open=open.filter(r=>r.CONFIG===perfCfg); }}
   if(dateRangeActive){{
     closed=closed.filter(r=>inDateRange(r.SIGNAL_DATE));
     open=open.filter(r=>inDateRange(r.SIGNAL_DATE));
@@ -1550,17 +1707,21 @@ function renderPerformance(){{
     </tr>`;
   }}).join('');
 
-  // Open summary
-  const openInv=open.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
-  const openMktVal=open.reduce((s,r)=>s+(parseFloat(r.CURRENT_LTP)||0)*(parseInt(r.TOTAL_QTY)||0),0);
-  const openPnl=open.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
-  document.getElementById('perf-open-summary').innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-val">${{open.length}}</div><div class="stat-lbl">Open Trades</div></div>
-      <div class="stat-card ac"><div class="stat-val">₹${{fN(openInv)}}</div><div class="stat-lbl">Invested</div></div>
-      <div class="stat-card"><div class="stat-val">₹${{fN(openMktVal)}}</div><div class="stat-lbl">Market Value</div></div>
-      <div class="stat-card ${{openPnl>=0?'gc':'rc'}}"><div class="stat-val">₹${{fN(openPnl)}}</div><div class="stat-lbl">Unrealized P&L</div></div>
-    </div>`;
+  // Open trades breakdown per config
+  document.getElementById('perf-open-body').innerHTML=allCfgIds.map(cid=>{{
+    const orows=open.filter(r=>r.CONFIG===cid);
+    const oInv=orows.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
+    const oMkt=orows.reduce((s,r)=>s+(parseFloat(r.CURRENT_LTP)||0)*(parseInt(r.TOTAL_QTY)||0),0);
+    const oPnl=orows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+    const oPct=oInv>0?(oPnl/oInv*100):0;
+    return `<tr>
+      <td>${{cfgBadge(cid)}}</td><td>${{orows.length}}</td>
+      <td>&#8377;${{fN(oInv)}}</td>
+      <td>&#8377;${{fN(oMkt)}}</td>
+      <td ${{pnlColor(oPnl)}}>&#8377;${{fN(oPnl)}}</td>
+      <td ${{pnlColor(oPct)}}>${{oPct>=0?'+':''}}${{f2(oPct)}}%</td>
+    </tr>`;
+  }}).join('');
 
   // Top stocks by P&L
   const symMap={{}};
@@ -1605,22 +1766,43 @@ function openStockDetail(sym){{
   document.getElementById('sdm-body').innerHTML=rows.length?rows.map(r=>{{
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
+    const oKey=`${{r.SYMBOL}}_${{r.SIGNAL_DATE}}_${{r.CONFIG}}`;
+    const hasOHLC=TRADE_OHLC[oKey]&&TRADE_OHLC[oKey].length>0;
     return `<tr>
       <td>${{cfgBadge(r.CONFIG)}}</td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
       <td>₹${{fN(r.AVG_BUY_PRICE)}}</td>
       <td>₹${{fN(r.EXIT_PRICE)}}</td>
       <td ${{pnlColor(r.PROFIT)}}>₹${{fN(pnl)}}</td>
-      <td ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
-      <td>${{resultBadge(r.STATUS==='Open'?'Open':r.RESULT)}}</td>
+      <td ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?\'+\':\'\'}}${{f2(pct)}}%</td>
+      <td>${{resultBadge(r.STATUS===\'Open\'?\'Open\':r.RESULT)}}</td>
       <td>${{fI(r.MARKET_DAYS)}}d</td>
       <td>${{resultBadge(r.RESULT)}}</td>
+      <td>${{hasOHLC?`<button onclick="showOHLC(\\'${{oKey}}\\',\\'${{r.SYMBOL}} (${{r.CONFIG}})\\')" style="font-size:11px;padding:2px 8px;border:1px solid #2563eb;border-radius:6px;cursor:pointer;background:#eff6ff;color:#2563eb;">📈 OHLC</button>`:\'—\'}}</td>
     </tr>`;
-  }}).join(''):'<tr><td colspan="9" class="empty">No trades found</td></tr>';
+  }}).join(\'\'):\'<tr><td colspan="10" class="empty">No trades found</td></tr>\';
 }}
 function closeStockDetail(){{
   document.getElementById('stockDetailModal').classList.remove('open');
   document.body.style.overflow='';
+}}
+function showOHLC(key, label){{
+  const data=TRADE_OHLC[key]||[];
+  document.getElementById('sdm-ohlc-title').textContent=`📈 OHLC Prices — ${{label}} (${{data.length}} days)`;
+  const panel=document.getElementById('sdm-ohlc-panel');
+  panel.style.display='block';
+  if(!data.length){{document.getElementById('sdm-ohlc-body').innerHTML='<tr><td colspan="6" class="empty">No OHLC data</td></tr>';return;}}
+  document.getElementById('sdm-ohlc-body').innerHTML=data.map(d=>{{
+    const chg=parseFloat(d.chg)||0;
+    return `<tr>
+      <td>${{d.date}}</td>
+      <td>&#8377;${{fN(d.o)}}</td>
+      <td style="color:#059669">&#8377;${{fN(d.h)}}</td>
+      <td style="color:#dc2626">&#8377;${{fN(d.l)}}</td>
+      <td><strong>&#8377;${{fN(d.c)}}</strong></td>
+      <td ${{pnlColor(chg)}}>${{chg>=0?'+':''}}${{f2(chg)}}%</td>
+    </tr>`;
+  }}).join('');
 }}
 
 // ─── EXPORT CSV FOR NEW TABS ──────────────────────────────────────────────────
