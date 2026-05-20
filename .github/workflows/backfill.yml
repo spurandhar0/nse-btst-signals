@@ -1,0 +1,61 @@
+name: Historical Backfill (Run Once)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy requests pyarrow openpyxl
+
+      # ── Step 0: Download missing bhav data from Dec 2024 onwards ──────────
+      - name: Step 0 – Bootstrap bhavcopy (Dec 2024 → today)
+        run: python src/00_bootstrap_historical.py
+
+      # ── Step 1: Consolidate all CSVs into one parquet ─────────────────────
+      - name: Step 1 – Consolidate bhavcopy CSV → parquet
+        run: python src/01_consolidate_csv.py
+
+      # ── Step 2: Filter EQ series ──────────────────────────────────────────
+      - name: Step 2 – Filter EQ series
+        run: python src/02_filter_eq.py
+
+      # ── Step 3: Compute ATH ───────────────────────────────────────────────
+      - name: Step 3 – Compute ATH
+        run: python src/03_find_ath.py
+
+      # ── Step 00b: Generate signals for ALL dates from Jan 2025 ───────────
+      - name: Step 00b – Historical signal backfill (Jan 2025 → today)
+        run: python src/00b_historical_backfill.py
+
+      # ── Step 5: Run simulation on all historical signals ─────────────────
+      - name: Step 5 – Run simulation & generate Excel files
+        run: python src/05_run_simulation.py
+
+      # ── Step 6: Build dashboard ───────────────────────────────────────────
+      - name: Step 6 – Build dashboard HTML
+        run: python src/05_build_dashboard.py
+
+      # ── Commit everything ─────────────────────────────────────────────────
+      - name: Commit and push all data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bhav_data/ db/ output/ docs/index.html docs/data/ || true
+          # output/ can be large — add with LFS tracking fallback
+          git diff --staged --quiet || git commit -m "Backfill: historical signals + simulation Jan 2025 → $(date +'%Y-%m-%d')"
+          git push
