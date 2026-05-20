@@ -538,6 +538,10 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <button class="btn-filter" onclick="cfgFilter('hist','C2',this)">C2</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C3',this)">C3</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C4',this)">C4</button>
+    <span class="slbl" style="margin-left:8px">Status:</span>
+    <button class="btn-filter active" id="hist-status-ALL" onclick="statusFilterHist('ALL',this)">All</button>
+    <button class="btn-filter" id="hist-status-Open" onclick="statusFilterHist('Open',this)">Hold</button>
+    <button class="btn-filter" id="hist-status-Closed" onclick="statusFilterHist('Closed',this)">Sold</button>
   </div>
   <div id="hist-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px 0"></div>
   <div id="hist-container"></div>
@@ -701,7 +705,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#8681; Avg Trigger</h3>
-      <span style="font-size:12px;color:var(--text3);">Open positions where price dropped 10%+ below avg buy — averaging candidates</span>
+      <span style="font-size:12px;color:var(--text3);">Open positions where price dropped to the configured buy drop percentage</span>
       <div style="margin-left:auto;display:flex;gap:6px;">
         <button class="btn-sm btn-green" onclick="exportTabCSV('avgtrigger')">Export CSV</button>
       </div>
@@ -744,6 +748,12 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#9400; Avg History</h3>
       <span style="font-size:12px;color:var(--text3);">Trades with multiple buy legs (BUY_COUNT &gt; 1)</span>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+         <span class="slbl">Search:</span>
+         <input type="text" id="avghist-search" placeholder="Search symbol..." oninput="renderAvgHistory()" style="width:140px;padding:5px 8px;font-size:13px;">
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <span class="slbl">Config:</span>
       <button class="btn-filter active" onclick="avgHistCfgFilter('ALL',this)">All</button>
       <button class="btn-filter" onclick="avgHistCfgFilter('C1',this)">C1</button>
@@ -758,7 +768,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="table-area">
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
-        <th>Buy Count</th><th>Avg Buy ₹</th><th>Total Invested ₹</th>
+        <th>Buy Count</th><th>Total Qty</th><th>Avg Buy ₹</th><th>Total Invested ₹</th>
         <th>Current LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th>
       </tr></thead><tbody id="avghistory-body"></tbody></table>
     </div>
@@ -976,7 +986,7 @@ const state = {{
   open:    {{cfg:'ALL', page:1, sort:0, asc:false}},
   closed:  {{cfg:'ALL', res:'ALL', page:1, sort:0, asc:false}},
   fe:      {{cfg:'ALL', page:1, sort:0, asc:false}},
-  hist:    {{cfg:'ALL'}},
+  hist:    {{cfg:'ALL', status:'ALL'}},
   avghistory: {{cfg:'ALL'}},
   marketdata: {{cfg:'ALL'}},
   perf:    {{cfg:'ALL'}},
@@ -1042,6 +1052,13 @@ function showTab(name,el){{
 }}
 
 // ─── FILTER HELPERS ──────────────────────────────────────────────────────────
+function statusFilterHist(val,btn){{
+  state.hist.status=val;
+  document.querySelectorAll('[id^="hist-status-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildHistory();
+}}
+
 function cfgFilter(tab,val,btn){{
   state[tab].cfg=val;
   if(state[tab].page!==undefined)state[tab].page=1;
@@ -1123,7 +1140,7 @@ function getFiltered(tab){{
     // Build ledger from closed rows
     let closed = ALL_ROWS.filter(r=>r.STATUS==='Closed'&&r.PROFIT!=null&&r.EXIT_DATE);
     if(state.ledger.cfg!=='ALL') closed=closed.filter(r=>r.CONFIG===state.ledger.cfg);
-    if(dateRangeActive) closed=closed.filter(r=>inDateRange(r.SIGNAL_DATE)); // <-- ADDED GLOBAL FILTER
+    if(dateRangeActive) closed=closed.filter(r=>inDateRange(r.SIGNAL_DATE));
     const map={{}};
     closed.forEach(r=>{{
       const d=r.EXIT_DATE;
@@ -1402,7 +1419,7 @@ function buildOverview(){{
 
   cfgIds.forEach(cid=>{{
     let crows=ALL_ROWS.filter(r=>r.CONFIG===cid);
-    if(dateRangeActive) crows=crows.filter(r=>inDateRange(r.SIGNAL_DATE)); // <-- ADDED GLOBAL FILTER
+    if(dateRangeActive) crows=crows.filter(r=>inDateRange(r.SIGNAL_DATE)); 
     
     const exec=crows.filter(r=>r.ORDER==='Executed');
     const open=exec.filter(r=>r.STATUS==='Open');
@@ -1437,7 +1454,6 @@ function buildOverview(){{
   document.getElementById('ov-body').innerHTML=rows.join('');
   const totWr=totPT+totLoss>0?(totPT/(totPT+totLoss)*100).toFixed(1)+'%':'—';
   
-  // Calculate total signals based on date range for accurate display
   let totalSigsFiltered = ALL_ROWS;
   if(dateRangeActive) totalSigsFiltered = totalSigsFiltered.filter(r=>inDateRange(r.SIGNAL_DATE));
   
@@ -1454,10 +1470,17 @@ function buildOverview(){{
 function buildHistory(){{
   const q=(document.getElementById('hist-search')||{{}}).value||'';
   const cfg=state.hist.cfg;
+  const statusF=state.hist.status;
+
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed');
   if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
+  
+  // Apply Hold/Sold filter
+  if(statusF==='Open') rows=rows.filter(r=>r.STATUS==='Open');
+  if(statusF==='Closed') rows=rows.filter(r=>r.STATUS!=='Open');
+  
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
-  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE)); // <-- ADDED GLOBAL FILTER
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE)); 
 
   // Stats bar
   const holdRows=rows.filter(r=>r.STATUS==='Open');
@@ -1505,17 +1528,46 @@ function buildHistory(){{
       `<span style="border:1px solid #6366f1;border-radius:12px;padding:2px 10px;font-size:11px;color:#4f46e5;background:#f5f3ff">${{r.EXIT_TYPE}}</span>`
       :'—';
 
-    // BUY HISTORY rows - one per buy count
-    const buyCount=parseInt(r.BUY_COUNT)||1;
-    const buyRows=Array.from({{length:buyCount}},(_,bi)=>`
+    // BUY HISTORY rows - dynamically calculating based on Config Dip
+    const buyCount = parseInt(r.BUY_COUNT) || 1;
+    const finalAvg = parseFloat(r.AVG_BUY_PRICE) || 0;
+    
+    // Read the specific drop percentage from params.json for this Config
+    const cfgDef = CONFIGS_DEF.find(c => c.id === r.CONFIG || c.ID === r.CONFIG) || {{}};
+    const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); // e.g., 0.10 for 10%
+
+    let runningAvg = 0;
+
+    const buyRows = Array.from({{length: buyCount}}, (_, bi) => {{
+      let legDate = r[`B${{bi}}_BoughtDate`] || (bi === 0 ? r.SIGNAL_DATE : '—');
+      
+      let legPrice;
+      if (bi === 0) {{
+         // First buy uses the exact signal close price (or database fallback)
+         legPrice = parseFloat(r.B0_Close) || parseFloat(r.SIGNAL_CLOSE) || finalAvg;
+         runningAvg = legPrice;
+      }} else {{
+         // Subsequent buys trigger at exactly the config % drop from the previous average
+         legPrice = runningAvg * (1 - dropPct);
+         // Calculate the new running average after this buy
+         runningAvg = ((runningAvg * bi) + legPrice) / (bi + 1);
+      }}
+
+      // Ensure the very last row matches the exact database Final Average perfectly
+      let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
+      
+      let avgStr = (bi === buyCount - 1) ? `&#8377;${{fN(displayAvg)}}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${{fN(displayAvg)}}</span>`;
+
+      return `
       <tr style="border-top:1px solid #e2e8f0">
         <td style="padding:5px 8px">${{bi+1}}</td>
-        <td style="padding:5px 8px">${{fD(r.SIGNAL_DATE)}}</td>
-        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
-        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
-        <td style="padding:5px 8px;text-align:right">${{fI(r.TOTAL_QTY)}}</td>
-        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
-      </tr>`).join('');
+        <td style="padding:5px 8px">${{fD(legDate)}}</td>
+        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(legPrice)}}</td>
+        <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{avgStr}}</td>
+        <td style="padding:5px 8px;text-align:right">—</td>
+        <td style="padding:5px 8px;text-align:right">—</td>
+      </tr>`;
+    }}).join('');
 
     const sellSection=isSold?`
       <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
@@ -1677,25 +1729,41 @@ function mdSubTab(type, btn){{
 function renderAvgTrigger(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  
+  // Map the configured buy_drop for every config dynamically
+  const cfgMap = {{}};
+  CONFIGS_DEF.forEach(c => cfgMap[c.id || c.ID] = parseFloat(c.buy_drop || c.BUY_DROP || 0.1));
+
   rows=rows.filter(r=>{{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-    return avg>0&&ltp>0&&ltp<avg*0.90;
+    const dropPct = cfgMap[r.CONFIG] || 0.1;
+    
+    // Show stocks that have dropped at least 80% of the way to the required config dip
+    return avg>0 && ltp>0 && ltp <= avg * (1 - dropPct * 0.8);
   }}).sort((a,b)=>{{
     const da=((parseFloat(a.CURRENT_LTP)||0)-(parseFloat(a.AVG_BUY_PRICE)||0))/(parseFloat(a.AVG_BUY_PRICE)||1);
     const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
     return da-db; // most dropped first
   }});
+
   renderBadges('avgtrigger-badges', rows, 'open');
   const body=document.getElementById('avgtrigger-body');
-  document.getElementById('avgtrigger-info').textContent=`${{rows.length}} stocks triggered`;
-  if(!rows.length){{body.innerHTML='<tr><td colspan="10" class="empty">No stocks triggered for averaging</td></tr>';return;}}
+  document.getElementById('avgtrigger-info').textContent=`${{rows.length}} stocks triggered or near trigger`;
+  
+  if(!rows.length){{body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}}
+  
   body.innerHTML=rows.map((r,i)=>{{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const dropPct = cfgMap[r.CONFIG] || 0.1;
+    
     const drop=avg>0?((ltp-avg)/avg*100):0;
-    const nextBuy=avg*0.85;
-    const dist=ltp>0?((ltp-avg*0.90)/(avg*0.90)*100):0;
+    
+    // Calculate exact Next Buy Price based on Config %
+    const nextBuy=avg*(1 - dropPct); 
+    const dist=ltp>0?((ltp-nextBuy)/nextBuy*100):0;
+    
     return `<tr>
       <td>${{i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
@@ -1762,14 +1830,18 @@ function avgHistCfgFilter(val,btn){{
   renderAvgHistory();
 }}
 function renderAvgHistory(){{
+  const q = (document.getElementById('avghist-search')||{{}}).value||'';
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&parseInt(r.BUY_COUNT||0)>1);
   if(avgHistCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgHistCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
   rows.sort((a,b)=>parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0));
+  
   renderBadges('avghistory-badges', rows, 'closed');
   const body=document.getElementById('avghistory-body');
   document.getElementById('avghistory-info').textContent=`${{rows.length}} multi-buy trades`;
-  if(!rows.length){{body.innerHTML='<tr><td colspan="11" class="empty">No multi-buy trades found</td></tr>';return;}}
+  
+  if(!rows.length){{body.innerHTML='<tr><td colspan="12" class="empty">No multi-buy trades found</td></tr>';return;}}
   body.innerHTML=rows.map((r,i)=>{{
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
@@ -1777,6 +1849,7 @@ function renderAvgHistory(){{
       <td>${{i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
       <td style="font-weight:800;color:var(--blue2)">${{fI(r.BUY_COUNT)}}x</td>
+      <td>${{fI(r.TOTAL_QTY)}}</td>
       <td>₹${{fN(r.AVG_BUY_PRICE)}}</td>
       <td>₹${{fN(r.TOTAL_INVESTMENT)}}</td>
       <td>₹${{fN(r.CURRENT_LTP)}}</td>
