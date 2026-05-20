@@ -4,7 +4,7 @@ NSE BTST Signals — Dashboard Builder v3
 Full tabs: Overview, Open, Closed, Force Exit, Stock History, Daily Ledger,
            Trade History, Today's Signals, Configs, Disclaimer
 """
-import os, json, csv, glob
+import os, json, csv, glob, re
 from datetime import datetime, timezone, timedelta
 
 IST  = timezone(timedelta(hours=5, minutes=30))
@@ -29,8 +29,32 @@ def load_logo():
 def load_nifty():
     try:
         with open(NIFTY) as f:
-            return json.load(f)
-    except:
+            raw = json.load(f)
+
+        label_to_key = {
+            'NIFTY 50': 'nifty50',
+            'BANKNIFTY': 'banknifty',
+            'SENSEX': 'sensex',
+            'NIFTY IT': 'niftyit',
+        }
+
+        result = {}
+
+        for idx in raw.get('indices', []):
+            key = label_to_key.get(idx.get('label'))
+
+            if key:
+                result[key] = {
+                    'price': idx.get('close', 0),
+                    'change': idx.get('change', 0),
+                    'change_pct': idx.get('change_pct', 0),
+                    'date': idx.get('date', ''),
+                }
+
+        result['updated_at'] = raw.get('updated_at', '')
+        return result
+
+    except Exception:
         return {}
 
 
@@ -361,9 +385,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   <div class="tab" onclick="showTab('disclaimer',this)">&#9432; Disclaimer</div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: OVERVIEW
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-overview">
   <div id="ov-stats" class="stat-grid"></div>
   <div class="card" style="padding:0 0 8px">
@@ -381,9 +402,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: OPEN POSITIONS
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-open" class="hidden">
   <div class="tab-badges" id="open-badges"></div>
   <div class="cstrip">
@@ -425,9 +443,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: CLOSED POSITIONS
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-closed" class="hidden">
   <div class="tab-badges" id="closed-badges"></div>
   <div class="cstrip">
@@ -473,9 +488,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: FORCE EXIT
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-fe" class="hidden">
   <div class="tab-badges" id="fe-badges"></div>
   <div class="cstrip">
@@ -516,9 +528,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: STOCK HISTORY
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-history" class="hidden">
   <div class="cstrip">
     <span class="slbl">Search symbol:</span>
@@ -534,9 +543,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   <div id="hist-container"></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: DAILY LEDGER
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-ledger" class="hidden">
   <div class="cstrip">
     <span class="slbl">Config:</span>
@@ -565,9 +571,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: TRADE HISTORY
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-trades" class="hidden">
   <div class="tab-badges" id="trades-badges" style="margin-bottom:10px;"></div>
   <div class="cstrip">
@@ -615,9 +618,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: TODAY'S SIGNALS
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-signals" class="hidden">
   <div class="tab-badges" id="sig-total-badges" style="margin-bottom:12px;"></div>
   <div class="cstrip">
@@ -662,9 +662,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: CONFIGS
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-configs" class="hidden">
   <div class="card">
     <h3 style="color:var(--navy);margin-bottom:16px">&#9881; Parameter Configurations</h3>
@@ -688,9 +685,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TAB: DISCLAIMER
-═══════════════════════════════════════════════════════════════ -->
 <div id="tab-disclaimer" class="hidden">
   <div class="disclaimer-box">
     <h2>&#9888; Disclaimer</h2>
@@ -703,7 +697,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 </div>
 
 
-<!-- ══ TAB: AVG TRIGGER ══ -->
 <div id="tab-avgtrigger" class="hidden">
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
@@ -725,7 +718,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══ TAB: SELL TRIGGER ══ -->
 <div id="tab-selltrigger" class="hidden">
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
@@ -747,7 +739,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══ TAB: AVG HISTORY ══ -->
 <div id="tab-avghistory" class="hidden">
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
@@ -775,7 +766,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══ TAB: MARKET DATA ══ -->
 <div id="tab-marketdata" class="hidden">
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
@@ -806,7 +796,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══ TAB: PERFORMANCE ══ -->
 <div id="tab-performance" class="hidden">
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
@@ -859,7 +848,6 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<!-- ══ STOCK DETAIL MODAL ══ -->
 <div id="stockDetailModal">
   <div class="sdm-box" style="max-width:900px;width:96%;">
     <div class="sdm-hdr">
@@ -889,9 +877,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-</div><!-- /container -->
-
-<footer><strong>PS Market</strong> &mdash; NSE BTST Signals &nbsp;|&nbsp; Educational Purpose Only &nbsp;|&nbsp; Not SEBI Registered</footer>
+</div><footer><strong>PS Market</strong> &mdash; NSE BTST Signals &nbsp;|&nbsp; Educational Purpose Only &nbsp;|&nbsp; Not SEBI Registered</footer>
 <div id="toast-container"></div>
 
 <script>
@@ -926,7 +912,22 @@ ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').forEach(r=>{{
   }};
   Object.entries(map).forEach(([id,{{key,label}}])=>{{
     const el=document.getElementById(id), d=data[key];
-    if(!d||!d.price){{el.innerHTML='<span class="idx-loading">'+label+' N/A</span>';return;}}
+    if(!d||!d.price){{
+      // Fallback for array format
+      let match;
+      if(!d && Array.isArray(data.indices)){{
+        match = data.indices.find(x => x.label === label);
+      }}
+      if(match){{
+         const chg=match.change||0,chgPc=match.change_pct||0,cls=chg>0?'pos':chg<0?'neg':'flat',sign=chg>0?'+':'';
+         el.innerHTML=`<div><div class="idx-name">${{label}}</div><div class="idx-date">${{match.date||''}}</div></div>
+         <div><div class="idx-price">${{Number(match.close).toLocaleString('en-IN',{{maximumFractionDigits:2}})}}</div>
+         <div class="idx-chg ${{cls}}">${{sign}}${{Number(chg).toFixed(2)}} (${{sign}}${{Number(chgPc).toFixed(2)}}%)</div></div>`;
+      }} else {{
+         el.innerHTML='<span class="idx-loading">'+label+' N/A</span>';
+      }}
+      return;
+    }}
     const chg=d.change||0,chgPc=d.change_pct||0,cls=chg>0?'pos':chg<0?'neg':'flat',sign=chg>0?'+':'';
     el.innerHTML=`<div><div class="idx-name">${{label}}</div><div class="idx-date">${{d.date||''}}</div></div>
       <div><div class="idx-price">${{Number(d.price).toLocaleString('en-IN',{{maximumFractionDigits:2}})}}</div>
@@ -1122,6 +1123,7 @@ function getFiltered(tab){{
     // Build ledger from closed rows
     let closed = ALL_ROWS.filter(r=>r.STATUS==='Closed'&&r.PROFIT!=null&&r.EXIT_DATE);
     if(state.ledger.cfg!=='ALL') closed=closed.filter(r=>r.CONFIG===state.ledger.cfg);
+    if(dateRangeActive) closed=closed.filter(r=>inDateRange(r.SIGNAL_DATE)); // <-- ADDED GLOBAL FILTER
     const map={{}};
     closed.forEach(r=>{{
       const d=r.EXIT_DATE;
@@ -1399,7 +1401,9 @@ function buildOverview(){{
   const rows=[];
 
   cfgIds.forEach(cid=>{{
-    const crows=ALL_ROWS.filter(r=>r.CONFIG===cid);
+    let crows=ALL_ROWS.filter(r=>r.CONFIG===cid);
+    if(dateRangeActive) crows=crows.filter(r=>inDateRange(r.SIGNAL_DATE)); // <-- ADDED GLOBAL FILTER
+    
     const exec=crows.filter(r=>r.ORDER==='Executed');
     const open=exec.filter(r=>r.STATUS==='Open');
     const closed=exec.filter(r=>r.STATUS==='Closed');
@@ -1432,8 +1436,13 @@ function buildOverview(){{
 
   document.getElementById('ov-body').innerHTML=rows.join('');
   const totWr=totPT+totLoss>0?(totPT/(totPT+totLoss)*100).toFixed(1)+'%':'—';
+  
+  // Calculate total signals based on date range for accurate display
+  let totalSigsFiltered = ALL_ROWS;
+  if(dateRangeActive) totalSigsFiltered = totalSigsFiltered.filter(r=>inDateRange(r.SIGNAL_DATE));
+  
   document.getElementById('ov-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-val">${{ALL_ROWS.length}}</div><div class="stat-lbl">Total Signals</div></div>
+    <div class="stat-card"><div class="stat-val">${{totalSigsFiltered.length}}</div><div class="stat-lbl">Total Signals</div></div>
     <div class="stat-card gc"><div class="stat-val">${{totExec}}</div><div class="stat-lbl">Executed</div></div>
     <div class="stat-card"><div class="stat-val">${{totOpen}}</div><div class="stat-lbl">Open</div></div>
     <div class="stat-card"><div class="stat-val">${{totClosed}}</div><div class="stat-lbl">Closed</div></div>
@@ -1448,6 +1457,7 @@ function buildHistory(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed');
   if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE)); // <-- ADDED GLOBAL FILTER
 
   // Stats bar
   const holdRows=rows.filter(r=>r.STATUS==='Open');
@@ -1937,13 +1947,13 @@ function openStockDetail(key){{
       <td>₹${{fN(r.AVG_BUY_PRICE)}}</td>
       <td>₹${{fN(r.EXIT_PRICE)}}</td>
       <td ${{pnlColor(r.PROFIT)}}>₹${{fN(pnl)}}</td>
-      <td ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?\'+\':\'\'}}${{f2(pct)}}%</td>
-      <td>${{resultBadge(r.STATUS===\'Open\'?\'Open\':r.RESULT)}}</td>
+      <td ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
+      <td>${{resultBadge(r.STATUS==='Open'?'Open':r.RESULT)}}</td>
       <td>${{fI(r.MARKET_DAYS)}}d</td>
       <td>${{resultBadge(r.RESULT)}}</td>
-      <td>${{hasOHLC?`<button onclick="showOHLC(\\'${{oKey}}\\',\\'${{r.SYMBOL}} (${{r.CONFIG}})\\')" style="font-size:11px;padding:2px 8px;border:1px solid #2563eb;border-radius:6px;cursor:pointer;background:#eff6ff;color:#2563eb;">📈 OHLC</button>`:\'—\'}}</td>
+      <td>${{hasOHLC?`<button onclick="showOHLC('${{oKey}}','${{r.SYMBOL}} (${{r.CONFIG}})')" style="font-size:11px;padding:2px 8px;border:1px solid #2563eb;border-radius:6px;cursor:pointer;background:#eff6ff;color:#2563eb;">📈 OHLC</button>`:'—'}}</td>
     </tr>`;
-  }}).join(\'\'):\'<tr><td colspan="10" class="empty">No trades found</td></tr>\';
+  }}).join(''):'<tr><td colspan="10" class="empty">No trades found</td></tr>';
 }}
 function closeStockDetail(){{
   document.getElementById('stockDetailModal').classList.remove('open');
