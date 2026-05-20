@@ -530,6 +530,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <button class="btn-filter" onclick="cfgFilter('hist','C3',this)">C3</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C4',this)">C4</button>
   </div>
+  <div id="hist-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px 0"></div>
   <div id="hist-container"></div>
 </div>
 
@@ -1448,55 +1449,155 @@ function buildHistory(){{
   if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
 
-  // Group by CFG+SYMBOL to keep configs separate
-  const bySymbol={{}};
-  rows.forEach(r=>{{
-    const k=`${{r.CONFIG||''}}|${{r.SYMBOL}}`;
-    if(!bySymbol[k]) bySymbol[k]=[];
-    bySymbol[k].push(r);
+  // Stats bar
+  const holdRows=rows.filter(r=>r.STATUS==='Open');
+  const soldRows=rows.filter(r=>r.STATUS!=='Open');
+  const holdNet=holdRows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  const soldNet=soldRows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  const statEl=document.getElementById('hist-stats');
+  if(statEl) statEl.innerHTML=`
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Hold Count</div>
+      <div style="font-size:22px;font-weight:700;color:#2563eb">${{holdRows.length}}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Hold Net</div>
+      <div style="font-size:22px;font-weight:700;color:${{holdNet>=0?'#059669':'#dc2626'}}">&#8377;${{fN(holdNet)}}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Sold Count</div>
+      <div style="font-size:22px;font-weight:700;color:#2563eb">${{soldRows.length}}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Sold Net</div>
+      <div style="font-size:22px;font-weight:700;color:${{soldNet>=0?'#059669':'#dc2626'}}">&#8377;${{fN(soldNet)}}</div>
+    </div>`;
+
+  // Sort: open first (by date desc), then sold (by exit date desc)
+  rows.sort((a,b)=>{{
+    const aOpen=a.STATUS==='Open',bOpen=b.STATUS==='Open';
+    if(aOpen!==bOpen) return bOpen?1:-1;
+    return (a.SIGNAL_DATE||'')<(b.SIGNAL_DATE||'')?1:-1;
   }});
 
-  const syms=Object.keys(bySymbol).sort();
-  if(!syms.length){{
+  if(!rows.length){{
     document.getElementById('hist-container').innerHTML='<div class="card empty">No executed trades found.</div>';
     return;
   }}
 
-  document.getElementById('hist-container').innerHTML=syms.slice(0,50).map(sym=>{{
-    const srows=bySymbol[sym].sort((a,b)=>a.SIGNAL_DATE<b.SIGNAL_DATE?1:-1);
-    const totalPnl=srows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
-    const profits=srows.filter(r=>r.STATUS==='Closed'&&r.PROFIT!=null&&parseFloat(r.PROFIT)>=0).length;
-    const losses=srows.filter(r=>r.STATUS==='Closed'&&r.PROFIT!=null&&parseFloat(r.PROFIT)<0).length;
-    const pnlCls=totalPnl>=0?'green':'red';
-    const [symCfg, symName] = sym.includes('|') ? sym.split('|') : ['', sym];
-    return `<div class="card" style="margin-bottom:12px;padding:0">
-      <div style="padding:12px 16px;background:linear-gradient(135deg,#f8faff,#eef2ff);border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        ${{symCfg?cfgBadge(symCfg):''}}
-        <strong style="font-size:15px;color:var(--navy)">${{symName}}</strong>
-        <span style="font-size:12px;color:var(--text3)">${{srows.length}} trades</span>
-        <span class="green">${{profits}} profit</span>
-        <span class="red">${{losses}} loss</span>
-        <span class="${{pnlCls}}" style="margin-left:auto">P&L: &#8377;${{fN(totalPnl)}}</span>
-        <button class="btn-sm btn-outline" style="margin-left:10px" onclick="openStockDetail('${{sym}}')">&#128269; Show History</button>
-      </div>
-      <div class="table-area">
-        <table><thead><tr>
-          <th>CFG</th><th>BUY DATE</th><th>EXIT DATE</th>
-          <th>AVG BUY</th><th>EXIT PRICE</th><th>QTY</th><th>P&L</th><th>GAIN %</th><th>DAYS</th><th>RESULT</th>
+  document.getElementById('hist-container').innerHTML=rows.slice(0,100).map((r,i)=>{{
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    const isSold=r.STATUS!=='Open';
+    const ltp=isSold?(r.EXIT_PRICE||0):(r.CURRENT_LTP||0);
+    const cardKey=`${{r.CONFIG}}|${{r.SYMBOL}}`;
+    const exitTypeBadge=r.EXIT_TYPE?
+      `<span style="border:1px solid #6366f1;border-radius:12px;padding:2px 10px;font-size:11px;color:#4f46e5;background:#f5f3ff">${{r.EXIT_TYPE}}</span>`
+      :'—';
+
+    // BUY HISTORY rows - one per buy count
+    const buyCount=parseInt(r.BUY_COUNT)||1;
+    const buyRows=Array.from({{length:buyCount}},(_,bi)=>`
+      <tr style="border-top:1px solid #e2e8f0">
+        <td style="padding:5px 8px">${{bi+1}}</td>
+        <td style="padding:5px 8px">${{fD(r.SIGNAL_DATE)}}</td>
+        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
+        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
+        <td style="padding:5px 8px;text-align:right">${{fI(r.TOTAL_QTY)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
+      </tr>`).join('');
+
+    const sellSection=isSold?`
+      <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="background:#fff5f5">
+          <th style="padding:5px 8px;text-align:left;font-weight:600">Sell #</th>
+          <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+          <th style="padding:5px 8px;text-align:right;font-weight:600">Sell Price</th>
+          <th style="padding:5px 8px;text-align:center;font-weight:600">Exit Type</th>
         </tr></thead>
-        <tbody>${{srows.map(r=>`<tr>
-          <td>${{cfgBadge(r.CONFIG)}}</td>
-          <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
-          <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td><td>&#8377;${{fN(r.EXIT_PRICE)}}</td>
-          <td>${{fI(r.TOTAL_QTY)}}</td>
-          <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
-          <td ${{pnlColor(r.GAIN_PCT)}}>${{(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}}${{f2(r.GAIN_PCT)}}%</td>
-          <td>${{fI(r.MARKET_DAYS)}}</td>
-          <td>${{resultBadge(r.RESULT||r.STATUS)}}</td>
-        </tr>`).join('')}}</tbody>
-      </table></div></div>`;
+        <tbody>
+          <tr style="border-top:1px solid #fee2e2">
+            <td style="padding:5px 8px">1</td>
+            <td style="padding:5px 8px">${{fD(r.EXIT_DATE)}}</td>
+            <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${{fN(r.EXIT_PRICE)}}</td>
+            <td style="padding:5px 8px;text-align:center">${{exitTypeBadge}}</td>
+          </tr>
+        </tbody>
+      </table>`:'';
+
+    return `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+      <div style="padding:12px 16px;background:linear-gradient(135deg,#f8faff,#eef2ff);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <strong style="font-size:15px;color:#1e3a5f">${{i+1}}. ${{r.SYMBOL}}</strong>
+        <span style="font-size:12px;color:#64748b">(${{fD(r.SIGNAL_DATE)}})</span>
+        ${{cfgBadge(r.CONFIG)}}
+      </div>
+      <div style="padding:0 16px 8px">
+        <div style="font-size:11px;font-weight:700;color:#059669;letter-spacing:.5px;margin:12px 0 6px">BUY HISTORY</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="background:#f0fdf4">
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Buy #</th>
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Buy Price</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Avg Buy</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Qty (&#8377;10k)</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+          </tr></thead>
+          <tbody>${{buyRows}}</tbody>
+        </table>
+        ${{sellSection}}
+        <div style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:.5px;margin:10px 0 6px">FINAL SUMMARY</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="background:#eff6ff">
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Status</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Total Qty</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Avg Buy Price</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Exit/LTP</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Duration</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L &#8377;</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L %</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid #dbeafe">
+              <td style="padding:5px 8px;color:${{isSold?'#dc2626':'#2563eb'}};font-weight:700">${{isSold?'SOLD':'HOLD'}}</td>
+              <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{fI(r.TOTAL_QTY)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(ltp)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
+              <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">${{fI(r.MARKET_DAYS)}} Days</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(pnl)}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openStockDetail('${{cardKey}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="exportHistCard(this,'${{r.SYMBOL}}_${{r.CONFIG}}_${{r.SIGNAL_DATE}}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
+        <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
+      </div>
+    </div>`;
   }}).join('')+
-  (syms.length>50?`<div class="card empty">Showing first 50 symbols. Use search to narrow down.</div>`:'');
+  (rows.length>100?`<div class="card empty">Showing first 100 trades. Use search to narrow down.</div>`:'');
+}}
+function exportHistCard(btn,name){{
+  const card=btn.closest('.card');
+  if(!card){{toast('Cannot export','error');return;}}
+  if(typeof html2canvas==='undefined'){{
+    toast('Export Image loading... try again','info');
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    document.head.appendChild(s);
+    return;
+  }}
+  html2canvas(card,{{scale:2,backgroundColor:'#fff',useCORS:true}}).then(canvas=>{{
+    const a=document.createElement('a');
+    a.download=`Stock_${{name}}.png`;
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    toast('Image downloaded!','success');
+  }});
 }}
 
 // ─── EXPORTS ─────────────────────────────────────────────────────────────────
@@ -1807,9 +1908,10 @@ function renderPerformance(){{
 }}
 
 // ─── STOCK DETAIL MODAL ───────────────────────────────────────────────────────
-function openStockDetail(sym){{
-  const rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.SYMBOL===sym);
-  document.getElementById('sdm-title').textContent=`📊 Stock History: ${{sym}}`;
+function openStockDetail(key){{
+  const [kCfg,sym]=key.includes('|')?key.split('|',2):[null,key];
+  const rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.SYMBOL===sym&&(!kCfg||r.CONFIG===kCfg));
+  document.getElementById('sdm-title').textContent=`📊 Stock History: ${{kCfg?kCfg+' — ':''}}${{sym}}`;
   const modal=document.getElementById('stockDetailModal');
   modal.classList.add('open');
   document.body.style.overflow='hidden';
