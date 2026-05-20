@@ -4,7 +4,7 @@ NSE BTST Signals — Dashboard Builder v3
 Full tabs: Overview, Open, Closed, Force Exit, Stock History, Daily Ledger,
            Trade History, Today's Signals, Configs, Disclaimer
 """
-import os, json, csv, glob
+import os, json, csv, glob, re
 from datetime import datetime, timezone, timedelta
 
 IST  = timezone(timedelta(hours=5, minutes=30))
@@ -29,8 +29,33 @@ def load_logo():
 def load_nifty():
     try:
         with open(NIFTY) as f:
-            return json.load(f)
-    except:
+            raw = json.load(f)
+
+        label_to_key = {
+            'NIFTY 50': 'nifty50',
+            'BANKNIFTY': 'banknifty',
+            'SENSEX': 'sensex',
+            'NIFTY IT': 'niftyit',
+        }
+
+        result = {}
+
+        for idx in raw.get('indices', []):
+            key = label_to_key.get(idx.get('label'))
+
+            if key:
+                result[key] = {
+                    'price': idx.get('close', 0),
+                    'change': idx.get('change', 0),
+                    'change_pct': idx.get('change_pct', 0),
+                    'date': idx.get('date', ''),
+                }
+
+        result['updated_at'] = raw.get('updated_at', '')
+
+        return result
+
+    except Exception:
         return {}
 
 
@@ -917,22 +942,57 @@ ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').forEach(r=>{{
     .then(liveData=>renderIndices(liveData))
     .catch(()=>renderIndices(NIFTY_DATA));
 
-  function renderIndices(data){{
-  const map = {{
-    'idx-nifty50':  {{key:'nifty50',  label:'NIFTY 50'}},
-    'idx-banknifty':{{key:'banknifty',label:'BANKNIFTY'}},
-    'idx-sensex':   {{key:'sensex',   label:'SENSEX'}},
-    'idx-niftyit':  {{key:'niftyit',  label:'NIFTY IT'}},
-  }};
-  Object.entries(map).forEach(([id,{{key,label}}])=>{{
-    const el=document.getElementById(id), d=data[key];
-    if(!d||!d.price){{el.innerHTML='<span class="idx-loading">'+label+' N/A</span>';return;}}
-    const chg=d.change||0,chgPc=d.change_pct||0,cls=chg>0?'pos':chg<0?'neg':'flat',sign=chg>0?'+':'';
-    el.innerHTML=`<div><div class="idx-name">${{label}}</div><div class="idx-date">${{d.date||''}}</div></div>
-      <div><div class="idx-price">${{Number(d.price).toLocaleString('en-IN',{{maximumFractionDigits:2}})}}</div>
-      <div class="idx-chg ${{cls}}">${{sign}}${{Number(chg).toFixed(2)}} (${{sign}}${{Number(chgPc).toFixed(2)}}%)</div></div>`;
-  }});
-  }} // end renderIndices
+  // function renderIndices(data){{
+ function renderIndices(){
+  const mapping = {
+    nifty50: 'NIFTY 50',
+    banknifty: 'BANKNIFTY',
+    sensex: 'SENSEX',
+    niftyit: 'NIFTY IT'
+  };
+
+  Object.keys(mapping).forEach(key => {
+    const el = document.getElementById(`idx-${key}`);
+    if(!el) return;
+
+    let d = NIFTY_DATA[key];
+
+    // fallback support for old array format
+    if(!d && Array.isArray(NIFTY_DATA.indices)){
+      const match = NIFTY_DATA.indices.find(x => x.label === mapping[key]);
+
+      if(match){
+        d = {
+          price: match.close,
+          change: match.change,
+          change_pct: match.change_pct,
+          date: match.date
+        };
+      }
+    }
+
+    if(!d || !d.price){
+      el.innerHTML = `<span class="idx-loading">${mapping[key]} N/A</span>`;
+      return;
+    }
+
+    const cls = d.change > 0 ? 'pos' : d.change < 0 ? 'neg' : 'flat';
+    const arrow = d.change > 0 ? '▲' : d.change < 0 ? '▼' : '■';
+
+    el.innerHTML = `
+      <div>
+        <div class="idx-name">${mapping[key]}</div>
+        <div class="idx-date">${d.date || ''}</div>
+      </div>
+      <div>
+        <div class="idx-price">${fN(d.price)}</div>
+      </div>
+      <div class="idx-chg ${cls}">
+        ${arrow} ${fN(d.change)} (${fN(d.change_pct)}%)
+      </div>
+    `;
+  });
+} // end renderIndices
 }})();
 
 // ─── DATE RANGE GLOBALS ──────────────────────────────────────────────────────
@@ -1446,7 +1506,22 @@ function buildHistory(){{
   const q=(document.getElementById('hist-search')||{{}}).value||'';
   const cfg=state.hist.cfg;
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed');
+  // Remove duplicate trades
+const seen = new Set();
+rows = rows.filter(r => {
+  const key = `${r.SYMBOL}|${r.CONFIG}|${r.SIGNAL_DATE}`;
+
+  if (seen.has(key)) {
+    return false;
+  }
+
+  seen.add(key);
+  return true;
+});
   if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
+  if (dateRangeActive) {
+  rows = rows.filter(r => inDateRange(r.SIGNAL_DATE));
+}
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
 
   // Stats bar
