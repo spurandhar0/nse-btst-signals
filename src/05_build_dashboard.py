@@ -770,8 +770,8 @@ const CONFIGS_DEF = {configs_js};
     el.innerHTML=`<div><div class="idx-name">${{label}}</div><div class="idx-date">${{d.date||''}}</div></div>
       <div><div class="idx-price">${{Number(d.price).toLocaleString('en-IN',{{maximumFractionDigits:2}})}}</div>
       <div class="idx-chg ${{cls}}">${{sign}}${{Number(chg).toFixed(2)}} (${{sign}}${{Number(chgPc).toFixed(2)}}%)</div></div>`;
-  });
-  } // end renderIndices
+  }});
+  }} // end renderIndices
 }})();
 
 // ─── DATE RANGE GLOBALS ──────────────────────────────────────────────────────
