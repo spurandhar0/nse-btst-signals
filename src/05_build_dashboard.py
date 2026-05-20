@@ -66,6 +66,7 @@ def load_signals_csv():
 def build_html(logo, nifty, configs, sim_meta, sim_results, signals_rows, sig_date):
     generated = sim_meta.get('generated_at', datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'))
     last_date = sim_meta.get('last_date', '')
+    today_date = datetime.now(tz=IST).strftime('%Y-%m-%d')
 
     # Flatten all results across configs for JS
     all_rows = []
@@ -186,6 +187,22 @@ select:focus,input:focus{{border-color:var(--blue2);outline:none;box-shadow:0 0 
 .toast.success{{background:linear-gradient(135deg,#059669,#10b981);}}.toast.info{{background:linear-gradient(135deg,var(--blue2),var(--cyan2));}}
 @keyframes slideIn{{from{{transform:translateX(110%);opacity:0}}to{{transform:none;opacity:1}}}}
 footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:14px;font-size:12px;border-top:2px solid rgba(255,255,255,.08);}}
+.tab-badges{{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}}
+.tbadge{{display:inline-flex;align-items:center;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid;white-space:nowrap;cursor:default;}}
+.tbadge.blue{{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;}}
+.tbadge.green{{background:#dcfce7;color:#059669;border-color:#86efac;}}
+.tbadge.red{{background:#ffe4e6;color:#dc2626;border-color:#fca5a5;}}
+.tbadge.amber{{background:#fef3c7;color:#d97706;border-color:#fcd34d;}}
+.tbadge.navy{{background:#e0e7ff;color:#3730a3;border-color:#a5b4fc;}}
+.badge-fresh{{display:inline-block;padding:3px 11px;border-radius:12px;font-size:11px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;}}
+.badge-opencall{{display:inline-block;padding:3px 11px;border-radius:12px;font-size:11px;font-weight:700;background:#fff7ed;color:#d97706;border:1px solid #fed7aa;}}
+.perf-hero{{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}}
+.phc{{background:linear-gradient(135deg,#f8faff,#eef2ff);border:1.5px solid #c7d7fe;border-radius:10px;padding:16px;text-align:center;}}
+.phc.pos{{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#86efac;}}.phc.neg{{background:linear-gradient(135deg,#fff1f2,#ffe4e6);border-color:#fca5a5;}}
+.phc-label{{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}}
+.phc-value{{font-size:20px;font-weight:900;color:var(--navy);margin:6px 0 4px;}}
+.phc.pos .phc-value{{color:var(--green);}}.phc.neg .phc-value{{color:var(--red);}}
+.phc-sub{{font-size:11px;color:var(--text3);}}
 
 /* ── STOCK DETAIL MODAL ── */
 #stockDetailModal{{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}}
@@ -235,9 +252,9 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 
 <div class="cstrip">
   <span class="slbl">Range:</span>
-  <input type="date" id="fromDate" style="padding:6px 10px;font-size:12px;min-width:130px;">
+  <input type="date" id="fromDate" value="2025-01-01" style="padding:6px 10px;font-size:12px;min-width:130px;">
   <span style="color:var(--text3);font-weight:600;">to</span>
-  <input type="date" id="toDate" style="padding:6px 10px;font-size:12px;min-width:130px;">
+  <input type="date" id="toDate" value="{today_date}" style="padding:6px 10px;font-size:12px;min-width:130px;">
   <button onclick="applyDateRange()" style="padding:6px 14px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 14px;font-size:12px;background:#64748b;">Reset</button>
   <span id="filterPill" class="pill" style="display:none;"></span>
@@ -286,6 +303,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
      TAB: OPEN POSITIONS
 ═══════════════════════════════════════════════════════════════ -->
 <div id="tab-open" class="hidden">
+  <div class="tab-badges" id="open-badges"></div>
   <div class="cstrip">
     <span class="slbl">Config:</span>
     <button class="btn-filter active" onclick="cfgFilter('open','ALL',this)">All</button>
@@ -330,6 +348,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
      TAB: CLOSED POSITIONS
 ═══════════════════════════════════════════════════════════════ -->
 <div id="tab-closed" class="hidden">
+  <div class="tab-badges" id="closed-badges"></div>
   <div class="cstrip">
     <span class="slbl">Config:</span>
     <button class="btn-filter active" onclick="cfgFilter('closed','ALL',this)">All</button>
@@ -377,6 +396,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
      TAB: FORCE EXIT
 ═══════════════════════════════════════════════════════════════ -->
 <div id="tab-fe" class="hidden">
+  <div class="tab-badges" id="fe-badges"></div>
   <div class="cstrip">
     <span class="slbl">Config:</span>
     <button class="btn-filter active" onclick="cfgFilter('fe','ALL',this)">All</button>
@@ -518,15 +538,14 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
      TAB: TODAY'S SIGNALS
 ═══════════════════════════════════════════════════════════════ -->
 <div id="tab-signals" class="hidden">
-  <div class="stat-grid" id="sig-stats"></div>
+  <div class="tab-badges" id="sig-total-badges" style="margin-bottom:12px;"></div>
   <div class="cstrip">
-    <span class="slbl">Search:</span>
-    <input type="text" id="sig-search" placeholder="Symbol..." oninput="renderTab('signals')" style="width:180px">
-    <span class="slbl" style="margin-left:8px">Filter:</span>
-    <button class="btn-filter active" onclick="cfgFilter('signals','ALL',this)">All</button>
-    <button class="btn-filter" onclick="cfgFilter('signals','4',this)">&#9733;&#9733;&#9733;&#9733; 4 Configs</button>
-    <button class="btn-filter" onclick="cfgFilter('signals','3',this)">&#9733;&#9733;&#9733; 3+</button>
-    <button class="btn-filter" onclick="cfgFilter('signals','2',this)">&#9733;&#9733; 2+</button>
+    <span class="slbl">Filter Status:</span>
+    <select id="sig-status-filter" onchange="renderTab('signals')" style="min-width:150px;padding:6px 10px;font-size:13px;">
+      <option value="ALL">All</option>
+      <option value="Fresh Call">Fresh Call</option>
+      <option value="Open Call">Open Call</option>
+    </select>
     <div style="flex:1"></div>
     <button class="btn-green btn-sm" onclick="exportTab('signals')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('signals')">&#8595; CSV</button>
@@ -535,13 +554,15 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="table-area">
       <table><thead><tr>
         <th onclick="srt('signals',0)">#</th>
-        <th onclick="srt('signals',1)">SYMBOL</th>
-        <th onclick="srt('signals',2)">CLOSE &#8377;</th>
-        <th onclick="srt('signals',3)">1D CHG %</th>
-        <th onclick="srt('signals',4)">% FROM LOW</th>
-        <th onclick="srt('signals',5)">% FROM ATH</th>
-        <th onclick="srt('signals',6)">CONFIGS</th>
-        <th onclick="srt('signals',7)">COUNT</th>
+        <th onclick="srt('signals',1)">DATE</th>
+        <th onclick="srt('signals',2)">STOCK</th>
+        <th onclick="srt('signals',3)">1D %</th>
+        <th onclick="srt('signals',4)">5D %</th>
+        <th onclick="srt('signals',5)">BUY PRICE &#8377;</th>
+        <th onclick="srt('signals',6)">LTP &#8377;</th>
+        <th onclick="srt('signals',7)">TARGET &#8377;</th>
+        <th onclick="srt('signals',8)">SL &#8377;</th>
+        <th onclick="srt('signals',9)">STATUS</th>
       </tr></thead>
       <tbody id="signals-body"></tbody></table>
     </div>
@@ -758,6 +779,13 @@ const SIGNALS_RAW = {signals_js};
 const NIFTY_DATA  = {nifty_js};
 const CONFIGS_DEF = {configs_js};
 
+// ─── OPEN POSITION MAPS ────────────────────────────────────────────────────────
+const openSymbols = new Set(ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').map(r=>r.SYMBOL));
+const openMap = {{}};
+ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').forEach(r=>{{
+  if(!openMap[r.SYMBOL]) openMap[r.SYMBOL]=parseFloat(r.CURRENT_LTP)||0;
+}});
+
 // ─── INDICES ─────────────────────────────────────────────────────────────────
 (function(){{
   // Try to fetch fresh nifty data from nse-btst-dashboard first
@@ -950,6 +978,7 @@ function getFiltered(tab){{
   else if(tab==='fe'){{
     rows = rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
     if(state.fe.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.fe.cfg);
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   }}
   else if(tab==='ledger'){{
     // Build ledger from closed rows
@@ -981,13 +1010,12 @@ function getFiltered(tab){{
     if(q)rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
   }}
   else if(tab==='signals'){{
-    rows = SIGNALS_RAW;
-    const cfg=state.signals.cfg;
-    const q=(document.getElementById('sig-search')||{{}}).value||'';
-    if(q) rows=rows.filter(r=>(r.SYMBOL||r.symbol||'').toLowerCase().includes(q.toLowerCase()));
-    if(cfg==='4') rows=rows.filter(r=>parseInt(r.COUNT||r.count||0)>=4);
-    else if(cfg==='3') rows=rows.filter(r=>parseInt(r.COUNT||r.count||0)>=3);
-    else if(cfg==='2') rows=rows.filter(r=>parseInt(r.COUNT||r.count||0)>=2);
+    rows=[...SIGNALS_RAW];
+    const statusF=(document.getElementById('sig-status-filter')||{{}}).value||'ALL';
+    if(statusF!=='ALL') rows=rows.filter(r=>{{
+      const sym=r.SYMBOL||r.symbol||'';
+      return (openSymbols.has(sym)?'Open Call':'Fresh Call')===statusF;
+    }});
   }}
 
   // Sort
@@ -1034,13 +1062,21 @@ function getTabSortVals(tab,a,b,col){{
     return[nv(a[k]),nv(b[k])];
   }}
   if(tab==='signals'){{
-    const cols=[0,'SYMBOL','CLOSE','CHG_PCT','PCT_FROM_LOW','PCT_FROM_ATH','CONFIGS','COUNT'];
-    const k=cols[col]||'COUNT';
-    const K=k.toUpperCase();
-    const av=a[K]||a[k.toLowerCase()]||a[k]||0;
-    const bv=b[K]||b[k.toLowerCase()]||b[k]||0;
-    if(col===1||col===6)return[sv(av),sv(bv)];
-    return[nv(av),nv(bv)];
+    // cols: #, DATE, STOCK, 1D%, 5D%, BUY PRICE, LTP, TARGET, SL, STATUS
+    if(col===1)return[sv(a.SIGNAL_DATE||a.signal_date||''),sv(b.SIGNAL_DATE||b.signal_date||'')];
+    if(col===2)return[sv(a.SYMBOL||a.symbol||''),sv(b.SYMBOL||b.symbol||'')];
+    if(col===3)return[nv(a.CHG_PCT||a.chg_pct||0),nv(b.CHG_PCT||b.chg_pct||0)];
+    if(col===5||col===6){{
+      const ac=parseFloat(a.CLOSE||a.close||0);
+      const bc=parseFloat(b.CLOSE||b.close||0);
+      return[ac,bc];
+    }}
+    if(col===9){{
+      const as=openSymbols.has(a.SYMBOL||'')?'Open Call':'Fresh Call';
+      const bs=openSymbols.has(b.SYMBOL||'')?'Open Call':'Fresh Call';
+      return[sv(as),sv(bs)];
+    }}
+    return[0,0];
   }}
   return[0,0];
 }}
@@ -1050,6 +1086,9 @@ function renderTab(tab){{
   const rows=getFiltered(tab);
   if(tab==='ledger'){{ renderLedger(rows);return; }}
   if(tab==='signals'){{ renderSignals(rows);return; }}
+  if(tab==='open') renderBadges('open-badges', rows, 'open');
+  else if(tab==='closed') renderBadges('closed-badges', rows, 'closed');
+  else if(tab==='fe') renderBadges('fe-badges', rows, 'closed');
   const pgSzEl=document.getElementById(tab+'-pgsize');
   const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
   const page=state[tab].page||1;
@@ -1130,34 +1169,41 @@ function renderSignals(rows){{
   const slice=rows.slice(start,start+pgSz);
   setPager('signals',page,rows.length,pgSz);
   const body=document.getElementById('signals-body');
-  if(!slice.length){{body.innerHTML='<tr><td colspan="8" class="empty">No signals.</td></tr>';return;}}
+  if(!slice.length){{body.innerHTML='<tr><td colspan="10" class="empty">No signals.</td></tr>';return;}}
   body.innerHTML=slice.map((r,i)=>{{
     const sym=r.SYMBOL||r.symbol||'—';
-    const close=r.CLOSE||r.close||r.SIGNAL_CLOSE||0;
-    const chg=parseFloat(r.CHG_PCT||r.chg_pct||r.PCT_1D_CHANGE||0);
-    const low=parseFloat(r.PCT_FROM_LOW||r.pct_from_low||0);
-    const ath=parseFloat(r.PCT_FROM_ATH||r.pct_from_ath||0);
-    const cfgs=r.CONFIGS||r.configs||'—';
-    const cnt=parseInt(r.COUNT||r.count||0);
-    const stars='&#9733;'.repeat(cnt)+'&#9734;'.repeat(Math.max(0,4-cnt));
+    const date=r.SIGNAL_DATE||r.signal_date||'—';
+    const close=parseFloat(r.CLOSE||r.close||r.SIGNAL_CLOSE||0);
+    const chg1d=parseFloat(r.CHG_PCT||r.chg_pct||r.PCT_1D_CHANGE||0);
+    const chg5dRaw=r.CHG_5D||r.PCT_5D||r.pct_5d||r.CHG5D||r.CHANGE_5D||null;
+    const chg5d=chg5dRaw!=null?parseFloat(chg5dRaw):null;
+    const ltp=openMap[sym]||close;
+    const target=close*1.10;
+    const sl=close*0.75;
+    const isOpen=openSymbols.has(sym);
+    const statusBadge=isOpen?'<span class="badge-opencall">Open Call</span>':'<span class="badge-fresh">Fresh Call</span>';
+    const ltpHtml=isOpen?`<span class="green">&#8377;${{fN(ltp)}}</span>`:`&#8377;${{fN(close)}}`;
     return `<tr>
-      <td>${{start+i+1}}</td><td><strong>${{sym}}</strong></td>
+      <td>${{start+i+1}}</td>
+      <td>${{date}}</td>
+      <td><strong>${{sym}}</strong></td>
+      <td ${{pnlColor(chg1d)}}>${{chg1d>=0?'+':''}}${{f2(chg1d)}}%</td>
+      <td>${{chg5d!=null?`<span ${{chg5d>=0?'class="green"':'class="red"'}}>${{chg5d>=0?'+':''}}${{f2(chg5d)}}%</span>`:'—'}}</td>
       <td>&#8377;${{fN(close)}}</td>
-      <td ${{pnlColor(chg)}}>${{chg>=0?'+':''}}${{f2(chg)}}%</td>
-      <td ${{pnlColor(low)}}>${{low>=0?'+':''}}${{f2(low)}}%</td>
-      <td ${{pnlColor(ath)}}>${{ath>=0?'+':''}}${{f2(ath)}}%</td>
-      <td style="font-size:11px;color:var(--text3)">${{cfgs}}</td>
-      <td style="color:#f59e0b;font-weight:700">${{stars}}</td>
+      <td>${{ltpHtml}}</td>
+      <td style="color:#059669;font-weight:700">&#8377;${{fN(target)}}</td>
+      <td style="color:#dc2626;font-weight:700">&#8377;${{fN(sl)}}</td>
+      <td>${{statusBadge}}</td>
     </tr>`;
   }}).join('');
-  // Update stat cards
-  const total4=SIGNALS_RAW.filter(r=>parseInt(r.COUNT||r.count||0)>=4).length;
-  const total3=SIGNALS_RAW.filter(r=>parseInt(r.COUNT||r.count||0)>=3).length;
-  document.getElementById('sig-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-val">${{SIGNALS_RAW.length}}</div><div class="stat-lbl">Total Signals</div></div>
-    <div class="stat-card gc"><div class="stat-val">${{total4}}</div><div class="stat-lbl">&#9733;&#9733;&#9733;&#9733; All 4 Configs</div></div>
-    <div class="stat-card ac"><div class="stat-val">${{total3}}</div><div class="stat-lbl">&#9733;&#9733;&#9733; 3+ Configs</div></div>
-    <div class="stat-card"><div class="stat-val">${{rows.length}}</div><div class="stat-lbl">Showing (filtered)</div></div>`;
+  // Update summary badges
+  const freshCount=SIGNALS_RAW.filter(r=>!openSymbols.has(r.SYMBOL||r.symbol||'')).length;
+  const openCount=SIGNALS_RAW.length-freshCount;
+  const sigBadges=document.getElementById('sig-total-badges');
+  if(sigBadges)sigBadges.innerHTML=`
+    <span class="tbadge blue">Total: ${{SIGNALS_RAW.length}}</span>
+    <span class="tbadge green">Fresh Call: ${{freshCount}}</span>
+    <span class="tbadge amber">Open Call: ${{openCount}}</span>`;
 }}
 
 // ─── OVERVIEW ─────────────────────────────────────────────────────────────────
@@ -1289,25 +1335,28 @@ function exportCSVTab(tab){{
 }}
 
 // ─── TAB BADGES ──────────────────────────────────────────────────────────────
-function renderBadges(containerId, rows){{
+function renderBadges(containerId, rows, type){{
   const el=document.getElementById(containerId);
   if(!el) return;
   const profit=rows.reduce((s,r)=>{{const p=parseFloat(r.PROFIT)||0;return p>0?s+p:s;}},0);
   const loss=rows.reduce((s,r)=>{{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;}},0);
   const net=profit+loss;
   const totalInv=rows.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
-  const mktVal=rows.reduce((s,r)=>{{
-    const ltp=parseFloat(r.CURRENT_LTP)||0;
-    const qty=parseInt(r.TOTAL_QTY)||0;
-    return s+ltp*qty;
-  }},0);
+  let lastBadge='';
+  if(type==='open'){{
+    const mktVal=rows.reduce((s,r)=>{{const ltp=parseFloat(r.CURRENT_LTP)||0;const qty=parseInt(r.TOTAL_QTY)||0;return s+ltp*qty;}},0);
+    lastBadge=`<span class="tbadge navy">Market Val: ₹${{fN(mktVal)}}</span>`;
+  }}else{{
+    const exitVal=rows.reduce((s,r)=>{{const ep=parseFloat(r.EXIT_PRICE)||0;const qty=parseInt(r.TOTAL_QTY)||0;return s+ep*qty;}},0);
+    lastBadge=`<span class="tbadge navy">Exit Val: ₹${{fN(exitVal)}}</span>`;
+  }}
   el.innerHTML=`
     <span class="tbadge blue">Trades: ${{rows.length}}</span>
     <span class="tbadge green">Profit: ₹${{fN(profit)}}</span>
     <span class="tbadge red">Loss: ₹${{fN(loss)}}</span>
     <span class="tbadge ${{net>=0?'green':'red'}}">Net: ₹${{fN(net)}}</span>
     <span class="tbadge amber">Total Inv: ₹${{fN(totalInv)}}</span>
-    <span class="tbadge navy">Market Val: ₹${{fN(mktVal)}}</span>`;
+    ${{lastBadge}}`;
 }}
 
 // ─── MARKET DATA SUB-TAB ──────────────────────────────────────────────────────
@@ -1332,7 +1381,7 @@ function renderAvgTrigger(){{
     const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
     return da-db; // most dropped first
   }});
-  renderBadges('avgtrigger-badges', rows);
+  renderBadges('avgtrigger-badges', rows, 'open');
   const body=document.getElementById('avgtrigger-body');
   document.getElementById('avgtrigger-info').textContent=`${{rows.length}} stocks triggered`;
   if(!rows.length){{body.innerHTML='<tr><td colspan="10" class="empty">No stocks triggered for averaging</td></tr>';return;}}
@@ -1368,7 +1417,7 @@ function renderSellTrigger(){{
     const db=(parseFloat(b.CURRENT_LTP)||0)/(parseFloat(b.TARGET_PRICE)||1);
     return db-da; // closest to target first
   }});
-  renderBadges('selltrigger-badges', rows);
+  renderBadges('selltrigger-badges', rows, 'open');
   const body=document.getElementById('selltrigger-body');
   document.getElementById('selltrigger-info').textContent=`${{rows.length}} stocks near target`;
   if(!rows.length){{body.innerHTML='<tr><td colspan="11" class="empty">No stocks near sell trigger</td></tr>';return;}}
@@ -1398,7 +1447,7 @@ function renderAvgHistory(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&parseInt(r.BUY_COUNT||0)>1);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   rows.sort((a,b)=>parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0));
-  renderBadges('avghistory-badges', rows);
+  renderBadges('avghistory-badges', rows, 'closed');
   const body=document.getElementById('avghistory-body');
   document.getElementById('avghistory-info').textContent=`${{rows.length}} multi-buy trades`;
   if(!rows.length){{body.innerHTML='<tr><td colspan="11" class="empty">No multi-buy trades found</td></tr>';return;}}
@@ -1426,7 +1475,7 @@ function renderMarketData(){{
   if(mdSubFilter==='gainers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)>0);
   else if(mdSubFilter==='losers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)<0);
   rows.sort((a,b)=>(parseFloat(b.GAIN_PCT)||0)-(parseFloat(a.GAIN_PCT)||0));
-  renderBadges('marketdata-badges', rows);
+  renderBadges('marketdata-badges', rows, 'open');
   const body=document.getElementById('marketdata-body');
   document.getElementById('marketdata-info').textContent=`${{rows.length}} open positions`;
   if(!rows.length){{body.innerHTML='<tr><td colspan="13" class="empty">No open positions</td></tr>';return;}}
