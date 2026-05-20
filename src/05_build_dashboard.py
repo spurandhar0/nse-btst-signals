@@ -943,7 +943,7 @@ ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').forEach(r=>{{
     .catch(()=>renderIndices(NIFTY_DATA));
 
   // function renderIndices(data){{
- function renderIndices(){
+ function renderIndices(data){
   const mapping = {
     nifty50: 'NIFTY 50',
     banknifty: 'BANKNIFTY',
