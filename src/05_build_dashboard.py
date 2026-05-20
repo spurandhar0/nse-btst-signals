@@ -441,6 +441,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <button class="btn-filter active" id="closed-res-ALL" onclick="resFilter('closed','ALL',this)">All</button>
     <button class="btn-filter" id="closed-res-P" onclick="resFilter('closed','P',this)">Profit</button>
     <button class="btn-filter" id="closed-res-L" onclick="resFilter('closed','L',this)">Loss</button>
+    <button class="btn-filter" id="closed-res-FE" onclick="resFilter('closed','FE',this)">FE Only</button>
     <div style="flex:1"></div>
     <button class="btn-green btn-sm" onclick="exportTab('closed')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('closed')">&#8595; CSV</button>
@@ -593,8 +594,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th onclick="srt('trades',2)">SYMBOL</th>
         <th onclick="srt('trades',3)">BUY DATE</th>
         <th onclick="srt('trades',4)">EXIT DATE</th>
-        <th onclick="srt('trades',5)">ORDER</th>
-        <th onclick="srt('trades',6)">STATUS</th>
+        <th onclick="srt('trades',5)">STATUS</th>
         <th onclick="srt('trades',7)">AVG BUY &#8377;</th>
         <th onclick="srt('trades',8)">EXIT &#8377;</th>
         <th onclick="srt('trades',9)">QTY</th>
@@ -620,8 +620,14 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 <div id="tab-signals" class="hidden">
   <div class="tab-badges" id="sig-total-badges" style="margin-bottom:12px;"></div>
   <div class="cstrip">
-    <span class="slbl">Filter Status:</span>
-    <select id="sig-status-filter" onchange="renderTab('signals')" style="min-width:150px;padding:6px 10px;font-size:13px;">
+    <span class="slbl">Config:</span>
+    <button class="btn-filter active" onclick="sigCfgFilter('ALL',this)">All</button>
+    <button class="btn-filter" onclick="sigCfgFilter('C1',this)">C1</button>
+    <button class="btn-filter" onclick="sigCfgFilter('C2',this)">C2</button>
+    <button class="btn-filter" onclick="sigCfgFilter('C3',this)">C3</button>
+    <button class="btn-filter" onclick="sigCfgFilter('C4',this)">C4</button>
+    <span class="slbl" style="margin-left:8px">Status:</span>
+    <select id="sig-status-filter" onchange="renderTab('signals')" style="min-width:130px;padding:5px 8px;font-size:13px;">
       <option value="ALL">All</option>
       <option value="Fresh Call">Fresh Call</option>
       <option value="Open Call">Open Call</option>
@@ -1090,8 +1096,9 @@ function getFiltered(tab){{
   else if(tab==='closed'){{
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
     if(state.closed.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.closed.cfg);
-    if(state.closed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit'));
-    if(state.closed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss'));
+    if(state.closed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
+    if(state.closed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
+    if(state.closed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   }}
   else if(tab==='fe'){{
@@ -1103,8 +1110,11 @@ function getFiltered(tab){{
     rows=rows.map(r=>{{
       const maxD=cfgDurMap[r.CONFIG]||90;
       const held=parseInt(r.MARKET_DAYS)||0;
-      return {{...r,_MAX_DUR:maxD,_DAYS_LEFT:Math.max(0,maxD-held)}};
+      const left=Math.max(0,maxD-held);
+      return {{...r,_MAX_DUR:maxD,_DAYS_LEFT:left}};
     }});
+    // Show only trades that have used ≥60% of max duration (approaching FE threshold)
+    rows=rows.filter(r=>r._DAYS_LEFT<=Math.ceil(r._MAX_DUR*0.4));
     rows.sort((a,b)=>a._DAYS_LEFT-b._DAYS_LEFT);
   }}
   else if(tab==='ledger'){{
@@ -1138,6 +1148,10 @@ function getFiltered(tab){{
   }}
   else if(tab==='signals'){{
     rows=[...SIGNALS_RAW];
+    if(sigCfg!=='ALL') rows=rows.filter(r=>{{
+      const cfgRaw=(r.CONFIGS_MATCHED||r.configs_matched||r.CONFIG||'');
+      return cfgRaw.split(',').map(s=>s.trim()).includes(sigCfg);
+    }});
     const statusF=(document.getElementById('sig-status-filter')||{{}}).value||'ALL';
     if(statusF!=='ALL') rows=rows.filter(r=>{{
       const sym=r.SYMBOL||r.symbol||'';
@@ -1189,7 +1203,7 @@ function getTabSortVals(tab,a,b,col){{
     return[nv(a[k]),nv(b[k])];
   }}
   if(tab==='trades'){{
-    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','ORDER','STATUS','AVG_BUY_PRICE','EXIT_PRICE','BUY_COUNT','TOTAL_QTY','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','STATUS','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','BUY_COUNT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
     const k=cols[col]||'SIGNAL_DATE';
     if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
     return[nv(a[k]),nv(b[k])];
@@ -1237,7 +1251,12 @@ function renderTab(tab){{
   const slice=rows.slice(start,start+pgSz);
   setPager(tab,page,rows.length,pgSz);
   const body=document.getElementById(tab+'-body');
-  if(!slice.length){{body.innerHTML=`<tr><td colspan="20" class="empty">No data.</td></tr>`;return;}}
+  if(!slice.length){{
+    const emptyMsg=tab==='fe'?
+      '<tr><td colspan="13" class="empty">&#10003; No trades approaching Force Exit threshold — all open positions are within safe limits.</td></tr>':
+      `<tr><td colspan="20" class="empty">No data.</td></tr>`;
+    body.innerHTML=emptyMsg;return;
+  }}
   body.innerHTML=slice.map((r,i)=>rowHTML(tab,r,start+i+1)).join('');
 }}
 
@@ -1298,7 +1317,7 @@ function rowHTML(tab,r,n){{
     return `<tr>
       <td>${{n}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
-      <td>${{r.ORDER||'—'}}</td><td>${{r.STATUS||'—'}}</td>
+      <td>${{r.STATUS||'—'}}</td>
       <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td><td>&#8377;${{fN(r.EXIT_PRICE)}}</td>
       <td>${{fI(r.TOTAL_QTY)}}</td><td>${{bcHtml}}</td>
       <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
@@ -1429,10 +1448,10 @@ function buildHistory(){{
   if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
 
-  // Group by symbol
+  // Group by CFG+SYMBOL to keep configs separate
   const bySymbol={{}};
   rows.forEach(r=>{{
-    const k=r.SYMBOL;
+    const k=`${{r.CONFIG||''}}|${{r.SYMBOL}}`;
     if(!bySymbol[k]) bySymbol[k]=[];
     bySymbol[k].push(r);
   }});
@@ -1449,9 +1468,11 @@ function buildHistory(){{
     const profits=srows.filter(r=>r.STATUS==='Closed'&&r.PROFIT!=null&&parseFloat(r.PROFIT)>=0).length;
     const losses=srows.filter(r=>r.STATUS==='Closed'&&r.PROFIT!=null&&parseFloat(r.PROFIT)<0).length;
     const pnlCls=totalPnl>=0?'green':'red';
+    const [symCfg, symName] = sym.includes('|') ? sym.split('|') : ['', sym];
     return `<div class="card" style="margin-bottom:12px;padding:0">
       <div style="padding:12px 16px;background:linear-gradient(135deg,#f8faff,#eef2ff);border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <strong style="font-size:15px;color:var(--navy)">${{sym}}</strong>
+        ${{symCfg?cfgBadge(symCfg):''}}
+        <strong style="font-size:15px;color:var(--navy)">${{symName}}</strong>
         <span style="font-size:12px;color:var(--text3)">${{srows.length}} trades</span>
         <span class="green">${{profits}} profit</span>
         <span class="red">${{losses}} loss</span>
@@ -1616,7 +1637,13 @@ function renderSellTrigger(){{
 }}
 
 // ─── AVG HISTORY ──────────────────────────────────────────────────────────────
-let avgHistCfg='ALL';
+let avgHistCfg='ALL', sigCfg='ALL';
+function sigCfgFilter(val,btn){{
+  sigCfg=val;
+  document.querySelectorAll('#tab-signals .btn-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTab('signals');
+}}
 function avgHistCfgFilter(val,btn){{
   avgHistCfg=val;
   document.querySelectorAll('#tab-avghistory .btn-filter').forEach(b=>b.classList.remove('active'));
