@@ -186,6 +186,16 @@ select:focus,input:focus{{border-color:var(--blue2);outline:none;box-shadow:0 0 
 .toast.success{{background:linear-gradient(135deg,#059669,#10b981);}}.toast.info{{background:linear-gradient(135deg,var(--blue2),var(--cyan2));}}
 @keyframes slideIn{{from{{transform:translateX(110%);opacity:0}}to{{transform:none;opacity:1}}}}
 footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:14px;font-size:12px;border-top:2px solid rgba(255,255,255,.08);}}
+
+/* ── STOCK DETAIL MODAL ── */
+#stockDetailModal{{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}}
+#stockDetailModal.open{{display:flex;}}
+.sdm-box{{background:var(--surface);border-radius:12px;width:90%;max-width:960px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);}}
+.sdm-hdr{{background:var(--navy);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}}
+.sdm-hdr h3{{margin:0;font-size:16px;}}
+.sdm-close{{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px;}}
+.sdm-close:hover{{background:rgba(255,255,255,.15);}}
+.sdm-body{{padding:16px;overflow-y:auto;flex:1;}}
 </style>
 </head>
 <body>
@@ -1574,7 +1584,7 @@ function exportTabCSV(tab){{
   if(!rows.length){{toast('No data to export','info');return;}}
   const keys=Object.keys(rows[0]);
   const csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${{r[k]!=null?r[k]:''}}"`)
-    .join(','))].join('\n');
+    .join(','))].join('\\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=`NSE_BTST_${{tab}}_${{new Date().toISOString().slice(0,10)}}.csv`;a.click();
