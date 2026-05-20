@@ -310,9 +310,9 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 .phc.pos .phc-value{{color:var(--green);}}.phc.neg .phc-value{{color:var(--red);}}
 .phc-sub{{font-size:11px;color:var(--text3);}}
 
-/* ── STOCK DETAIL MODAL ── */
-#stockDetailModal{{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}}
-#stockDetailModal.open{{display:flex;}}
+/* ── MODALS ── */
+#tradeDetailModal, #ohlcModal {{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}}
+#tradeDetailModal.open, #ohlcModal.open {{display:flex;}}
 .sdm-box{{background:var(--surface);border-radius:12px;width:90%;max-width:960px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);}}
 .sdm-hdr{{background:var(--navy);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}}
 .sdm-hdr h3{{margin:0;font-size:16px;}}
@@ -611,6 +611,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th onclick="srt('trades',12)">GAIN %</th>
         <th onclick="srt('trades',13)">DAYS</th>
         <th onclick="srt('trades',14)">RESULT</th>
+        <th>HISTORY</th>
       </tr></thead>
       <tbody id="trades-body"></tbody></table>
     </div>
@@ -858,30 +859,35 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
 </div>
 
-<div id="stockDetailModal">
+<div id="tradeDetailModal">
   <div class="sdm-box" style="max-width:900px;width:96%;">
     <div class="sdm-hdr">
-      <h3 id="sdm-title">Stock History</h3>
-      <button class="sdm-close" onclick="closeStockDetail()">&#10005;</button>
+      <h3 id="tdm-title">Trade History</h3>
+      <button class="sdm-close" onclick="closeTradeDetail()">&#10005;</button>
     </div>
     <div class="sdm-body">
-      <div id="sdm-badges" class="tab-badges" style="margin-bottom:12px;"></div>
+      <div id="tdm-badges" class="tab-badges" style="margin-bottom:12px;"></div>
       <div class="table-area">
         <table><thead><tr>
           <th>CFG</th><th>Buy Date</th><th>Avg Buy ₹</th><th>Exit Price ₹</th>
-          <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th><th>OHLC</th>
-        </tr></thead><tbody id="sdm-body"></tbody></table>
+          <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th>
+        </tr></thead><tbody id="tdm-body"></tbody></table>
       </div>
-      <div id="sdm-ohlc-panel" style="display:none;margin-top:14px;border-top:2px solid #e2e8f0;padding-top:12px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <strong id="sdm-ohlc-title" style="color:var(--navy);font-size:14px;">📈 OHLC Prices</strong>
-          <button onclick="document.getElementById('sdm-ohlc-panel').style.display='none'" style="font-size:11px;padding:2px 8px;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;background:#f8faff;">✕ Close</button>
-        </div>
-        <div class="table-area" style="max-height:260px;overflow-y:auto;">
-          <table><thead><tr>
-            <th>Date</th><th>Open ₹</th><th>High ₹</th><th>Low ₹</th><th>Close ₹</th><th>Chg%</th>
-          </tr></thead><tbody id="sdm-ohlc-body"></tbody></table>
-        </div>
+    </div>
+  </div>
+</div>
+
+<div id="ohlcModal">
+  <div class="sdm-box" style="max-width:800px;width:96%;">
+    <div class="sdm-hdr">
+      <h3 id="ohlc-title">📈 Daily Historical Data</h3>
+      <button class="sdm-close" onclick="closeOHLC()">&#10005;</button>
+    </div>
+    <div class="sdm-body">
+      <div class="table-area" style="max-height:400px;overflow-y:auto;">
+        <table><thead><tr>
+          <th>Date</th><th>Open ₹</th><th>High ₹</th><th>Low ₹</th><th>Close ₹</th><th>Chg%</th>
+        </tr></thead><tbody id="ohlc-body"></tbody></table>
       </div>
     </div>
   </div>
@@ -1334,6 +1340,7 @@ function rowHTML(tab,r,n){{
   if(tab==='trades'){{
     const bc=parseInt(r.BUY_COUNT||1);
     const bcHtml=bc>1?`<span style="font-weight:800;color:var(--blue2)">${{bc}}x</span>`:`${{bc}}`;
+    const cardKey=`${{r.CONFIG}}|${{r.SYMBOL}}`;
     return `<tr>
       <td>${{n}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
@@ -1344,6 +1351,7 @@ function rowHTML(tab,r,n){{
       <td ${{pnlColor(r.GAIN_PCT)}}>${{(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}}${{f2(r.GAIN_PCT)}}%</td>
       <td>${{fI(r.MARKET_DAYS)}}</td>
       <td>${{resultBadge(r.RESULT)}}</td>
+      <td><button onclick="openTradeDetail('${{cardKey}}')" class="btn-sm btn-outline" style="padding:3px 8px;font-size:11px;">View</button></td>
     </tr>`;
   }}
   return '';
@@ -1523,7 +1531,7 @@ function buildHistory(){{
     const pct=parseFloat(r.GAIN_PCT)||0;
     const isSold=r.STATUS!=='Open';
     const ltp=isSold?(r.EXIT_PRICE||0):(r.CURRENT_LTP||0);
-    const cardKey=`${{r.CONFIG}}|${{r.SYMBOL}}`;
+    const oKey=`${{r.SYMBOL}}_${{r.SIGNAL_DATE}}_${{r.CONFIG}}`;
     const exitTypeBadge=r.EXIT_TYPE?
       `<span style="border:1px solid #6366f1;border-radius:12px;padding:2px 10px;font-size:11px;color:#4f46e5;background:#f5f3ff">${{r.EXIT_TYPE}}</span>`
       :'—';
@@ -1534,7 +1542,7 @@ function buildHistory(){{
     
     // Read the specific drop percentage from params.json for this Config
     const cfgDef = CONFIGS_DEF.find(c => c.id === r.CONFIG || c.ID === r.CONFIG) || {{}};
-    const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); // e.g., 0.10 for 10%
+    const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); 
 
     let runningAvg = 0;
 
@@ -1635,7 +1643,7 @@ function buildHistory(){{
         </table>
       </div>
       <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="openStockDetail('${{cardKey}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
         <button onclick="exportHistCard(this,'${{r.SYMBOL}}_${{r.CONFIG}}_${{r.SIGNAL_DATE}}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
         <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
       </div>
@@ -1990,12 +1998,13 @@ function renderPerformance(){{
   document.getElementById('perf-top-loss').innerHTML=topLoss.map(mkRow).join('');
 }}
 
-// ─── STOCK DETAIL MODAL ───────────────────────────────────────────────────────
-function openStockDetail(key){{
+
+// ─── TRADE DETAIL MODAL ───────────────────────────────────────────────────────
+function openTradeDetail(key){{
   const [kCfg,sym]=key.includes('|')?key.split('|',2):[null,key];
   const rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.SYMBOL===sym&&(!kCfg||r.CONFIG===kCfg));
-  document.getElementById('sdm-title').textContent=`📊 Stock History: ${{kCfg?kCfg+' — ':''}}${{sym}}`;
-  const modal=document.getElementById('stockDetailModal');
+  document.getElementById('tdm-title').textContent=`📊 Trade History: ${{kCfg?kCfg+' — ':''}}${{sym}}`;
+  const modal=document.getElementById('tradeDetailModal');
   modal.classList.add('open');
   document.body.style.overflow='hidden';
   
@@ -2003,17 +2012,15 @@ function openStockDetail(key){{
   const loss=rows.reduce((s,r)=>{{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;}},0);
   const net=profit+loss;
   const wins=rows.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
-  document.getElementById('sdm-badges').innerHTML=`
+  document.getElementById('tdm-badges').innerHTML=`
     <span class="tbadge blue">Trades: ${{rows.length}}</span>
     <span class="tbadge green">Wins: ${{wins}}</span>
     <span class="tbadge red">Losses: ${{rows.length-wins}}</span>
     <span class="tbadge ${{net>=0?'green':'red'}}">Net P&amp;L: ₹${{fN(net)}}</span>`;
   
-  document.getElementById('sdm-body').innerHTML=rows.length?rows.map(r=>{{
+  document.getElementById('tdm-body').innerHTML=rows.length?rows.map(r=>{{
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
-    const oKey=`${{r.SYMBOL}}_${{r.SIGNAL_DATE}}_${{r.CONFIG}}`;
-    const hasOHLC=TRADE_OHLC[oKey]&&TRADE_OHLC[oKey].length>0;
     return `<tr>
       <td>${{cfgBadge(r.CONFIG)}}</td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
@@ -2024,21 +2031,26 @@ function openStockDetail(key){{
       <td>${{resultBadge(r.STATUS==='Open'?'Open':r.RESULT)}}</td>
       <td>${{fI(r.MARKET_DAYS)}}d</td>
       <td>${{resultBadge(r.RESULT)}}</td>
-      <td>${{hasOHLC?`<button onclick="showOHLC('${{oKey}}','${{r.SYMBOL}} (${{r.CONFIG}})')" style="font-size:11px;padding:2px 8px;border:1px solid #2563eb;border-radius:6px;cursor:pointer;background:#eff6ff;color:#2563eb;">📈 OHLC</button>`:'—'}}</td>
     </tr>`;
-  }}).join(''):'<tr><td colspan="10" class="empty">No trades found</td></tr>';
+  }}).join(''):'<tr><td colspan="9" class="empty">No trades found</td></tr>';
 }}
-function closeStockDetail(){{
-  document.getElementById('stockDetailModal').classList.remove('open');
-  document.body.style.overflow='';
+
+function closeTradeDetail(){{
+  document.getElementById('tradeDetailModal').classList.remove('open');
+  if(!document.getElementById('ohlcModal').classList.contains('open')){{
+     document.body.style.overflow='';
+  }}
 }}
-function showOHLC(key, label){{
+
+// ─── OHLC (DAILY HISTORY) MODAL ───────────────────────────────────────────────
+function showOHLCDirect(key, label){{
   const data=TRADE_OHLC[key]||[];
-  document.getElementById('sdm-ohlc-title').textContent=`📈 OHLC Prices — ${{label}} (${{data.length}} days)`;
-  const panel=document.getElementById('sdm-ohlc-panel');
-  panel.style.display='block';
-  if(!data.length){{document.getElementById('sdm-ohlc-body').innerHTML='<tr><td colspan="6" class="empty">No OHLC data</td></tr>';return;}}
-  document.getElementById('sdm-ohlc-body').innerHTML=data.map(d=>{{
+  document.getElementById('ohlc-title').textContent=`📈 Daily Historical Data — ${{label}} (${{data.length}} days)`;
+  const modal=document.getElementById('ohlcModal');
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  if(!data.length){{document.getElementById('ohlc-body').innerHTML='<tr><td colspan="6" class="empty">No OHLC data</td></tr>';return;}}
+  document.getElementById('ohlc-body').innerHTML=data.map(d=>{{
     const chg=parseFloat(d.chg)||0;
     return `<tr>
       <td>${{d.date}}</td>
@@ -2050,6 +2062,14 @@ function showOHLC(key, label){{
     </tr>`;
   }}).join('');
 }}
+
+function closeOHLC(){{
+  document.getElementById('ohlcModal').classList.remove('open');
+  if(!document.getElementById('tradeDetailModal').classList.contains('open')){{
+     document.body.style.overflow='';
+  }}
+}}
+
 
 // ─── EXPORT CSV FOR NEW TABS ──────────────────────────────────────────────────
 function exportTabCSV(tab){{
@@ -2077,7 +2097,12 @@ function toast(msg,type='info'){{
 }}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('keydown', e=>{{ if(e.key==='Escape') closeStockDetail(); }});
+document.addEventListener('keydown', e=>{{ 
+    if(e.key==='Escape') {{
+        closeTradeDetail(); 
+        closeOHLC();
+    }}
+}});
 buildOverview();
 </script>
 </body>
