@@ -60,33 +60,18 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          python - <<'PYEOF'
-import subprocess, os, sys
-pat = os.environ['GH_PAT']
-run = lambda cmd: subprocess.run(cmd, shell=True, check=True)
-# Read generated files
-import base64, requests, json
-from pathlib import Path
-
-HEADERS = {"Authorization": f"token {pat}", "Accept": "application/vnd.github.v3+json"}
-PUB_REPO = "spurandhar0/nse-btst-signals-dashboard"
-
-def push_file(repo_path, local_path):
-    with open(local_path, 'rb') as f:
-        content = f.read()
-    r = requests.get(f"https://api.github.com/repos/{repo_path}/contents/{local_path}", headers=HEADERS)
-    sha = r.json().get('sha','') if r.status_code == 200 else ''
-    payload = {"message": f"Dashboard update: {local_path}", "content": base64.b64encode(content).decode()}
-    if sha: payload["sha"] = sha
-    r2 = requests.put(f"https://api.github.com/repos/{repo_path}/contents/{local_path}", headers=HEADERS, json=payload)
-    print(f"Pushed {local_path}: {r2.status_code}")
-
-push_file(PUB_REPO, "docs/index.html")
-push_file(PUB_REPO, "docs/data/sim_results.json")
-try:
-    push_file(PUB_REPO, "docs/data/nifty_index.json")
-except: pass
-PYEOF
+          cd /tmp
+          git clone https://x-access-token:${GH_PAT}@github.com/spurandhar0/nse-btst-signals-dashboard.git pub-dashboard
+          mkdir -p pub-dashboard/docs/data
+          cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/docs/index.html
+          cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/docs/data/sim_results.json
+          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json || true
+          cd pub-dashboard
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --staged --quiet && echo "Nothing to push to public repo" || git commit -m "Dashboard update: $(date +'%Y-%m-%d')"
+          git push origin main
 
       - name: Commit private repo data
         run: |
