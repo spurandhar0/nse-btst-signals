@@ -94,7 +94,7 @@ def load_bhav_ohlc(all_rows):
         bhav_files = sorted(glob.glob(os.path.join(BHAV_DIR, '*.csv')))
         if not bhav_files:
             return {}
-        # Build date -> symbol -> {o,h,l,c} mapping
+        # Build date -> symbol -> {pc,o,h,l,c} mapping
         date_sym_map = {}
         for fpath in bhav_files:
             fname = os.path.basename(fpath)
@@ -114,6 +114,8 @@ def load_bhav_ohlc(all_rows):
                     h_col   = next((h for h in hdrs if h.strip().upper() in ('HIGH','HIGH_PRICE','HP')), None)
                     l_col   = next((h for h in hdrs if h.strip().upper() in ('LOW','LOW_PRICE','LP')), None)
                     c_col   = next((h for h in hdrs if h.strip().upper() in ('CLOSE','CLOSE_PRICE','CP')), None)
+                    prev_col= next((h for h in hdrs if h.strip().upper() in ('PREVCLOSE','PREV_CLOSE','PRP')), None)
+                    
                     if not all([sym_col, o_col, h_col, l_col, c_col]):
                         continue
                     sym_map = {}
@@ -123,6 +125,7 @@ def load_bhav_ohlc(all_rows):
                             continue
                         try:
                             sym_map[sym] = {
+                                'pc': round(float(row.get(prev_col,0) or 0), 2) if prev_col else 0,
                                 'o': round(float(row.get(o_col,0) or 0), 2),
                                 'h': round(float(row.get(h_col,0) or 0), 2),
                                 'l': round(float(row.get(l_col,0) or 0), 2),
@@ -545,6 +548,13 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   </div>
   <div id="hist-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px 0"></div>
   <div id="hist-container"></div>
+  
+  <div class="pager" style="margin-top:16px;">
+    <span class="info" id="hist-info"></span><div style="flex:1"></div>
+    <button class="btn-sm btn-outline" onclick="pgHist(-1)">&#8249; Prev</button>
+    <button class="btn-sm btn-outline" onclick="pgHist(1)">Next &#8250;</button>
+    <select id="hist-pgsize" onchange="buildHistory()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="9999">All</option></select>
+  </div>
 </div>
 
 <div id="tab-ledger" class="hidden">
@@ -869,7 +879,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
       <div id="tdm-badges" class="tab-badges" style="margin-bottom:12px;"></div>
       <div class="table-area">
         <table><thead><tr>
-          <th>CFG</th><th>Buy Date</th><th>Avg Buy ₹</th><th>Exit Price ₹</th>
+          <th>CFG</th><th>Buy Date</th><th>Exit Date</th><th>Avg Buy ₹</th><th>Exit Price ₹</th>
           <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th>
         </tr></thead><tbody id="tdm-body"></tbody></table>
       </div>
@@ -886,7 +896,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="sdm-body">
       <div class="table-area" style="max-height:400px;overflow-y:auto;">
         <table><thead><tr>
-          <th>Date</th><th>Open ₹</th><th>High ₹</th><th>Low ₹</th><th>Close ₹</th><th>Chg%</th>
+          <th>Date</th><th>Prev.Close ₹</th><th>Open ₹</th><th>High ₹</th><th>Low ₹</th><th>Close ₹</th><th>Chg%</th><th>Note</th>
         </tr></thead><tbody id="ohlc-body"></tbody></table>
       </div>
     </div>
@@ -992,7 +1002,7 @@ const state = {{
   open:    {{cfg:'ALL', page:1, sort:0, asc:false}},
   closed:  {{cfg:'ALL', res:'ALL', page:1, sort:0, asc:false}},
   fe:      {{cfg:'ALL', page:1, sort:0, asc:false}},
-  hist:    {{cfg:'ALL', status:'ALL'}},
+  hist:    {{cfg:'ALL', status:'ALL', page:1}},
   avghistory: {{cfg:'ALL'}},
   marketdata: {{cfg:'ALL'}},
   perf:    {{cfg:'ALL'}},
@@ -1060,6 +1070,7 @@ function showTab(name,el){{
 // ─── FILTER HELPERS ──────────────────────────────────────────────────────────
 function statusFilterHist(val,btn){{
   state.hist.status=val;
+  state.hist.page=1;
   document.querySelectorAll('[id^="hist-status-"]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   buildHistory();
@@ -1101,6 +1112,11 @@ function srt(tab,col){{
 function pg(tab,dir){{
   state[tab].page=Math.max(1,state[tab].page+dir);
   renderTab(tab);
+}}
+
+function pgHist(dir){{
+  state.hist.page = Math.max(1, (state.hist.page || 1) + dir);
+  buildHistory();
 }}
 
 function setPager(tab,cur,total,pgSz){{
@@ -1483,7 +1499,6 @@ function buildHistory(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed');
   if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
   
-  // Apply Hold/Sold filter
   if(statusF==='Open') rows=rows.filter(r=>r.STATUS==='Open');
   if(statusF==='Closed') rows=rows.filter(r=>r.STATUS!=='Open');
   
@@ -1521,12 +1536,20 @@ function buildHistory(){{
     return (a.SIGNAL_DATE||'')<(b.SIGNAL_DATE||'')?1:-1;
   }});
 
-  if(!rows.length){{
+  // Pagination setup for History Tab
+  const pgSzEl=document.getElementById('hist-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=state.hist.page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('hist',page,rows.length,pgSz);
+
+  if(!slice.length){{
     document.getElementById('hist-container').innerHTML='<div class="card empty">No executed trades found.</div>';
     return;
   }}
 
-  document.getElementById('hist-container').innerHTML=rows.slice(0,100).map((r,i)=>{{
+  document.getElementById('hist-container').innerHTML=slice.map((r,i)=>{{
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
     const isSold=r.STATUS!=='Open';
@@ -1539,32 +1562,34 @@ function buildHistory(){{
     // BUY HISTORY rows - dynamically calculating based on Config Dip
     const buyCount = parseInt(r.BUY_COUNT) || 1;
     const finalAvg = parseFloat(r.AVG_BUY_PRICE) || 0;
-    
-    // Read the specific drop percentage from params.json for this Config
     const cfgDef = CONFIGS_DEF.find(c => c.id === r.CONFIG || c.ID === r.CONFIG) || {{}};
     const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); 
 
     let runningAvg = 0;
+    const buyDatesTracker = [];
 
     const buyRows = Array.from({{length: buyCount}}, (_, bi) => {{
       let legDate = r[`B${{bi}}_BoughtDate`] || (bi === 0 ? r.SIGNAL_DATE : '—');
+      if (legDate !== '—') buyDatesTracker.push(legDate);
       
       let legPrice;
       if (bi === 0) {{
-         // First buy uses the exact signal close price (or database fallback)
          legPrice = parseFloat(r.B0_Close) || parseFloat(r.SIGNAL_CLOSE) || finalAvg;
          runningAvg = legPrice;
       }} else {{
-         // Subsequent buys trigger at exactly the config % drop from the previous average
          legPrice = runningAvg * (1 - dropPct);
-         // Calculate the new running average after this buy
          runningAvg = ((runningAvg * bi) + legPrice) / (bi + 1);
       }}
 
-      // Ensure the very last row matches the exact database Final Average perfectly
       let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
-      
       let avgStr = (bi === buyCount - 1) ? `&#8377;${{fN(displayAvg)}}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${{fN(displayAvg)}}</span>`;
+
+      // Get individual leg specific OHLC
+      let pPrev = parseFloat(r[`B${{bi}}_PrevClose`]) || (bi===0?parseFloat(r.PREV_CLOSE):0);
+      let pOp = parseFloat(r[`B${{bi}}_Open`]) || (bi===0?parseFloat(r.OPEN_PRICE):0);
+      let pHi = parseFloat(r[`B${{bi}}_High`]) || (bi===0?parseFloat(r.HIGH_PRICE):0);
+      let pLo = parseFloat(r[`B${{bi}}_Low`]) || (bi===0?parseFloat(r.LOW_PRICE):0);
+      let pCl = parseFloat(r[`B${{bi}}_Close`]) || (bi===0?parseFloat(r.SIGNAL_CLOSE):0);
 
       return `
       <tr style="border-top:1px solid #e2e8f0">
@@ -1574,82 +1599,117 @@ function buildHistory(){{
         <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{avgStr}}</td>
         <td style="padding:5px 8px;text-align:right">—</td>
         <td style="padding:5px 8px;text-align:right">—</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pPrev)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pOp)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pHi)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pLo)}}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${{fN(pCl)}}</td>
       </tr>`;
     }}).join('');
 
+    // SELL HISTORY rows
+    let sPrev = parseFloat(r.SoldPrevClose)||0;
+    let sOp = parseFloat(r.SoldOpen)||0;
+    let sHi = parseFloat(r.SoldHigh)||0;
+    let sLo = parseFloat(r.SoldLow)||0;
+    let sCl = parseFloat(r.SoldClose)||parseFloat(r.EXIT_PRICE)||0;
+
     const sellSection=isSold?`
       <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
-      <table style="width:100%;font-size:12px;border-collapse:collapse">
-        <thead><tr style="background:#fff5f5">
-          <th style="padding:5px 8px;text-align:left;font-weight:600">Sell #</th>
-          <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
-          <th style="padding:5px 8px;text-align:right;font-weight:600">Sell Price</th>
-          <th style="padding:5px 8px;text-align:center;font-weight:600">Exit Type</th>
-        </tr></thead>
-        <tbody>
-          <tr style="border-top:1px solid #fee2e2">
-            <td style="padding:5px 8px">1</td>
-            <td style="padding:5px 8px">${{fD(r.EXIT_DATE)}}</td>
-            <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${{fN(r.EXIT_PRICE)}}</td>
-            <td style="padding:5px 8px;text-align:center">${{exitTypeBadge}}</td>
-          </tr>
-        </tbody>
-      </table>`:'';
+      <div class="table-area" style="margin-bottom:8px">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+          <thead><tr style="background:#fff5f5">
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Sell #</th>
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Sell Price</th>
+            <th style="padding:5px 8px;text-align:center;font-weight:600">Exit Type</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Low</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Close</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid #fee2e2">
+              <td style="padding:5px 8px">1</td>
+              <td style="padding:5px 8px">${{fD(r.EXIT_DATE)}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#dc2626">&#8377;${{fN(r.EXIT_PRICE)}}</td>
+              <td style="padding:5px 8px;text-align:center">${{exitTypeBadge}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sPrev)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sOp)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sHi)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sLo)}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${{fN(sCl)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`:'';
+
+    const buyDatesJson = JSON.stringify(buyDatesTracker).replace(/"/g, '&quot;');
+    const sellDateStr = isSold ? r.EXIT_DATE : '—';
 
     return `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
       <div style="padding:12px 16px;background:linear-gradient(135deg,#f8faff,#eef2ff);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <strong style="font-size:15px;color:#1e3a5f">${{i+1}}. ${{r.SYMBOL}}</strong>
+        <strong style="font-size:15px;color:#1e3a5f">${{start+i+1}}. ${{r.SYMBOL}}</strong>
         <span style="font-size:12px;color:#64748b">(${{fD(r.SIGNAL_DATE)}})</span>
         ${{cfgBadge(r.CONFIG)}}
       </div>
       <div style="padding:0 16px 8px">
         <div style="font-size:11px;font-weight:700;color:#059669;letter-spacing:.5px;margin:12px 0 6px">BUY HISTORY</div>
-        <table style="width:100%;font-size:12px;border-collapse:collapse">
-          <thead><tr style="background:#f0fdf4">
-            <th style="padding:5px 8px;text-align:left;font-weight:600">Buy #</th>
-            <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Buy Price</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Avg Buy</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Qty (&#8377;10k)</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
-          </tr></thead>
-          <tbody>${{buyRows}}</tbody>
-        </table>
+        <div class="table-area" style="margin-bottom:8px">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+            <thead><tr style="background:#f0fdf4">
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Buy #</th>
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Buy Price</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600;color:#2563eb">Avg Buy</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Qty (&#8377;10k)</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Low</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Close</th>
+            </tr></thead>
+            <tbody>${{buyRows}}</tbody>
+          </table>
+        </div>
         ${{sellSection}}
         <div style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:.5px;margin:10px 0 6px">FINAL SUMMARY</div>
-        <table style="width:100%;font-size:12px;border-collapse:collapse">
-          <thead><tr style="background:#eff6ff">
-            <th style="padding:5px 8px;text-align:left;font-weight:600">Status</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Total Qty</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Avg Buy Price</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Exit/LTP</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">Duration</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L &#8377;</th>
-            <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L %</th>
-          </tr></thead>
-          <tbody>
-            <tr style="border-top:1px solid #dbeafe">
-              <td style="padding:5px 8px;color:${{isSold?'#dc2626':'#2563eb'}};font-weight:700">${{isSold?'SOLD':'HOLD'}}</td>
-              <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{fI(r.TOTAL_QTY)}}</td>
-              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
-              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(ltp)}}</td>
-              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
-              <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">${{fI(r.MARKET_DAYS)}} Days</td>
-              <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(pnl)}}</td>
-              <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-area" style="margin-bottom:8px">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+            <thead><tr style="background:#eff6ff">
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Status</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Total Qty</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Avg Buy Price</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Exit/LTP</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Duration</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L &#8377;</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L %</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid #dbeafe">
+                <td style="padding:5px 8px;color:${{isSold?'#dc2626':'#2563eb'}};font-weight:700">${{isSold?'SOLD':'HOLD'}}</td>
+                <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{fI(r.TOTAL_QTY)}}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${{fN(ltp)}}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
+                <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">${{fI(r.MARKET_DAYS)}} Days</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(pnl)}}</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})', '${{buyDatesJson}}', '${{sellDateStr}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
         <button onclick="exportHistCard(this,'${{r.SYMBOL}}_${{r.CONFIG}}_${{r.SIGNAL_DATE}}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
         <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
       </div>
     </div>`;
-  }}).join('')+
-  (rows.length>100?`<div class="card empty">Showing first 100 trades. Use search to narrow down.</div>`:'');
+  }}).join('');
 }}
 function exportHistCard(btn,name){{
   const card=btn.closest('.card');
@@ -2024,6 +2084,7 @@ function openTradeDetail(key){{
     return `<tr>
       <td>${{cfgBadge(r.CONFIG)}}</td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
+      <td>${{fD(r.EXIT_DATE)}}</td>
       <td>₹${{fN(r.AVG_BUY_PRICE)}}</td>
       <td>₹${{fN(r.EXIT_PRICE)}}</td>
       <td ${{pnlColor(r.PROFIT)}}>₹${{fN(pnl)}}</td>
@@ -2032,7 +2093,7 @@ function openTradeDetail(key){{
       <td>${{fI(r.MARKET_DAYS)}}d</td>
       <td>${{resultBadge(r.RESULT)}}</td>
     </tr>`;
-  }}).join(''):'<tr><td colspan="9" class="empty">No trades found</td></tr>';
+  }}).join(''):'<tr><td colspan="10" class="empty">No trades found</td></tr>';
 }}
 
 function closeTradeDetail(){{
@@ -2043,22 +2104,36 @@ function closeTradeDetail(){{
 }}
 
 // ─── OHLC (DAILY HISTORY) MODAL ───────────────────────────────────────────────
-function showOHLCDirect(key, label){{
+function showOHLCDirect(key, label, buyDatesStr, sellDateStr){{
   const data=TRADE_OHLC[key]||[];
   document.getElementById('ohlc-title').textContent=`📈 Daily Historical Data — ${{label}} (${{data.length}} days)`;
   const modal=document.getElementById('ohlcModal');
   modal.classList.add('open');
   document.body.style.overflow='hidden';
-  if(!data.length){{document.getElementById('ohlc-body').innerHTML='<tr><td colspan="6" class="empty">No OHLC data</td></tr>';return;}}
+  
+  let buyDates = [];
+  try {{ buyDates = JSON.parse(buyDatesStr.replace(/&quot;/g, '"')); }} catch(e) {{}}
+
+  if(!data.length){{document.getElementById('ohlc-body').innerHTML='<tr><td colspan="8" class="empty">No OHLC data</td></tr>';return;}}
+  
   document.getElementById('ohlc-body').innerHTML=data.map(d=>{{
     const chg=parseFloat(d.chg)||0;
+    const isBuy = buyDates.includes(d.date);
+    const isSell = (d.date === sellDateStr);
+    
+    let note = '';
+    if(isBuy) note += '<span style="background:#dcfce7;color:#059669;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;margin-right:4px;">BOUGHT</span>';
+    if(isSell) note += '<span style="background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;">SOLD</span>';
+    
     return `<tr>
       <td>${{d.date}}</td>
+      <td>&#8377;${{fN(d.pc)}}</td>
       <td>&#8377;${{fN(d.o)}}</td>
       <td style="color:#059669">&#8377;${{fN(d.h)}}</td>
       <td style="color:#dc2626">&#8377;${{fN(d.l)}}</td>
       <td><strong>&#8377;${{fN(d.c)}}</strong></td>
       <td ${{pnlColor(chg)}}>${{chg>=0?'+':''}}${{f2(chg)}}%</td>
+      <td>${{note}}</td>
     </tr>`;
   }}).join('');
 }}
