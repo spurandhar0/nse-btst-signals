@@ -403,18 +403,17 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th onclick="srt('open',0)">#</th>
         <th onclick="srt('open',1)">CFG</th>
         <th onclick="srt('open',2)">SYMBOL</th>
-        <th onclick="srt('open',3)">SIGNAL DATE</th>
-        <th onclick="srt('open',4)">BUY DATE</th>
-        <th onclick="srt('open',5)">AVG BUY &#8377;</th>
-        <th onclick="srt('open',6)">CURRENT LTP &#8377;</th>
-        <th onclick="srt('open',7)">TARGET &#8377;</th>
-        <th onclick="srt('open',8)">STOP &#8377;</th>
-        <th onclick="srt('open',9)">BUYS</th>
-        <th onclick="srt('open',10)">QTY</th>
-        <th onclick="srt('open',11)">INVESTED &#8377;</th>
-        <th onclick="srt('open',12)">MARKET DAYS</th>
-        <th onclick="srt('open',13)">UNREAL P&amp;L &#8377;</th>
-        <th onclick="srt('open',14)">GAIN %</th>
+        <th onclick="srt('open',3)">BUY DATE</th>
+        <th onclick="srt('open',4)">AVG BUY &#8377;</th>
+        <th onclick="srt('open',5)">CURRENT LTP &#8377;</th>
+        <th onclick="srt('open',6)">TARGET &#8377;</th>
+        <th onclick="srt('open',7)">STOP &#8377;</th>
+        <th onclick="srt('open',8)">BUYS</th>
+        <th onclick="srt('open',9)">QTY</th>
+        <th onclick="srt('open',10)">INVESTED &#8377;</th>
+        <th onclick="srt('open',11)">MARKET DAYS</th>
+        <th onclick="srt('open',12)">UNREAL P&amp;L &#8377;</th>
+        <th onclick="srt('open',13)">GAIN %</th>
       </tr></thead>
       <tbody id="open-body"></tbody></table>
     </div>
@@ -452,17 +451,16 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th onclick="srt('closed',0)">#</th>
         <th onclick="srt('closed',1)">CFG</th>
         <th onclick="srt('closed',2)">SYMBOL</th>
-        <th onclick="srt('closed',3)">SIGNAL DATE</th>
-        <th onclick="srt('closed',4)">BUY DATE</th>
-        <th onclick="srt('closed',5)">EXIT DATE</th>
-        <th onclick="srt('closed',6)">AVG BUY &#8377;</th>
-        <th onclick="srt('closed',7)">EXIT PRICE &#8377;</th>
-        <th onclick="srt('closed',8)">QTY</th>
-        <th onclick="srt('closed',9)">INVESTED &#8377;</th>
-        <th onclick="srt('closed',10)">P&amp;L &#8377;</th>
-        <th onclick="srt('closed',11)">GAIN %</th>
-        <th onclick="srt('closed',12)">MARKET DAYS</th>
-        <th onclick="srt('closed',13)">RESULT</th>
+        <th onclick="srt('closed',3)">BUY DATE</th>
+        <th onclick="srt('closed',4)">EXIT DATE</th>
+        <th onclick="srt('closed',5)">AVG BUY &#8377;</th>
+        <th onclick="srt('closed',6)">EXIT PRICE &#8377;</th>
+        <th onclick="srt('closed',7)">QTY</th>
+        <th onclick="srt('closed',8)">INVESTED &#8377;</th>
+        <th onclick="srt('closed',9)">P&amp;L &#8377;</th>
+        <th onclick="srt('closed',10)">GAIN %</th>
+        <th onclick="srt('closed',11)">MARKET DAYS</th>
+        <th onclick="srt('closed',12)">RESULT</th>
       </tr></thead>
       <tbody id="closed-body"></tbody></table>
     </div>
@@ -496,17 +494,16 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th onclick="srt('fe',0)">#</th>
         <th onclick="srt('fe',1)">CFG</th>
         <th onclick="srt('fe',2)">SYMBOL</th>
-        <th onclick="srt('fe',3)">SIGNAL DATE</th>
-        <th onclick="srt('fe',4)">BUY DATE</th>
-        <th onclick="srt('fe',5)">EXIT DATE</th>
-        <th onclick="srt('fe',6)">AVG BUY &#8377;</th>
-        <th onclick="srt('fe',7)">EXIT PRICE &#8377;</th>
-        <th onclick="srt('fe',8)">QTY</th>
-        <th onclick="srt('fe',9)">P&amp;L &#8377;</th>
-        <th onclick="srt('fe',10)">GAIN %</th>
-        <th onclick="srt('fe',11)">MARKET DAYS</th>
-        <th onclick="srt('fe',12)">EXIT TYPE</th>
-        <th onclick="srt('fe',13)">RESULT</th>
+        <th onclick="srt('fe',3)">BUY DATE</th>
+        <th onclick="srt('fe',4)">AVG BUY &#8377;</th>
+        <th onclick="srt('fe',5)">LTP &#8377;</th>
+        <th onclick="srt('fe',6)">TARGET &#8377;</th>
+        <th onclick="srt('fe',7)">STOP &#8377;</th>
+        <th onclick="srt('fe',8)">DAYS HELD</th>
+        <th onclick="srt('fe',9)">DAYS LEFT</th>
+        <th onclick="srt('fe',10)">P&amp;L &#8377;</th>
+        <th onclick="srt('fe',11)">GAIN %</th>
+        <th onclick="srt('fe',12)">BUYS</th>
       </tr></thead>
       <tbody id="fe-body"></tbody></table>
     </div>
@@ -594,14 +591,14 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th onclick="srt('trades',0)">#</th>
         <th onclick="srt('trades',1)">CFG</th>
         <th onclick="srt('trades',2)">SYMBOL</th>
-        <th onclick="srt('trades',3)">SIGNAL DATE</th>
-        <th onclick="srt('trades',4)">BUY DATE</th>
-        <th onclick="srt('trades',5)">EXIT DATE</th>
-        <th onclick="srt('trades',6)">ORDER</th>
-        <th onclick="srt('trades',7)">STATUS</th>
-        <th onclick="srt('trades',8)">AVG BUY &#8377;</th>
-        <th onclick="srt('trades',9)">EXIT &#8377;</th>
-        <th onclick="srt('trades',10)">QTY</th>
+        <th onclick="srt('trades',3)">BUY DATE</th>
+        <th onclick="srt('trades',4)">EXIT DATE</th>
+        <th onclick="srt('trades',5)">ORDER</th>
+        <th onclick="srt('trades',6)">STATUS</th>
+        <th onclick="srt('trades',7)">AVG BUY &#8377;</th>
+        <th onclick="srt('trades',8)">EXIT &#8377;</th>
+        <th onclick="srt('trades',9)">QTY</th>
+        <th onclick="srt('trades',10)">BUYS</th>
         <th onclick="srt('trades',11)">P&amp;L &#8377;</th>
         <th onclick="srt('trades',12)">GAIN %</th>
         <th onclick="srt('trades',13)">DAYS</th>
@@ -866,7 +863,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
       <div id="sdm-badges" class="tab-badges" style="margin-bottom:12px;"></div>
       <div class="table-area">
         <table><thead><tr>
-          <th>CFG</th><th>Signal Date</th><th>Buy Price ₹</th><th>Exit Price ₹</th>
+          <th>CFG</th><th>Buy Date</th><th>Avg Buy ₹</th><th>Exit Price ₹</th>
           <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th><th>OHLC</th>
         </tr></thead><tbody id="sdm-body"></tbody></table>
       </div>
@@ -1091,16 +1088,24 @@ function getFiltered(tab){{
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   }}
   else if(tab==='closed'){{
-    rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&!r.RESULT.includes('FE'));
+    rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
     if(state.closed.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.closed.cfg);
     if(state.closed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit'));
     if(state.closed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss'));
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   }}
   else if(tab==='fe'){{
-    rows = rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
+    const cfgDurMap={{}};
+    CONFIGS_DEF.forEach(c=>{{ cfgDurMap[c.id||c.ID]=parseInt(c.max_duration||c.MAXDURA||90); }});
+    rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
     if(state.fe.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.fe.cfg);
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    rows=rows.map(r=>{{
+      const maxD=cfgDurMap[r.CONFIG]||90;
+      const held=parseInt(r.MARKET_DAYS)||0;
+      return {{...r,_MAX_DUR:maxD,_DAYS_LEFT:Math.max(0,maxD-held)}};
+    }});
+    rows.sort((a,b)=>a._DAYS_LEFT-b._DAYS_LEFT);
   }}
   else if(tab==='ledger'){{
     // Build ledger from closed rows
@@ -1160,14 +1165,20 @@ function getTabSortVals(tab,a,b,col){{
   const nv=x=>parseFloat(x)||0;
   const sv=x=>x||'';
   if(tab==='open'){{
-    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','BUY_COUNT','TOTAL_QTY','TOTAL_INVESTMENT','MARKET_DAYS','PROFIT','GAIN_PCT'];
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','BUY_COUNT','TOTAL_QTY','TOTAL_INVESTMENT','MARKET_DAYS','PROFIT','GAIN_PCT'];
     const k=cols[col]||'SYMBOL';
     if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
     return[nv(a[k]),nv(b[k])];
   }}
-  if(tab==='closed'||tab==='fe'){{
-    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','SIGNAL_DATE','EXIT_DATE','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','TOTAL_INVESTMENT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
+  if(tab==='closed'){{
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','TOTAL_INVESTMENT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
     const k=cols[col]||'EXIT_DATE';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }}
+  if(tab==='fe'){{
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','MARKET_DAYS','_DAYS_LEFT','PROFIT','GAIN_PCT','BUY_COUNT'];
+    const k=cols[col]||'MARKET_DAYS';
     if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
     return[nv(a[k]),nv(b[k])];
   }}
@@ -1178,7 +1189,7 @@ function getTabSortVals(tab,a,b,col){{
     return[nv(a[k]),nv(b[k])];
   }}
   if(tab==='trades'){{
-    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','SIGNAL_DATE','EXIT_DATE','ORDER','STATUS','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','ORDER','STATUS','AVG_BUY_PRICE','EXIT_PRICE','BUY_COUNT','TOTAL_QTY','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
     const k=cols[col]||'SIGNAL_DATE';
     if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
     return[nv(a[k]),nv(b[k])];
@@ -1210,7 +1221,7 @@ function renderTab(tab){{
   if(tab==='signals'){{ renderSignals(rows);return; }}
   if(tab==='open') renderBadges('open-badges', rows, 'open');
   else if(tab==='closed') renderBadges('closed-badges', rows, 'closed');
-  else if(tab==='fe') renderBadges('fe-badges', rows, 'closed');
+  else if(tab==='fe') renderBadges('fe-badges', rows, 'open');
   else if(tab==='trades'){{
     const tProfit=rows.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
     const tLoss=rows.filter(r=>(parseFloat(r.PROFIT)||0)<0).length;
@@ -1234,40 +1245,62 @@ function rowHTML(tab,r,n){{
   if(tab==='open'){{
     const pl=parseFloat(r.PROFIT)||0;
     const gp=parseFloat(r.GAIN_PCT)||0;
+    const bc=parseInt(r.BUY_COUNT||1);
+    const bcHtml=bc>1
+      ?`<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:900;background:linear-gradient(135deg,var(--blue2),var(--cyan2));color:#fff">${{bc}}x</span>`
+      :`<span style="color:var(--text3)">${{bc}}</span>`;
     return `<tr>
       <td>${{n}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
-      <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.SIGNAL_DATE)}}</td>
+      <td>${{fD(r.SIGNAL_DATE)}}</td>
       <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td><td>&#8377;${{fN(r.CURRENT_LTP)}}</td>
       <td>&#8377;${{fN(r.TARGET_PRICE)}}</td><td>&#8377;${{fN(r.STOP_PRICE)}}</td>
-      <td>${{fI(r.BUY_COUNT)}}</td><td>${{fI(r.TOTAL_QTY)}}</td>
+      <td>${{bcHtml}}</td><td>${{fI(r.TOTAL_QTY)}}</td>
       <td>&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td><td>${{fI(r.MARKET_DAYS)}}</td>
       <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
       <td ${{pnlColor(r.GAIN_PCT)}}>${{gp>=0?'+':''}}${{f2(r.GAIN_PCT)}}%</td>
     </tr>`;
   }}
-  if(tab==='closed'||tab==='fe'){{
-    const cols=tab==='fe'?
-      `<td>${{fD(r.EXIT_TYPE)}}</td>`:
-      `<td>&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>`;
+  if(tab==='closed'){{
     return `<tr>
       <td>${{n}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
-      <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
+      <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
       <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td><td>&#8377;${{fN(r.EXIT_PRICE)}}</td>
-      <td>${{fI(r.TOTAL_QTY)}}</td>
-      ${{cols}}
+      <td>${{fI(r.TOTAL_QTY)}}</td><td>&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
       <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
       <td ${{pnlColor(r.GAIN_PCT)}}>${{(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}}${{f2(r.GAIN_PCT)}}%</td>
       <td>${{fI(r.MARKET_DAYS)}}</td>
       <td>${{resultBadge(r.RESULT)}}</td>
     </tr>`;
   }}
-  if(tab==='trades'){{
+  if(tab==='fe'){{
+    const held=parseInt(r.MARKET_DAYS)||0;
+    const left=r._DAYS_LEFT!=null?r._DAYS_LEFT:Math.max(0,(r._MAX_DUR||90)-held);
+    const urgCls=left<=5?'color:#dc2626;font-weight:900':left<=15?'color:#d97706;font-weight:800':'color:#059669;font-weight:700';
+    const urgIcon=left<=5?'🔴':left<=15?'⚠️':'✅';
+    const bc=parseInt(r.BUY_COUNT||1);
+    const bcHtml=bc>1?`<span style="font-weight:800;color:var(--blue2)">${{bc}}x</span>`:`${{bc}}`;
     return `<tr>
       <td>${{n}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
-      <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
+      <td>${{fD(r.SIGNAL_DATE)}}</td>
+      <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
+      <td class="${{(parseFloat(r.GAIN_PCT)||0)>=0?'green':'red'}}">&#8377;${{fN(r.CURRENT_LTP)}}</td>
+      <td>&#8377;${{fN(r.TARGET_PRICE)}}</td><td>&#8377;${{fN(r.STOP_PRICE)}}</td>
+      <td>${{held}}d</td>
+      <td style="${{urgCls}}">${{urgIcon}} ${{left}}d</td>
+      <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
+      <td ${{pnlColor(r.GAIN_PCT)}}>${{(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}}${{f2(r.GAIN_PCT)}}%</td>
+      <td>${{bcHtml}}</td>
+    </tr>`;
+  }}
+  if(tab==='trades'){{
+    const bc=parseInt(r.BUY_COUNT||1);
+    const bcHtml=bc>1?`<span style="font-weight:800;color:var(--blue2)">${{bc}}x</span>`:`${{bc}}`;
+    return `<tr>
+      <td>${{n}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
+      <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
       <td>${{r.ORDER||'—'}}</td><td>${{r.STATUS||'—'}}</td>
       <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td><td>&#8377;${{fN(r.EXIT_PRICE)}}</td>
-      <td>${{fI(r.TOTAL_QTY)}}</td>
+      <td>${{fI(r.TOTAL_QTY)}}</td><td>${{bcHtml}}</td>
       <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
       <td ${{pnlColor(r.GAIN_PCT)}}>${{(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}}${{f2(r.GAIN_PCT)}}%</td>
       <td>${{fI(r.MARKET_DAYS)}}</td>
@@ -1313,11 +1346,12 @@ function renderSignals(rows){{
     const isOpen=openSymbols.has(sym);
     const statusBadge=isOpen?'<span class="badge-opencall">Open Call</span>':'<span class="badge-fresh">Fresh Call</span>';
     const ltpHtml=isOpen?`<span class="green">&#8377;${{fN(ltp)}}</span>`:`&#8377;${{fN(close)}}`;
-    const sigCfg=r.CONFIG||r.config||'';
+    const sigCfgRaw=r.CONFIGS_MATCHED||r.configs_matched||r.CONFIG||r.config||'';
+    const sigCfgs=sigCfgRaw.split(',').map(s=>s.trim()).filter(Boolean);
     return `<tr>
       <td>${{start+i+1}}</td>
       <td>${{date}}</td>
-      <td>${{sigCfg?cfgBadge(sigCfg):'—'}}</td>
+      <td>${{sigCfgs.length?sigCfgs.map(c=>cfgBadge(c)).join(' '):'—'}}</td>
       <td><strong>${{sym}}</strong></td>
       <td ${{pnlColor(chg1d)}}>${{chg1d>=0?'+':''}}${{f2(chg1d)}}%</td>
       <td>${{chg5d!=null?`<span ${{chg5d>=0?'class="green"':'class="red"'}}>${{chg5d>=0?'+':''}}${{f2(chg5d)}}%</span>`:'—'}}</td>
@@ -1426,12 +1460,12 @@ function buildHistory(){{
       </div>
       <div class="table-area">
         <table><thead><tr>
-          <th>CFG</th><th>SIGNAL DATE</th><th>BUY DATE</th><th>EXIT DATE</th>
+          <th>CFG</th><th>BUY DATE</th><th>EXIT DATE</th>
           <th>AVG BUY</th><th>EXIT PRICE</th><th>QTY</th><th>P&L</th><th>GAIN %</th><th>DAYS</th><th>RESULT</th>
         </tr></thead>
         <tbody>${{srows.map(r=>`<tr>
           <td>${{cfgBadge(r.CONFIG)}}</td>
-          <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
+          <td>${{fD(r.SIGNAL_DATE)}}</td><td>${{fD(r.EXIT_DATE)}}</td>
           <td>&#8377;${{fN(r.AVG_BUY_PRICE)}}</td><td>&#8377;${{fN(r.EXIT_PRICE)}}</td>
           <td>${{fI(r.TOTAL_QTY)}}</td>
           <td ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(r.PROFIT)}}</td>
