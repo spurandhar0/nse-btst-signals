@@ -7,6 +7,17 @@ name: Historical Backfill (Run Once)
 on:
   workflow_dispatch:
 
+  # ADD THIS BLOCK RIGHT HERE
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+
 permissions:
   contents: write
 
