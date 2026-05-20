@@ -105,7 +105,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </div>
     </div>
     <div class="hdr-right">
-      <span class="hdr-badge">&#9679; 20-May-2026 11:07 IST</span>
+      <span class="hdr-badge">&#9679; 20-May-2026 11:42 IST</span>
       <button class="hdr-btn" onclick="location.reload()">&#8635; Refresh</button>
     </div>
   </div>
@@ -122,10 +122,21 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="liveBanner">
-  &#10003; Last simulation: <strong id="bannerDate">20-May-2026 11:07 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-19</strong>
+  &#10003; Last simulation: <strong id="bannerDate">20-May-2026 11:42 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-19</strong>
 </div>
 
 <div class="container">
+
+<div class="cstrip">
+  <span class="slbl">Range:</span>
+  <input type="date" id="fromDate" style="padding:6px 10px;font-size:12px;min-width:130px;">
+  <span style="color:var(--text3);font-weight:600;">to</span>
+  <input type="date" id="toDate" style="padding:6px 10px;font-size:12px;min-width:130px;">
+  <button onclick="applyDateRange()" style="padding:6px 14px;font-size:12px;">Apply</button>
+  <button onclick="resetDateRange()" style="padding:6px 14px;font-size:12px;background:#64748b;">Reset</button>
+  <span id="filterPill" class="pill" style="display:none;"></span>
+  <span id="globalLastSignal" style="margin-left:auto;font-size:12px;font-weight:700;color:var(--blue2);"></span>
+</div>
 
 <div class="tabs">
   <div class="tab active"  onclick="showTab('overview',this)">&#9675; Overview</div>
@@ -137,6 +148,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="tab" onclick="showTab('trades',this)">&#8635; Trade History</div>
   <div class="tab" onclick="showTab('signals',this)">&#9654; Today's Signals</div>
   <div class="tab" onclick="showTab('configs',this)">&#9881; Configs</div>
+  <div class="tab" onclick="showTab('avgtrigger',this)">&#8681; Avg Trigger</div>
+  <div class="tab" onclick="showTab('selltrigger',this)">&#8682; Sell Trigger</div>
+  <div class="tab" onclick="showTab('avghistory',this)">&#9400; Avg History</div>
+  <div class="tab" onclick="showTab('marketdata',this)">&#128200; Market Data</div>
+  <div class="tab" onclick="showTab('performance',this)">&#128202; Performance</div>
   <div class="tab" onclick="showTab('disclaimer',this)">&#9432; Disclaimer</div>
 </div>
 
@@ -499,6 +515,159 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   </div>
 </div>
 
+
+<!-- ══ TAB: AVG TRIGGER ══ -->
+<div id="tab-avgtrigger" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#8681; Avg Trigger</h3>
+      <span style="font-size:12px;color:var(--text3);">Open positions where price dropped 10%+ below avg buy — averaging candidates</span>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn-sm btn-green" onclick="exportTabCSV('avgtrigger')">Export CSV</button>
+      </div>
+    </div>
+    <div id="avgtrigger-badges" class="tab-badges"></div>
+    <div class="table-area">
+      <table><thead><tr>
+        <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
+        <th>Avg Buy ₹</th><th>Current LTP ₹</th><th>Drop%</th>
+        <th>Next Buy Price</th><th>Distance</th><th>Days Held</th>
+      </tr></thead><tbody id="avgtrigger-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="avgtrigger-info"></span></div>
+  </div>
+</div>
+
+<!-- ══ TAB: SELL TRIGGER ══ -->
+<div id="tab-selltrigger" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#8682; Sell Trigger</h3>
+      <span style="font-size:12px;color:var(--text3);">Open positions within 3% of target price — sell candidates</span>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn-sm btn-green" onclick="exportTabCSV('selltrigger')">Export CSV</button>
+      </div>
+    </div>
+    <div id="selltrigger-badges" class="tab-badges"></div>
+    <div class="table-area">
+      <table><thead><tr>
+        <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
+        <th>Avg Buy ₹</th><th>Current LTP ₹</th><th>Target ₹</th>
+        <th>Distance to TGT</th><th>P&amp;L ₹</th><th>P&amp;L%</th><th>Days Held</th>
+      </tr></thead><tbody id="selltrigger-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="selltrigger-info"></span></div>
+  </div>
+</div>
+
+<!-- ══ TAB: AVG HISTORY ══ -->
+<div id="tab-avghistory" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#9400; Avg History</h3>
+      <span style="font-size:12px;color:var(--text3);">Trades with multiple buy legs (BUY_COUNT &gt; 1)</span>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn-sm btn-green" onclick="exportTabCSV('avghistory')">Export CSV</button>
+      </div>
+    </div>
+    <div id="avghistory-badges" class="tab-badges"></div>
+    <div class="table-area">
+      <table><thead><tr>
+        <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
+        <th>Buy Count</th><th>Avg Buy ₹</th><th>Total Invested ₹</th>
+        <th>Current LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th>
+      </tr></thead><tbody id="avghistory-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="avghistory-info"></span></div>
+  </div>
+</div>
+
+<!-- ══ TAB: MARKET DATA ══ -->
+<div id="tab-marketdata" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128200; Market Data</h3>
+      <span style="font-size:12px;color:var(--text3);">All open positions with latest price & P&amp;L</span>
+      <div style="display:flex;gap:6px;margin-left:auto;">
+        <button class="btn-filter active" id="md-all" onclick="mdSubTab('all',this)">All</button>
+        <button class="btn-filter" id="md-gain" onclick="mdSubTab('gainers',this)">&#9650; Gainers</button>
+        <button class="btn-filter" id="md-loss" onclick="mdSubTab('losers',this)">&#9660; Losers</button>
+        <button class="btn-sm btn-green" onclick="exportTabCSV('marketdata')">Export CSV</button>
+      </div>
+    </div>
+    <div id="marketdata-badges" class="tab-badges"></div>
+    <div class="table-area">
+      <table><thead><tr>
+        <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
+        <th>Avg Buy ₹</th><th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
+        <th>Target ₹</th><th>Stop ₹</th><th>Total Inv ₹</th><th>Mkt Val ₹</th><th>Days</th>
+      </tr></thead><tbody id="marketdata-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="marketdata-info"></span></div>
+  </div>
+</div>
+
+<!-- ══ TAB: PERFORMANCE ══ -->
+<div id="tab-performance" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128202; Performance Analytics</h3>
+      <span style="font-size:12px;color:var(--text3);">Deep dive into closed and open trade statistics</span>
+    </div>
+    <div id="perf-hero" class="perf-hero"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;" class="perf-panels">
+      <div class="card" style="margin:0;padding:16px;">
+        <h4 style="color:var(--navy);margin-bottom:12px;">&#9989; Closed Trades Breakdown (Per Config)</h4>
+        <div class="table-area">
+          <table><thead><tr>
+            <th>Config</th><th>Trades</th><th>Wins</th><th>Losses</th><th>Win%</th>
+            <th>Avg Gain</th><th>Avg Loss</th><th>P Factor</th><th>Net P&amp;L</th>
+          </tr></thead><tbody id="perf-closed-body"></tbody></table>
+        </div>
+      </div>
+      <div class="card" style="margin:0;padding:16px;">
+        <h4 style="color:var(--navy);margin-bottom:12px;">&#9745; Open Positions Summary</h4>
+        <div id="perf-open-summary"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div class="card" style="margin:0;padding:16px;">
+        <h4 style="color:var(--green);margin-bottom:12px;">&#127942; Top 10 Profitable Stocks</h4>
+        <div class="table-area">
+          <table><thead><tr><th>Symbol</th><th>Trades</th><th>Net P&amp;L ₹</th><th>Win%</th></tr></thead>
+          <tbody id="perf-top-profit"></tbody></table>
+        </div>
+      </div>
+      <div class="card" style="margin:0;padding:16px;">
+        <h4 style="color:var(--red);margin-bottom:12px;">&#128308; Top 10 Loss Stocks</h4>
+        <div class="table-area">
+          <table><thead><tr><th>Symbol</th><th>Trades</th><th>Net P&amp;L ₹</th><th>Win%</th></tr></thead>
+          <tbody id="perf-top-loss"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STOCK DETAIL MODAL ══ -->
+<div id="stockDetailModal">
+  <div class="sdm-box">
+    <div class="sdm-hdr">
+      <h3 id="sdm-title">Stock History</h3>
+      <button class="sdm-close" onclick="closeStockDetail()">&#10005;</button>
+    </div>
+    <div class="sdm-body">
+      <div id="sdm-badges" class="tab-badges" style="margin-bottom:12px;"></div>
+      <div class="table-area">
+        <table><thead><tr>
+          <th>CFG</th><th>Signal Date</th><th>Buy Price ₹</th><th>Exit Price ₹</th>
+          <th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th><th>Days</th><th>Result</th>
+        </tr></thead><tbody id="sdm-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /container -->
 
 <footer><strong>PS Market</strong> &mdash; NSE BTST Signals &nbsp;|&nbsp; Educational Purpose Only &nbsp;|&nbsp; Not SEBI Registered</footer>
@@ -513,6 +682,13 @@ const CONFIGS_DEF = [{"id": "C1", "name": "Config 1", "days_back": 5, "pct_min":
 
 // ─── INDICES ─────────────────────────────────────────────────────────────────
 (function(){
+  // Try to fetch fresh nifty data from nse-btst-dashboard first
+  fetch('https://spurandhar0.github.io/nse-btst-dashboard/nifty_index.json')
+    .then(r=>r.json())
+    .then(liveData=>renderIndices(liveData))
+    .catch(()=>renderIndices(NIFTY_DATA));
+
+  function renderIndices(data){
   const map = {
     'idx-nifty50':  {key:'nifty50',  label:'NIFTY 50'},
     'idx-banknifty':{key:'banknifty',label:'BANKNIFTY'},
@@ -520,14 +696,50 @@ const CONFIGS_DEF = [{"id": "C1", "name": "Config 1", "days_back": 5, "pct_min":
     'idx-niftyit':  {key:'niftyit',  label:'NIFTY IT'},
   };
   Object.entries(map).forEach(([id,{key,label}])=>{
-    const el=document.getElementById(id), d=NIFTY_DATA[key];
+    const el=document.getElementById(id), d=data[key];
     if(!d||!d.price){el.innerHTML='<span class="idx-loading">'+label+' N/A</span>';return;}
     const chg=d.change||0,chgPc=d.change_pct||0,cls=chg>0?'pos':chg<0?'neg':'flat',sign=chg>0?'+':'';
     el.innerHTML=`<div><div class="idx-name">${label}</div><div class="idx-date">${d.date||''}</div></div>
       <div><div class="idx-price">${Number(d.price).toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
       <div class="idx-chg ${cls}">${sign}${Number(chg).toFixed(2)} (${sign}${Number(chgPc).toFixed(2)}%)</div></div>`;
   });
+  } // end renderIndices
 })();
+
+// ─── DATE RANGE GLOBALS ──────────────────────────────────────────────────────
+let dateRangeActive=false, fromDateGlobal=null, toDateGlobal=null;
+
+// ─── DATE RANGE FUNCTIONS ─────────────────────────────────────────────────────
+function applyDateRange(){
+  const f=document.getElementById('fromDate').value;
+  const t=document.getElementById('toDate').value;
+  if(!f||!t){toast('Select both From and To dates','info');return;}
+  if(new Date(f)>new Date(t)){toast('From cannot be after To','info');return;}
+  fromDateGlobal=f; toDateGlobal=t; dateRangeActive=true;
+  const pill=document.getElementById('filterPill');
+  const days=Math.ceil((new Date(t)-new Date(f))/(864e5))+1;
+  pill.textContent=`📅 ${f} → ${t} (${days}d)`;
+  pill.style.display='inline-block'; pill.style.color='#2563eb'; pill.style.borderColor='#2563eb';
+  // re-render current active tab
+  const activeTab=document.querySelector('.tab.active');
+  if(activeTab) activeTab.click();
+  toast(`Range filter: ${f} to ${t}`,'success');
+}
+function resetDateRange(){
+  fromDateGlobal=null; toDateGlobal=null; dateRangeActive=false;
+  document.getElementById('fromDate').value='';
+  document.getElementById('toDate').value='';
+  const pill=document.getElementById('filterPill');
+  pill.textContent=''; pill.style.display='none';
+  const activeTab=document.querySelector('.tab.active');
+  if(activeTab) activeTab.click();
+  toast('Date range reset','info');
+}
+function inDateRange(dateStr){
+  if(!dateRangeActive||!fromDateGlobal||!toDateGlobal) return true;
+  if(!dateStr) return false;
+  return dateStr>=fromDateGlobal && dateStr<=toDateGlobal;
+}
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {
@@ -588,7 +800,12 @@ function showTab(name,el){
   else if(name==='history') buildHistory();
   else if(name==='ledger')  renderTab('ledger');
   else if(name==='trades')  renderTab('trades');
-  else if(name==='signals') renderTab('signals');
+  else if(name==='signals')   renderTab('signals');
+  else if(name==='avgtrigger')  renderAvgTrigger();
+  else if(name==='selltrigger') renderSellTrigger();
+  else if(name==='avghistory')  renderAvgHistory();
+  else if(name==='marketdata')  renderMarketData();
+  else if(name==='performance') renderPerformance();
 }
 
 // ─── FILTER HELPERS ──────────────────────────────────────────────────────────
@@ -643,12 +860,14 @@ function getFiltered(tab){
   if(tab==='open'){
     rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
     if(state.open.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.open.cfg);
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   }
   else if(tab==='closed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&!r.RESULT.includes('FE'));
     if(state.closed.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.closed.cfg);
     if(state.closed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit'));
     if(state.closed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss'));
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   }
   else if(tab==='fe'){
     rows = rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
@@ -947,6 +1166,7 @@ function buildHistory(){
         <span class="green">${profits} profit</span>
         <span class="red">${losses} loss</span>
         <span class="${pnlCls}" style="margin-left:auto">P&L: &#8377;${fN(totalPnl)}</span>
+        <button class="btn-sm btn-outline" style="margin-left:10px" onclick="openStockDetail('${sym}')">&#128269; Show History</button>
       </div>
       <div class="table-area">
         <table><thead><tr>
@@ -990,6 +1210,310 @@ function exportCSVTab(tab){
   toast('CSV downloaded!','success');
 }
 
+// ─── TAB BADGES ──────────────────────────────────────────────────────────────
+function renderBadges(containerId, rows){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  const profit=rows.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p>0?s+p:s;},0);
+  const loss=rows.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;},0);
+  const net=profit+loss;
+  const totalInv=rows.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
+  const mktVal=rows.reduce((s,r)=>{
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const qty=parseInt(r.TOTAL_QTY)||0;
+    return s+ltp*qty;
+  },0);
+  el.innerHTML=`
+    <span class="tbadge blue">Trades: ${rows.length}</span>
+    <span class="tbadge green">Profit: ₹${fN(profit)}</span>
+    <span class="tbadge red">Loss: ₹${fN(loss)}</span>
+    <span class="tbadge ${net>=0?'green':'red'}">Net: ₹${fN(net)}</span>
+    <span class="tbadge amber">Total Inv: ₹${fN(totalInv)}</span>
+    <span class="tbadge navy">Market Val: ₹${fN(mktVal)}</span>`;
+}
+
+// ─── MARKET DATA SUB-TAB ──────────────────────────────────────────────────────
+let mdSubFilter='all';
+function mdSubTab(type, btn){
+  mdSubFilter=type;
+  document.querySelectorAll('[id^="md-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketData();
+}
+
+// ─── NEW TABS: AVG TRIGGER ────────────────────────────────────────────────────
+function renderAvgTrigger(){
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  rows=rows.filter(r=>{
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const avg=parseFloat(r.AVG_BUY_PRICE)||0;
+    return avg>0&&ltp>0&&ltp<avg*0.90;
+  }).sort((a,b)=>{
+    const da=((parseFloat(a.CURRENT_LTP)||0)-(parseFloat(a.AVG_BUY_PRICE)||0))/(parseFloat(a.AVG_BUY_PRICE)||1);
+    const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
+    return da-db; // most dropped first
+  });
+  renderBadges('avgtrigger-badges', rows);
+  const body=document.getElementById('avgtrigger-body');
+  document.getElementById('avgtrigger-info').textContent=`${rows.length} stocks triggered`;
+  if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty">No stocks triggered for averaging</td></tr>';return;}
+  body.innerHTML=rows.map((r,i)=>{
+    const avg=parseFloat(r.AVG_BUY_PRICE)||0;
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const drop=avg>0?((ltp-avg)/avg*100):0;
+    const nextBuy=avg*0.85;
+    const dist=ltp>0?((ltp-avg*0.90)/(avg*0.90)*100):0;
+    return `<tr>
+      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>₹${fN(avg)}</td>
+      <td class="red">₹${fN(ltp)}</td>
+      <td class="red">${drop.toFixed(2)}%</td>
+      <td style="color:#f59e0b;font-weight:700">₹${fN(nextBuy)}</td>
+      <td class="${dist<=0?'red':'green'}">${dist.toFixed(2)}%</td>
+      <td>${fI(r.MARKET_DAYS)}d</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── SELL TRIGGER ─────────────────────────────────────────────────────────────
+function renderSellTrigger(){
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  rows=rows.filter(r=>{
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const tgt=parseFloat(r.TARGET_PRICE)||0;
+    return tgt>0&&ltp>=tgt*0.97;
+  }).sort((a,b)=>{
+    const da=(parseFloat(a.CURRENT_LTP)||0)/(parseFloat(a.TARGET_PRICE)||1);
+    const db=(parseFloat(b.CURRENT_LTP)||0)/(parseFloat(b.TARGET_PRICE)||1);
+    return db-da; // closest to target first
+  });
+  renderBadges('selltrigger-badges', rows);
+  const body=document.getElementById('selltrigger-body');
+  document.getElementById('selltrigger-info').textContent=`${rows.length} stocks near target`;
+  if(!rows.length){body.innerHTML='<tr><td colspan="11" class="empty">No stocks near sell trigger</td></tr>';return;}
+  body.innerHTML=rows.map((r,i)=>{
+    const avg=parseFloat(r.AVG_BUY_PRICE)||0;
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const tgt=parseFloat(r.TARGET_PRICE)||0;
+    const dist=tgt>0?((tgt-ltp)/tgt*100):0;
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    return `<tr>
+      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>₹${fN(avg)}</td>
+      <td class="green">₹${fN(ltp)}</td>
+      <td style="color:#059669;font-weight:700">₹${fN(tgt)}</td>
+      <td class="${dist<=2?'green':''}">${dist.toFixed(2)}%</td>
+      <td ${pnlColor(r.PROFIT)}>₹${fN(pnl)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${pct>=0?'+':''}${f2(pct)}%</td>
+      <td>${fI(r.MARKET_DAYS)}d</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── AVG HISTORY ──────────────────────────────────────────────────────────────
+function renderAvgHistory(){
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&parseInt(r.BUY_COUNT||0)>1);
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  rows.sort((a,b)=>parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0));
+  renderBadges('avghistory-badges', rows);
+  const body=document.getElementById('avghistory-body');
+  document.getElementById('avghistory-info').textContent=`${rows.length} multi-buy trades`;
+  if(!rows.length){body.innerHTML='<tr><td colspan="11" class="empty">No multi-buy trades found</td></tr>';return;}
+  body.innerHTML=rows.map((r,i)=>{
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    return `<tr>
+      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td style="font-weight:800;color:var(--blue2)">${fI(r.BUY_COUNT)}x</td>
+      <td>₹${fN(r.AVG_BUY_PRICE)}</td>
+      <td>₹${fN(r.TOTAL_INVESTMENT)}</td>
+      <td>₹${fN(r.CURRENT_LTP)}</td>
+      <td ${pnlColor(r.PROFIT)}>₹${fN(pnl)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${pct>=0?'+':''}${f2(pct)}%</td>
+      <td>${resultBadge(r.STATUS==='Open'?'Open':r.RESULT)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── MARKET DATA ──────────────────────────────────────────────────────────────
+function renderMarketData(){
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  if(mdSubFilter==='gainers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)>0);
+  else if(mdSubFilter==='losers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)<0);
+  rows.sort((a,b)=>(parseFloat(b.GAIN_PCT)||0)-(parseFloat(a.GAIN_PCT)||0));
+  renderBadges('marketdata-badges', rows);
+  const body=document.getElementById('marketdata-body');
+  document.getElementById('marketdata-info').textContent=`${rows.length} open positions`;
+  if(!rows.length){body.innerHTML='<tr><td colspan="13" class="empty">No open positions</td></tr>';return;}
+  body.innerHTML=rows.map((r,i)=>{
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const qty=parseInt(r.TOTAL_QTY)||0;
+    const mktVal=ltp*qty;
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    return `<tr>
+      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>₹${fN(r.AVG_BUY_PRICE)}</td>
+      <td class="${pct>=0?'green':'red'}">₹${fN(ltp)}</td>
+      <td ${pnlColor(r.PROFIT)}>₹${fN(pnl)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${pct>=0?'+':''}${f2(pct)}%</td>
+      <td>₹${fN(r.TARGET_PRICE)}</td>
+      <td>₹${fN(r.STOP_PRICE)}</td>
+      <td>₹${fN(r.TOTAL_INVESTMENT)}</td>
+      <td>₹${fN(mktVal)}</td>
+      <td>${fI(r.MARKET_DAYS)}d</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── PERFORMANCE ──────────────────────────────────────────────────────────────
+function renderPerformance(){
+  const cfgIds=['C1','C2','C3','C4'];
+  let closed=ALL_ROWS.filter(r=>r.STATUS==='Closed'&&r.RESULT&&!r.RESULT.includes('FE'));
+  let open=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(dateRangeActive){
+    closed=closed.filter(r=>inDateRange(r.SIGNAL_DATE));
+    open=open.filter(r=>inDateRange(r.SIGNAL_DATE));
+  }
+
+  // Overall KPIs
+  const allExec=[...closed,...open];
+  const totalProfit=allExec.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p>0?s+p:s;},0);
+  const totalLoss=Math.abs(allExec.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;},0));
+  const netPnl=totalProfit-totalLoss;
+  const wins=allExec.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
+  const wr=allExec.length>0?(wins/allExec.length*100):0;
+  const durations=closed.map(r=>parseInt(r.MARKET_DAYS)||0).filter(d=>d>0);
+  const avgDur=durations.length?durations.reduce((a,b)=>a+b,0)/durations.length:0;
+
+  document.getElementById('perf-hero').innerHTML=`
+    <div class="phc ${netPnl>=0?'pos':'neg'}"><div class="phc-label">Combined Net P&amp;L</div><div class="phc-value">₹${fN(netPnl)}</div><div class="phc-sub">${allExec.length} total trades</div></div>
+    <div class="phc pos"><div class="phc-label">Total Win Amount</div><div class="phc-value">₹${fN(totalProfit)}</div><div class="phc-sub">${wins} wins</div></div>
+    <div class="phc neg"><div class="phc-label">Total Loss Amount</div><div class="phc-value">₹${fN(totalLoss)}</div><div class="phc-sub">${allExec.filter(r=>(parseFloat(r.PROFIT)||0)<0).length} losses</div></div>
+    <div class="phc ${wr>=50?'pos':'neg'}"><div class="phc-label">Win Rate</div><div class="phc-value">${wr.toFixed(1)}%</div><div class="phc-sub">${wins}/${allExec.length}</div></div>
+    <div class="phc"><div class="phc-label">Avg Hold Duration</div><div class="phc-value">${Math.round(avgDur)}d</div><div class="phc-sub">closed trades</div></div>`;
+
+  // Per-config closed breakdown
+  document.getElementById('perf-closed-body').innerHTML=cfgIds.map(cid=>{
+    const crows=closed.filter(r=>r.CONFIG===cid);
+    const cWins=crows.filter(r=>(parseFloat(r.PROFIT)||0)>0);
+    const cLoss=crows.filter(r=>(parseFloat(r.PROFIT)||0)<0);
+    const winAmt=cWins.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+    const lossAmt=Math.abs(cLoss.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0));
+    const pFactor=lossAmt>0?(winAmt/lossAmt):winAmt>0?99:0;
+    const net=winAmt-lossAmt;
+    const wr=crows.length>0?(cWins.length/crows.length*100):0;
+    const avgGain=cWins.length?winAmt/cWins.length:0;
+    const avgLoss=cLoss.length?lossAmt/cLoss.length:0;
+    return `<tr>
+      <td>${cfgBadge(cid)}</td><td>${crows.length}</td>
+      <td class="green">${cWins.length}</td><td class="red">${cLoss.length}</td>
+      <td class="${wr>=50?'green':'red'}">${wr.toFixed(1)}%</td>
+      <td class="green">₹${fN(avgGain)}</td><td class="red">₹${fN(avgLoss)}</td>
+      <td class="${pFactor>=1?'green':'red'}">${pFactor.toFixed(2)}</td>
+      <td ${pnlColor(net)}>₹${fN(net)}</td>
+    </tr>`;
+  }).join('');
+
+  // Open summary
+  const openInv=open.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
+  const openMktVal=open.reduce((s,r)=>s+(parseFloat(r.CURRENT_LTP)||0)*(parseInt(r.TOTAL_QTY)||0),0);
+  const openPnl=open.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  document.getElementById('perf-open-summary').innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val">${open.length}</div><div class="stat-lbl">Open Trades</div></div>
+      <div class="stat-card ac"><div class="stat-val">₹${fN(openInv)}</div><div class="stat-lbl">Invested</div></div>
+      <div class="stat-card"><div class="stat-val">₹${fN(openMktVal)}</div><div class="stat-lbl">Market Value</div></div>
+      <div class="stat-card ${openPnl>=0?'gc':'rc'}"><div class="stat-val">₹${fN(openPnl)}</div><div class="stat-lbl">Unrealized P&L</div></div>
+    </div>`;
+
+  // Top stocks by P&L
+  const symMap={};
+  allExec.forEach(r=>{
+    const s=r.SYMBOL||'?';
+    if(!symMap[s]) symMap[s]={sym:s,trades:0,pnl:0,wins:0};
+    symMap[s].trades++;
+    const p=parseFloat(r.PROFIT)||0;
+    symMap[s].pnl+=p;
+    if(p>0)symMap[s].wins++;
+  });
+  const syms=Object.values(symMap);
+  const topProfit=[...syms].sort((a,b)=>b.pnl-a.pnl).slice(0,10);
+  const topLoss=[...syms].sort((a,b)=>a.pnl-b.pnl).slice(0,10);
+  const mkRow=r=>`<tr>
+    <td><strong>${r.sym}</strong></td><td>${r.trades}</td>
+    <td ${pnlColor(r.pnl)}>₹${fN(r.pnl)}</td>
+    <td class="${r.trades>0&&(r.wins/r.trades*100)>=50?'green':'red'}">${r.trades>0?(r.wins/r.trades*100).toFixed(0):'0'}%</td>
+  </tr>`;
+  document.getElementById('perf-top-profit').innerHTML=topProfit.map(mkRow).join('');
+  document.getElementById('perf-top-loss').innerHTML=topLoss.map(mkRow).join('');
+}
+
+// ─── STOCK DETAIL MODAL ───────────────────────────────────────────────────────
+function openStockDetail(sym){
+  const rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.SYMBOL===sym);
+  document.getElementById('sdm-title').textContent=`📊 Stock History: ${sym}`;
+  const modal=document.getElementById('stockDetailModal');
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  
+  const profit=rows.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p>0?s+p:s;},0);
+  const loss=rows.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;},0);
+  const net=profit+loss;
+  const wins=rows.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
+  document.getElementById('sdm-badges').innerHTML=`
+    <span class="tbadge blue">Trades: ${rows.length}</span>
+    <span class="tbadge green">Wins: ${wins}</span>
+    <span class="tbadge red">Losses: ${rows.length-wins}</span>
+    <span class="tbadge ${net>=0?'green':'red'}">Net P&amp;L: ₹${fN(net)}</span>`;
+  
+  document.getElementById('sdm-body').innerHTML=rows.length?rows.map(r=>{
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    return `<tr>
+      <td>${cfgBadge(r.CONFIG)}</td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>₹${fN(r.AVG_BUY_PRICE)}</td>
+      <td>₹${fN(r.EXIT_PRICE)}</td>
+      <td ${pnlColor(r.PROFIT)}>₹${fN(pnl)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${pct>=0?'+':''}${f2(pct)}%</td>
+      <td>${resultBadge(r.STATUS==='Open'?'Open':r.RESULT)}</td>
+      <td>${fI(r.MARKET_DAYS)}d</td>
+      <td>${resultBadge(r.RESULT)}</td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="9" class="empty">No trades found</td></tr>';
+}
+function closeStockDetail(){
+  document.getElementById('stockDetailModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ─── EXPORT CSV FOR NEW TABS ──────────────────────────────────────────────────
+function exportTabCSV(tab){
+  let rows=[];
+  if(tab==='avgtrigger') rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&(parseFloat(r.CURRENT_LTP)||0)<(parseFloat(r.AVG_BUY_PRICE)||0)*0.90);
+  else if(tab==='selltrigger') rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&(parseFloat(r.CURRENT_LTP)||0)>=(parseFloat(r.TARGET_PRICE)||0)*0.97);
+  else if(tab==='avghistory') rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&parseInt(r.BUY_COUNT||0)>1);
+  else if(tab==='marketdata') rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(!rows.length){toast('No data to export','info');return;}
+  const keys=Object.keys(rows[0]);
+  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${r[k]!=null?r[k]:''}"`)
+    .join(','))].join('
+');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`NSE_BTST_${tab}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast('CSV downloaded!','success');
+}
+
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 function toast(msg,type='info'){
   const el=document.createElement('div');
@@ -999,6 +1523,7 @@ function toast(msg,type='info'){
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeStockDetail(); });
 buildOverview();
 </script>
 </body>
