@@ -2,7 +2,6 @@ name: Bootstrap Historical Data
 
 on:
   workflow_dispatch:
-
     inputs:
       months_back:
         description: 'How many months of history to download (default 14)'
