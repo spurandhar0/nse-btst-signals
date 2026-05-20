@@ -2,6 +2,17 @@ name: Bootstrap Historical Data
 
 on:
   workflow_dispatch:
+
+  # ADD THIS BLOCK RIGHT HERE
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
     inputs:
       months_back:
         description: 'How many months of history to download (default 14)'
