@@ -1,12 +1,12 @@
 {
-  "generated_at": "21-May-2026 06:53 IST",
+  "generated_at": "21-May-2026 13:05 IST",
   "signal_date": "20-May-2026",
   "total_signals": 1,
   "config_breakdown": {
     "C1": 1570,
     "C2": 1450,
     "C3": 3077,
-    "C4": 238
+    "C4": 2989
   },
   "configs": [
     {
@@ -54,13 +54,13 @@
     {
       "id": "C4",
       "name": "Config 4",
-      "days_back": 10,
+      "days_back": 5,
       "pct_min": -0.09,
-      "pct_max": -0.05,
-      "ath_min": -0.45,
-      "ath_max": -0.4,
+      "pct_max": -0.04,
+      "ath_min": -0.6,
+      "ath_max": -0.35,
       "max_buys": 4,
-      "buy_drop": 0.05,
+      "buy_drop": 0.1,
       "target": 0.1,
       "stoploss": 0.25,
       "max_duration": 40
