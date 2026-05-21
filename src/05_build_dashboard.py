@@ -762,7 +762,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#9400; Avg History</h3>
-      <span style="font-size:12px;color:var(--text3);">Trades with multiple buy legs (BUY_COUNT &gt; 1)</span>
+      <span style="font-size:12px;color:var(--text3);">Open positions with averaging (BUY_COUNT &gt; 1) — per buy step breakdown</span>
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
          <span class="slbl">Search:</span>
          <input type="text" id="avghist-search" placeholder="Search symbol..." oninput="renderAvgHistory()" style="width:140px;padding:5px 8px;font-size:13px;">
@@ -783,8 +783,9 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="table-area">
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
-        <th>Buy Count</th><th>Total Qty</th><th>Avg Buy ₹</th><th>Total Invested ₹</th>
-        <th>Current LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th><th>Status</th>
+        <th>Buy #</th><th>Buy Date</th><th>Buy Price ₹</th><th>Avg After ₹</th>
+        <th>Buy Count</th><th>Cum Qty</th><th>Cum Invested ₹</th>
+        <th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
       </tr></thead><tbody id="avghistory-body"></tbody></table>
     </div>
     <div class="pager"><span class="info" id="avghistory-info"></span></div>
@@ -1595,14 +1596,16 @@ function buildHistory(){{
       let pLo = parseFloat(r[`B${{bi}}_Low`]) || (bi===0?parseFloat(r.LOW_PRICE):0);
       let pCl = parseFloat(r[`B${{bi}}_Close`]) || (bi===0?parseFloat(r.SIGNAL_CLOSE):0);
 
+      const legQty = legPrice > 0 ? Math.floor(10000 / legPrice) : 0;
+      const legInv = legQty * legPrice;
       return `
       <tr style="border-top:1px solid #e2e8f0">
         <td style="padding:5px 8px">${{bi+1}}</td>
         <td style="padding:5px 8px">${{fD(legDate)}}</td>
         <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(legPrice)}}</td>
         <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{avgStr}}</td>
-        <td style="padding:5px 8px;text-align:right">—</td>
-        <td style="padding:5px 8px;text-align:right">—</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${{fI(legQty)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(legInv)}}</td>
         <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pPrev)}}</td>
         <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pOp)}}</td>
         <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pHi)}}</td>
@@ -1627,6 +1630,8 @@ function buildHistory(){{
             <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
             <th style="padding:5px 8px;text-align:right;font-weight:600">Sell Price</th>
             <th style="padding:5px 8px;text-align:center;font-weight:600">Exit Type</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">Qty</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Value &#8377;</th>
             <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
             <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
             <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
@@ -1639,6 +1644,8 @@ function buildHistory(){{
               <td style="padding:5px 8px">${{fD(r.EXIT_DATE)}}</td>
               <td style="padding:5px 8px;text-align:right;font-weight:600;color:#dc2626">&#8377;${{fN(r.EXIT_PRICE)}}</td>
               <td style="padding:5px 8px;text-align:center">${{exitTypeBadge}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${{fI(parseInt(r.TOTAL_QTY)||0)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN((parseInt(r.TOTAL_QTY)||0)*(parseFloat(r.EXIT_PRICE)||0))}}</td>
               <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sPrev)}}</td>
               <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sOp)}}</td>
               <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sHi)}}</td>
@@ -1708,7 +1715,7 @@ function buildHistory(){{
         </div>
       </div>
       <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})', '${{buyDatesJson}}', '${{sellDateStr}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})', '${{buyDatesJson}}', '${{sellDateStr}}', '${{r.B0_BoughtDate||r.SIGNAL_DATE||\'\'}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
         <button onclick="exportHistCard(this,'${{r.SYMBOL}}_${{r.CONFIG}}_${{r.SIGNAL_DATE}}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
         <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
       </div>
@@ -1903,33 +1910,68 @@ function avgHistCfgFilter(val,btn){{
 }}
 function renderAvgHistory(){{
   const q = (document.getElementById('avghist-search')||{{}}).value||'';
-  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&parseInt(r.BUY_COUNT||0)>1);
+  // Only OPEN positions with BUY_COUNT > 1 (averaging already happened)
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&parseInt(r.BUY_COUNT||0)>1);
   if(avgHistCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgHistCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
-  rows.sort((a,b)=>parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0));
-  
-  renderBadges('avghistory-badges', rows, 'closed');
+  rows.sort((a,b)=>{{
+    const bd=parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0);
+    return bd!==0?bd:(a.SYMBOL||'').localeCompare(b.SYMBOL||'');
+  }});
+
+  renderBadges('avghistory-badges', rows, 'open');
   const body=document.getElementById('avghistory-body');
-  document.getElementById('avghistory-info').textContent=`${{rows.length}} multi-buy trades`;
-  
-  if(!rows.length){{body.innerHTML='<tr><td colspan="12" class="empty">No multi-buy trades found</td></tr>';return;}}
-  body.innerHTML=rows.map((r,i)=>{{
-    const pnl=parseFloat(r.PROFIT)||0;
-    const pct=parseFloat(r.GAIN_PCT)||0;
-    return `<tr>
-      <td>${{i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
-      <td>${{fD(r.SIGNAL_DATE)}}</td>
-      <td style="font-weight:800;color:var(--blue2)">${{fI(r.BUY_COUNT)}}x</td>
-      <td>${{fI(r.TOTAL_QTY)}}</td>
-      <td>₹${{fN(r.AVG_BUY_PRICE)}}</td>
-      <td>₹${{fN(r.TOTAL_INVESTMENT)}}</td>
-      <td>₹${{fN(r.CURRENT_LTP)}}</td>
-      <td ${{pnlColor(r.PROFIT)}}>₹${{fN(pnl)}}</td>
-      <td ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
-      <td>${{resultBadge(r.STATUS==='Open'?'Open':r.RESULT)}}</td>
-    </tr>`;
-  }}).join('');
+  document.getElementById('avghistory-info').textContent=`${{rows.length}} open averaging positions`;
+
+  if(!rows.length){{body.innerHTML='<tr><td colspan="14" class="empty">No open averaging positions found</td></tr>';return;}}
+
+  // Expand each trade into per-buy step rows
+  const htmlRows=[];
+  rows.forEach((r,ri)=>{{
+    const buyCount=parseInt(r.BUY_COUNT)||1;
+    const finalAvg=parseFloat(r.AVG_BUY_PRICE)||0;
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const cfgDef=CONFIGS_DEF.find(c=>c.id===r.CONFIG||c.ID===r.CONFIG)||{{}};
+    const dropPct=parseFloat(cfgDef.buy_drop||cfgDef.BUY_DROP||0.1);
+    let runningAvg=0, cumQty=0, cumInv=0;
+
+    for(let bi=0;bi<buyCount;bi++){{
+      const date=r[`B${{bi}}_BoughtDate`]||(bi===0?r.SIGNAL_DATE:'—');
+      let price;
+      if(bi===0){{
+        price=parseFloat(r.B0_Close)||parseFloat(r.SIGNAL_CLOSE)||finalAvg;
+        runningAvg=price;
+      }}else{{
+        price=runningAvg*(1-dropPct);
+        runningAvg=((runningAvg*bi)+price)/(bi+1);
+      }}
+      const avgAfter=(bi===buyCount-1)?finalAvg:runningAvg;
+      const qty=price>0?Math.floor(10000/price):0;
+      const inv=qty*price;
+      cumQty+=qty; cumInv+=inv;
+      const pnl=ltp*cumQty-cumInv;
+      const pnlPct=cumInv>0?(pnl/cumInv)*100:0;
+      const isLast=(bi===buyCount-1);
+      const rowBg=isLast?'background:#eff6ff':'';
+
+      htmlRows.push(`<tr style="${{rowBg}}">
+        <td>${{ri+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
+        <td>${{fD(r.SIGNAL_DATE)}}</td>
+        <td style="text-align:center;font-weight:700;color:#2563eb">Buy ${{bi+1}}</td>
+        <td>${{fD(date)}}</td>
+        <td style="text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(price)}}</td>
+        <td style="text-align:right;color:#2563eb;font-weight:600">&#8377;${{fN(avgAfter)}}</td>
+        <td style="text-align:center;font-weight:700;color:#7c3aed">${{bi+1}}x</td>
+        <td style="text-align:right;font-weight:600">${{fI(cumQty)}}</td>
+        <td style="text-align:right">&#8377;${{fN(cumInv)}}</td>
+        <td style="text-align:right;font-weight:600">&#8377;${{fN(ltp)}}</td>
+        <td style="text-align:right;font-weight:600" ${{pnlColor(pnl)}}>&#8377;${{fN(pnl)}}</td>
+        <td style="text-align:right;font-weight:600" ${{pnlColor(pnlPct)}}>${{pnlPct>=0?'+':''}}${{f2(pnlPct)}}%</td>
+      </tr>`);
+    }}
+  }});
+  body.innerHTML=htmlRows.join('');
 }}
 
 // ─── MARKET DATA ──────────────────────────────────────────────────────────────
@@ -2108,8 +2150,14 @@ function closeTradeDetail(){{
 }}
 
 // ─── OHLC (DAILY HISTORY) MODAL ───────────────────────────────────────────────
-function showOHLCDirect(key, label, buyDatesStr, sellDateStr){{
-  const data=TRADE_OHLC[key]||[];
+function showOHLCDirect(key, label, buyDatesStr, sellDateStr, startDateStr){{
+  const allData=TRADE_OHLC[key]||[];
+  // Filter to: startDate (first buy) → sellDate (or today for open)
+  const data = startDateStr ? allData.filter(d => {{
+    if(startDateStr && d.date < startDateStr) return false;
+    if(sellDateStr && sellDateStr !== '—' && d.date > sellDateStr) return false;
+    return true;
+  }}) : allData;
   document.getElementById('ohlc-title').textContent=`📈 Daily Historical Data — ${{label}} (${{data.length}} days)`;
   const modal=document.getElementById('ohlcModal');
   modal.classList.add('open');
