@@ -168,6 +168,18 @@ def load_bhav_ohlc(all_rows):
                     rec['date'] = d
                     prev_c = rec['c']
                     ohlc_list.append(rec)
+            # For sold trades: ensure EXIT_DATE row present (use SoldOHLC from row)
+            if ext and (not ohlc_list or ohlc_list[-1]['date'] != ext):
+                sold_c = float(r.get('SoldClose') or r.get('EXIT_PRICE') or 0)
+                sold_o = float(r.get('SoldOpen') or 0)
+                sold_h = float(r.get('SoldHigh') or 0)
+                sold_l = float(r.get('SoldLow') or 0)
+                sold_pc = float(r.get('SoldPrevClose') or 0)
+                if sold_c > 0:
+                    prev_last = ohlc_list[-1]['c'] if ohlc_list else sold_pc
+                    chg = round((sold_c - prev_last) / prev_last * 100, 2) if prev_last else 0
+                    ohlc_list.append({'date': ext, 'pc': sold_pc, 'o': sold_o,
+                                      'h': sold_h, 'l': sold_l, 'c': sold_c, 'chg': chg})
             trade_ohlc[key] = ohlc_list
         return trade_ohlc
     except Exception as e:
@@ -1571,6 +1583,7 @@ function buildHistory(){{
     const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); 
 
     let runningAvg = 0;
+    let totalCalcQty = 0;
     const buyDatesTracker = [];
 
     const buyRows = Array.from({{length: buyCount}}, (_, bi) => {{
@@ -1598,6 +1611,7 @@ function buildHistory(){{
 
       const legQty = legPrice > 0 ? Math.floor(10000 / legPrice) : 0;
       const legInv = legQty * legPrice;
+      totalCalcQty += legQty;
       return `
       <tr style="border-top:1px solid #e2e8f0">
         <td style="padding:5px 8px">${{bi+1}}</td>
@@ -1644,8 +1658,8 @@ function buildHistory(){{
               <td style="padding:5px 8px">${{fD(r.EXIT_DATE)}}</td>
               <td style="padding:5px 8px;text-align:right;font-weight:600;color:#dc2626">&#8377;${{fN(r.EXIT_PRICE)}}</td>
               <td style="padding:5px 8px;text-align:center">${{exitTypeBadge}}</td>
-              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${{fI(parseInt(r.TOTAL_QTY)||0)}}</td>
-              <td style="padding:5px 8px;text-align:right">&#8377;${{fN((parseInt(r.TOTAL_QTY)||0)*(parseFloat(r.EXIT_PRICE)||0))}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${{fI(totalCalcQty)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(totalCalcQty*(parseFloat(r.EXIT_PRICE)||0))}}</td>
               <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sPrev)}}</td>
               <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sOp)}}</td>
               <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sHi)}}</td>
@@ -1702,7 +1716,7 @@ function buildHistory(){{
             <tbody>
               <tr style="border-top:1px solid #dbeafe">
                 <td style="padding:5px 8px;color:${{isSold?'#dc2626':'#2563eb'}};font-weight:700">${{isSold?'SOLD':'HOLD'}}</td>
-                <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{fI(r.TOTAL_QTY)}}</td>
+                <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{fI(totalCalcQty)}}</td>
                 <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
                 <td style="padding:5px 8px;text-align:right">&#8377;${{fN(ltp)}}</td>
                 <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
