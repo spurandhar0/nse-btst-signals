@@ -102,8 +102,12 @@ def load_bhav_ohlc(all_rows):
             dm = re.search(r'(\d{8})', fname)
             if not dm:
                 continue
-            ds = dm.group(1)  # YYYYMMDD
-            date_str = f"{ds[:4]}-{ds[4:6]}-{ds[6:]}"
+            ds = dm.group(1)
+            # Detect format: YYYYMMDD (year first, e.g. 20250101) vs DDMMYYYY (day first, e.g. 01012025)
+            if 2000 <= int(ds[:4]) <= 2099:
+                date_str = f"{ds[:4]}-{ds[4:6]}-{ds[6:]}"
+            else:
+                date_str = f"{ds[4:]}-{ds[2:4]}-{ds[:2]}"
             try:
                 with open(fpath, newline='', encoding='utf-8', errors='replace') as cf:
                     reader = csv.DictReader(cf)
