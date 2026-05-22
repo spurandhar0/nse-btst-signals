@@ -80,6 +80,8 @@ def check_signal(sym_df, ath_price, cfg):
 
     prev_close = closes[i - 1] if i > 0 else 0.0
     pct_1d = ((today_close - prev_close) / prev_close) if prev_close > 0 else 0.0
+    close_5d_ago = closes[i - 5] if i >= 5 else closes[0]
+    pct_5d = round(((today_close - close_5d_ago) / close_5d_ago) * 100, 2) if close_5d_ago > 0 else 0.0
 
     return {
         "SIGNAL_DATE":   dates[i],
@@ -92,6 +94,7 @@ def check_signal(sym_df, ath_price, cfg):
         "PCT_FROM_LOW":  round(pct_from_low * 100, 2),
         "PCT_FROM_ATH":  round(pct_from_ath * 100, 2),
         "PCT_1D_CHANGE": round(pct_1d * 100, 2),
+        "CHG_5D":        pct_5d,
     }
 
 
@@ -197,6 +200,7 @@ def main():
                 "PCT_FROM_LOW":    first_signal["PCT_FROM_LOW"],
                 "PCT_FROM_ATH":    first_signal["PCT_FROM_ATH"],
                 "PCT_1D_CHANGE":   first_signal["PCT_1D_CHANGE"],
+                "CHG_5D":          first_signal.get("CHG_5D", 0.0),
                 "CONFIGS_MATCHED": ",".join(matched_configs),
                 "CONFIG_COUNT":    len(matched_configs),
             }
@@ -212,7 +216,7 @@ def main():
 
     df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=[
         "SYMBOL", "SIGNAL_DATE", "SIGNAL_CLOSE", "PREV_CLOSE", "ATH_PRICE",
-        "MIN_5D_LOW", "PCT_FROM_LOW", "PCT_FROM_ATH", "PCT_1D_CHANGE",
+        "MIN_5D_LOW", "PCT_FROM_LOW", "PCT_FROM_ATH", "PCT_1D_CHANGE", "CHG_5D",
         "CONFIGS_MATCHED", "CONFIG_COUNT"
     ])
 
