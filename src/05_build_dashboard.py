@@ -2286,11 +2286,11 @@ def _patch_cfg_buttons(html, cfg_ids):
 
     html = html.replace(
         "const cfgIds=['C1','C2','C3','C4'];",
-        "const cfgIds=Object.keys(SIM_DATA.results).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));"
+        "const cfgIds=CONFIGS_DEF.map(c=>c.id||c.ID).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));"
     )
     html = html.replace(
         "const allCfgIds=['C1','C2','C3','C4'];",
-        "const allCfgIds=Object.keys(SIM_DATA.results).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));"
+        "const allCfgIds=CONFIGS_DEF.map(c=>c.id||c.ID).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));"
     )
 
     html = re.sub(r'\d+ FIXED CONFIGS', f'{len(cfg_ids)} CONFIGS', html)
