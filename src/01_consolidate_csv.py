@@ -3,6 +3,9 @@ Script 1: Consolidate NSE Bhavcopy CSVs
 ========================================
 Reads all CSV files from bhav_data/**/*.csv
 Merges into a single Parquet file: db/consolidated.parquet
+
+If no CSV files are found but consolidated.parquet already exists,
+skips consolidation (allows re-runs after cleanup step removes raw CSVs).
 """
 
 import os, glob
@@ -83,8 +86,13 @@ def main():
     print(f"Found {len(csv_files)} CSV files in {BHAV_DIR}/")
 
     if not csv_files:
-        print("\u274c No CSV files found.")
-        raise SystemExit(1)
+        if os.path.exists(OUTPUT_FILE):
+            print("\u26a0\ufe0f  No CSV files found, but consolidated.parquet already exists — skipping consolidation.")
+            print("\u2705 Using existing consolidated.parquet")
+            return
+        else:
+            print("\u274c No CSV files found and no consolidated.parquet exists. Cannot continue.")
+            raise SystemExit(1)
 
     csv_files = sorted(csv_files, key=extract_file_date)
 
