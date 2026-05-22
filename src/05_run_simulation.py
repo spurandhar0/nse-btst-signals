@@ -621,8 +621,14 @@ def fmt_date_str(val):
 
 
 def export_sim_json(consolidated_data, price_dict, global_last_date):
-    """Export simulation results as JSON for dashboard consumption."""
-    results = {}
+    """Export simulation results split across two JSON files to stay under GitHub's 100 MB limit.
+
+    docs/data/sim_results.json  — lightweight trade metadata (no per-day OHLC candles)
+    docs/data/trade_ohlc.json   — per-buy and sell-day OHLC rows keyed by SYMBOL_SIGNALDATE_CONFIG
+    """
+    results  = {}
+    ohlc_out = {}   # key → {buys: [...], sell: {...}}
+
     for cid, columns, rows in consolidated_data:
         col_map = {c: i for i, c in enumerate(columns)}
 
@@ -648,6 +654,7 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
             gain_pct = g(row, 'GainLoss%')
             order    = g(row, 'Order')
             status   = g(row, 'Status')
+            sig_date = fmt_date_str(g(row, 'BuyDate'))
 
             # Recompute unrealized P&L for open positions
             if order == 'Executed' and status == 'Open':
@@ -657,10 +664,11 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                     profit   = round((current_ltp - avg_buy) * qty, 2)
                     gain_pct = round(((current_ltp - avg_buy) / avg_buy) * 100, 2)
 
+            # ── Lightweight row (no raw OHLC candles) ─────────────────────────
             r = {
                 'CONFIG':           cid,
                 'SYMBOL':           sym,
-                'SIGNAL_DATE':      fmt_date_str(g(row, 'BuyDate')),
+                'SIGNAL_DATE':      sig_date,
                 'SIGNAL_CLOSE':     g(row, 'BuyClPrice'),
                 'CHG_1D':           g(row, '1DChange%'),
                 'PCT_FROM_LOW':     g(row, '5DLow%'),
@@ -684,53 +692,64 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                 'EXIT_DATE':        fmt_date_str(g(row, 'SoldDate')),
                 'EXIT_PRICE':       g(row, 'SoldPrice'),
                 'TODAY_DATE':       fmt_date_str(g(row, 'TodayDate')),
-                # Per-buy OHLC (B0..B3)
-                'B0_BoughtDate':    fmt_date_str(g(row, 'B0_BoughtDate')),
-                'B0_PrevClose':     g(row, 'B0_PrevClose'),
-                'B0_Open':          g(row, 'B0_Open'),
-                'B0_High':          g(row, 'B0_High'),
-                'B0_Low':           g(row, 'B0_Low'),
-                'B0_Close':         g(row, 'B0_Close'),
-                'B1_BoughtDate':    fmt_date_str(g(row, 'B1_BoughtDate')),
-                'B1_PrevClose':     g(row, 'B1_PrevClose'),
-                'B1_Open':          g(row, 'B1_Open'),
-                'B1_High':          g(row, 'B1_High'),
-                'B1_Low':           g(row, 'B1_Low'),
-                'B1_Close':         g(row, 'B1_Close'),
-                'B2_BoughtDate':    fmt_date_str(g(row, 'B2_BoughtDate')),
-                'B2_PrevClose':     g(row, 'B2_PrevClose'),
-                'B2_Open':          g(row, 'B2_Open'),
-                'B2_High':          g(row, 'B2_High'),
-                'B2_Low':           g(row, 'B2_Low'),
-                'B2_Close':         g(row, 'B2_Close'),
-                'B3_BoughtDate':    fmt_date_str(g(row, 'B3_BoughtDate')),
-                'B3_PrevClose':     g(row, 'B3_PrevClose'),
-                'B3_Open':          g(row, 'B3_Open'),
-                'B3_High':          g(row, 'B3_High'),
-                'B3_Low':           g(row, 'B3_Low'),
-                'B3_Close':         g(row, 'B3_Close'),
-                # Sell-day OHLC
-                'SoldPrevClose':    g(row, 'SoldPrevClose'),
-                'SoldOpen':         g(row, 'SoldOpen'),
-                'SoldHigh':         g(row, 'SoldHigh'),
-                'SoldLow':          g(row, 'SoldLow'),
-                'SoldClose':        g(row, 'SoldClose'),
             }
             config_rows.append(r)
+
+            # ── Per-buy OHLC → trade_ohlc.json ────────────────────────────────
+            # Only bother for executed trades (open or closed)
+            if order == 'Executed' and sig_date:
+                ohlc_key = f"{sym}_{sig_date}_{cid}"
+                if ohlc_key not in ohlc_out:
+                    buys = []
+                    max_b = 4  # B0..B3
+                    for b in range(max_b):
+                        bd = fmt_date_str(g(row, f'B{b}_BoughtDate'))
+                        if bd is None:
+                            break
+                        buys.append({
+                            'date': bd,
+                            'pc':   g(row, f'B{b}_PrevClose'),
+                            'o':    g(row, f'B{b}_Open'),
+                            'h':    g(row, f'B{b}_High'),
+                            'l':    g(row, f'B{b}_Low'),
+                            'c':    g(row, f'B{b}_Close'),
+                        })
+                    sell = None
+                    sold_c = g(row, 'SoldClose')
+                    if sold_c is not None:
+                        sell = {
+                            'date': fmt_date_str(g(row, 'SoldDate')),
+                            'pc':   g(row, 'SoldPrevClose'),
+                            'o':    g(row, 'SoldOpen'),
+                            'h':    g(row, 'SoldHigh'),
+                            'l':    g(row, 'SoldLow'),
+                            'c':    sold_c,
+                        }
+                    ohlc_out[ohlc_key] = {'buys': buys, 'sell': sell}
+
         results[cid] = config_rows
 
-    out = {
+    os.makedirs('docs/data', exist_ok=True)
+
+    # ── File 1: sim_results.json (lightweight) ─────────────────────────────────
+    sim_out = {
         'meta': {
             'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
             'last_date':    str(global_last_date.date()),
         },
         'results': results,
     }
-
-    os.makedirs('docs/data', exist_ok=True)
     with open('docs/data/sim_results.json', 'w') as f:
-        json.dump(out, f, default=str)
-    print("✅ Exported docs/data/sim_results.json")
+        json.dump(sim_out, f, default=str)
+    sim_kb = os.path.getsize('docs/data/sim_results.json') / 1024
+    print(f"✅ Exported docs/data/sim_results.json  ({sim_kb:,.0f} KB)")
+
+    # ── File 2: trade_ohlc.json (buy/sell OHLC only) ───────────────────────────
+    with open('docs/data/trade_ohlc.json', 'w') as f:
+        json.dump(ohlc_out, f, default=str)
+    ohlc_kb = os.path.getsize('docs/data/trade_ohlc.json') / 1024
+    print(f"✅ Exported docs/data/trade_ohlc.json   ({ohlc_kb:,.0f} KB)")
+    print(f"   Total data: {sim_kb + ohlc_kb:,.0f} KB  |  OHLC keys: {len(ohlc_out):,}")
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
