@@ -2250,6 +2250,53 @@ buildOverview();
 </html>"""
 
 
+def _patch_cfg_buttons(html, cfg_ids):
+    # Replace hardcoded C1-C4 filter buttons with dynamic ones for all cfg_ids.
+    import re
+
+    def make_cfgbtns(tab, indent):
+        return '\n'.join(
+            f'{indent}<button class="btn-filter" onclick="cfgFilter(\'{tab}\',\'{cid}\',this)">{cid}</button>'
+            for cid in cfg_ids
+        )
+
+    def make_specialbtns(fn, indent):
+        return '\n'.join(
+            f'{indent}<button class="btn-filter" onclick="{fn}(\'{cid}\',this)">{cid}</button>'
+            for cid in cfg_ids
+        )
+
+    for tab in ['open', 'closed', 'fe', 'hist', 'ledger', 'trades']:
+        pat = re.compile(
+            r'(?P<ind> *)<button class="btn-filter" onclick="cfgFilter\(\'' + re.escape(tab) + r'\',\'C1\',this\)">C1</button>\n'
+            r'(?P=ind)<button class="btn-filter" onclick="cfgFilter\(\'' + re.escape(tab) + r'\',\'C2\',this\)">C2</button>\n'
+            r'(?P=ind)<button class="btn-filter" onclick="cfgFilter\(\'' + re.escape(tab) + r'\',\'C3\',this\)">C3</button>\n'
+            r'(?P=ind)<button class="btn-filter" onclick="cfgFilter\(\'' + re.escape(tab) + r'\',\'C4\',this\)">C4</button>'
+        )
+        html = pat.sub(lambda m, t=tab: make_cfgbtns(t, m.group('ind')), html)
+
+    for fn in ['sigCfgFilter', 'avgHistCfgFilter', 'mdCfgFilter', 'perfCfgFilter']:
+        pat = re.compile(
+            r'(?P<ind> *)<button class="btn-filter" onclick="' + re.escape(fn) + r'\(\'C1\',this\)">C1</button>\n'
+            r'(?P=ind)<button class="btn-filter" onclick="' + re.escape(fn) + r'\(\'C2\',this\)">C2</button>\n'
+            r'(?P=ind)<button class="btn-filter" onclick="' + re.escape(fn) + r'\(\'C3\',this\)">C3</button>\n'
+            r'(?P=ind)<button class="btn-filter" onclick="' + re.escape(fn) + r'\(\'C4\',this\)">C4</button>'
+        )
+        html = pat.sub(lambda m, f=fn: make_specialbtns(f, m.group('ind')), html)
+
+    html = html.replace(
+        "const cfgIds=['C1','C2','C3','C4'];",
+        "const cfgIds=Object.keys(SIM_DATA.results).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));"
+    )
+    html = html.replace(
+        "const allCfgIds=['C1','C2','C3','C4'];",
+        "const allCfgIds=Object.keys(SIM_DATA.results).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));"
+    )
+
+    html = re.sub(r'\d+ FIXED CONFIGS', f'{len(cfg_ids)} CONFIGS', html)
+    return html
+
+
 def main():
     logo    = load_logo()
     nifty   = load_nifty()
@@ -2258,6 +2305,8 @@ def main():
     signals_rows, sig_date = load_signals_csv()
 
     html = build_html(logo, nifty, configs, sim_meta, sim_results, signals_rows, sig_date)
+    cfg_ids = [c['id'] for c in configs]
+    html = _patch_cfg_buttons(html, cfg_ids)
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, 'w', encoding='utf-8') as f:
