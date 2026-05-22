@@ -1,5 +1,5 @@
 """
-Script 5: Run Simulation for All Configs
+Script 5: Run Simulation for All 4 Configs
 ============================================
 Reads:
   db/signals_C1.parquet .. db/signals_C4.parquet   (accumulated per-config signals)
@@ -621,30 +621,23 @@ def fmt_date_str(val):
 
 
 def export_sim_json(consolidated_data, price_dict, global_last_date):
-    """Export simulation results to JSON files."""
+    """Export simulation results split across two JSON files to stay under GitHub's 100 MB limit.
+
+    docs/data/sim_results.json  — lightweight trade metadata (no per-day OHLC candles)
+    docs/data/trade_ohlc.json   — per-buy and sell-day OHLC rows keyed by SYMBOL_SIGNALDATE_CONFIG
+    """
     results  = {}
     ohlc_out = {}   # key → {buys: [...], sell: {...}}
 
     for cid, columns, rows in consolidated_data:
         col_map = {c: i for i, c in enumerate(columns)}
 
-        # Bulletproof getter function bypassing Pandas type checks entirely
         def g(row, col, default=None):
             idx = col_map.get(col)
-            if idx is None or idx >= len(row):
+            if idx is None:
                 return default
-            val = row[idx]
-            
-            # Universal safe check against None and math.nan
-            if val is None:
-                return default
-            if type(val) is float and val != val:
-                return default
-                
-            return val
-
-        # Dynamically determine the exact max buys available in these columns
-        max_b = sum(1 for c in columns if isinstance(c, str) and c.endswith('_BoughtDate'))
+            val = row[idx] if idx < len(row) else default
+            return default if val is None else val
 
         config_rows = []
         for row in rows:
@@ -667,11 +660,11 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
             if order == 'Executed' and status == 'Open':
                 avg_buy = g(row, 'AvgBuyPrice')
                 qty     = g(row, 'TotalQty')
-                if avg_buy and avg_buy > 0 and current_ltp is not None and qty:
+                if avg_buy and avg_buy > 0 and current_ltp and qty:
                     profit   = round((current_ltp - avg_buy) * qty, 2)
                     gain_pct = round(((current_ltp - avg_buy) / avg_buy) * 100, 2)
 
-            # ── Lightweight row ─────────────────────────
+            # ── Lightweight row (no raw OHLC candles) ─────────────────────────
             r = {
                 'CONFIG':           cid,
                 'SYMBOL':           sym,
@@ -699,41 +692,20 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                 'EXIT_DATE':        fmt_date_str(g(row, 'SoldDate')),
                 'EXIT_PRICE':       g(row, 'SoldPrice'),
                 'TODAY_DATE':       fmt_date_str(g(row, 'TodayDate')),
-                
-                # Restore the legacy dashboard OHLC support
-                'PREV_CLOSE':       g(row, 'B0_PrevClose'),
-                'OPEN_PRICE':       g(row, 'B0_Open'),
-                'HIGH_PRICE':       g(row, 'B0_High'),
-                'LOW_PRICE':        g(row, 'B0_Low'),
             }
-
-            # Embed ALL bought level columns explicitly so the dashboard correctly maps prices
-            for b in range(max_b):
-                r[f'B{b}_BoughtDate'] = fmt_date_str(g(row, f'B{b}_BoughtDate'))
-                r[f'B{b}_PrevClose']  = g(row, f'B{b}_PrevClose')
-                r[f'B{b}_Open']       = g(row, f'B{b}_Open')
-                r[f'B{b}_High']       = g(row, f'B{b}_High')
-                r[f'B{b}_Low']        = g(row, f'B{b}_Low')
-                r[f'B{b}_Close']      = g(row, f'B{b}_Close')
-
-            r['SoldDate']      = fmt_date_str(g(row, 'SoldDate'))
-            r['SoldPrevClose'] = g(row, 'SoldPrevClose')
-            r['SoldOpen']      = g(row, 'SoldOpen')
-            r['SoldHigh']      = g(row, 'SoldHigh')
-            r['SoldLow']       = g(row, 'SoldLow')
-            r['SoldClose']     = g(row, 'SoldClose')
-
             config_rows.append(r)
 
             # ── Per-buy OHLC → trade_ohlc.json ────────────────────────────────
+            # Only bother for executed trades (open or closed)
             if order == 'Executed' and sig_date:
                 ohlc_key = f"{sym}_{sig_date}_{cid}"
                 if ohlc_key not in ohlc_out:
                     buys = []
+                    max_b = 4  # B0..B3
                     for b in range(max_b):
                         bd = fmt_date_str(g(row, f'B{b}_BoughtDate'))
-                        if not bd or str(bd).lower() == 'nan':
-                            continue
+                        if bd is None:
+                            break
                         buys.append({
                             'date': bd,
                             'pc':   g(row, f'B{b}_PrevClose'),
