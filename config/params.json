@@ -1,7 +1,7 @@
 {
   "_readme": "NSE BTST Fixed Signal Generator \u2014 4 Parameter Configurations",
   "_note": "Edit this file to change parameters. Rebuild triggers on next run.",
-  "signal_start_date": "2024-01-01",
+  "signal_start_date": "2025-01-01",
   "simulation": {
     "_note": "These apply to the trading simulation (Step 5)",
     "investment_per_buy": 10000,
