@@ -2133,6 +2133,8 @@ def main():
     html = _patch_cfg_buttons(html, cfg_ids)
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    # Strip surrogate characters that can appear in data fields before writing
+    html = html.encode('utf-8', errors='replace').decode('utf-8')
     with open(OUT, 'w', encoding='utf-8') as f:
         f.write(html)
 
