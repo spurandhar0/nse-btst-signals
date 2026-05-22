@@ -1765,7 +1765,60 @@ document.addEventListener('keydown', e=>{{
         closeOHLC();
     }}
 }});
-// buildOverview() is called by the async data loader above once ALL_ROWS is ready
+// ─── OVERVIEW ────────────────────────────────────────────────────────────────
+function buildOverview(){{
+  const cfgIds = CONFIGS_DEF.map(c=>c.id||c.ID).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+  let totExec=0,totOpen=0,totClosed=0,totPnl=0,totPT=0,totLoss=0;
+  const rows=[];
+
+  cfgIds.forEach(cid=>{{
+    let crows=ALL_ROWS.filter(r=>r.CONFIG===cid);
+    if(dateRangeActive) crows=crows.filter(r=>inDateRange(r.SIGNAL_DATE));
+
+    const exec=crows.filter(r=>r.ORDER==='Executed');
+    const open=exec.filter(r=>r.STATUS==='Open');
+    const closed=exec.filter(r=>r.STATUS==='Closed');
+    const pt=closed.filter(r=>r.RESULT==='Profit-TGT');
+    const sl=closed.filter(r=>r.RESULT==='Loss-SL');
+    const fep=closed.filter(r=>r.RESULT&&r.RESULT.includes('FE')&&r.RESULT.includes('Profit'));
+    const fel=closed.filter(r=>r.RESULT&&r.RESULT.includes('FE')&&r.RESULT.includes('Loss'));
+    const pend=crows.filter(r=>r.ORDER==='Pending');
+    const exp=crows.filter(r=>r.ORDER==='Expired');
+    const inv=crows.filter(r=>r.ORDER==='Invalid');
+    const profitTrades=closed.filter(r=>r.RESULT&&r.RESULT.toLowerCase().startsWith('profit'));
+    const lossTrades=closed.filter(r=>r.RESULT&&r.RESULT.toLowerCase().startsWith('loss'));
+    const wr=profitTrades.length+lossTrades.length>0?
+      (profitTrades.length/(profitTrades.length+lossTrades.length)*100).toFixed(1):'—';
+    const pnl=exec.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+    const wrCls=parseFloat(wr)>=50?'class="green"':'class="red"';
+    const pnlCls=pnl>=0?'class="green"':'class="red"';
+    rows.push(`<tr>
+      <td>${{cfgBadge(cid)}}</td>
+      <td>${{crows.length}}</td><td>${{exec.length}}</td><td>${{open.length}}</td><td>${{closed.length}}</td>
+      <td class="green">${{pt.length}}</td><td class="red">${{sl.length}}</td>
+      <td class="green">${{fep.length}}</td><td class="red">${{fel.length}}</td>
+      <td>${{pend.length}}</td><td>${{exp.length}}</td><td>${{inv.length}}</td>
+      <td ${{wrCls}}>${{wr}}%</td>
+      <td ${{pnlCls}}>&#8377;${{fN(pnl)}}</td>
+    </tr>`);
+    totExec+=exec.length; totOpen+=open.length; totClosed+=closed.length;
+    totPnl+=pnl; totPT+=profitTrades.length; totLoss+=lossTrades.length;
+  }});
+
+  document.getElementById('ov-body').innerHTML=rows.join('');
+  const totWr=totPT+totLoss>0?(totPT/(totPT+totLoss)*100).toFixed(1)+'%':'—';
+
+  let totalSigsFiltered = ALL_ROWS;
+  if(dateRangeActive) totalSigsFiltered = totalSigsFiltered.filter(r=>inDateRange(r.SIGNAL_DATE));
+
+  document.getElementById('ov-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${{totalSigsFiltered.length}}</div><div class="stat-lbl">Total Signals</div></div>
+    <div class="stat-card gc"><div class="stat-val">${{totExec}}</div><div class="stat-lbl">Executed</div></div>
+    <div class="stat-card"><div class="stat-val">${{totOpen}}</div><div class="stat-lbl">Open</div></div>
+    <div class="stat-card"><div class="stat-val">${{totClosed}}</div><div class="stat-lbl">Closed</div></div>
+    <div class="stat-card gc"><div class="stat-val">${{totWr}}</div><div class="stat-lbl">Win Rate</div></div>
+    <div class="stat-card ${{totPnl>=0?'gc':'rc'}}"><div class="stat-val">&#8377;${{fN(totPnl)}}</div><div class="stat-lbl">Total P&amp;L</div></div>`;
+}}
 
 // ─── MTF OUTPUT ──────────────────────────────────────────────────────────────
 let MTF_SYMS = null;
