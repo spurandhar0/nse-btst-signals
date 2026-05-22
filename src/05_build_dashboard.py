@@ -2187,7 +2187,7 @@ function exportMTFCSV() {{
   );
   if (!rows.length) {{ toast('No data to export', 'info'); return; }}
   const hdr = 'S.No,Symbol,Signal Date,Signal Price,Duration,Avg Buy,Current LTP,Drop%,Qty,Investment,Target';
-  const blob = new Blob([hdr + '\n' + rows.join('\n')], {{ type: 'text/csv' }});
+  const blob = new Blob([hdr + '\\n' + rows.join('\\n')], {{ type: 'text/csv' }});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'mtf_output.csv';
