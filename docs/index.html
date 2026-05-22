@@ -131,7 +131,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </div>
     </div>
     <div class="hdr-right">
-      <span class="hdr-badge">&#9679; 23-May-2026 03:25 IST</span>
+      <span class="hdr-badge">&#9679; 23-May-2026 04:52 IST</span>
       <button class="hdr-btn" onclick="location.reload()">&#8635; Refresh</button>
     </div>
   </div>
@@ -148,7 +148,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="liveBanner">
-  &#10003; Last simulation: <strong id="bannerDate">23-May-2026 03:25 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
+  &#10003; Last simulation: <strong id="bannerDate">23-May-2026 04:52 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
 </div>
 
 <div class="container">
@@ -1521,30 +1521,277 @@ function getFiltered(tab){
   else if(tab==='signals'){
     rows=[...SIGNALS_RAW];
     if(sigCfg!=='ALL') rows=rows.filter(r=>{
+      const cfgRaw=(r.CONFIGS_MATCHED||r.configs_matched||r.CONFIG||'');
+      return cfgRaw.split(',').map(s=>s.trim()).includes(sigCfg);
+    });
+    const statusF=(document.getElementById('sig-status-filter')||{}).value||'ALL';
+    if(statusF!=='ALL') rows=rows.filter(r=>{
+      const sym=r.SYMBOL||r.symbol||'';
+      return (openSymbols.has(sym)?'Open Call':'Fresh Call')===statusF;
+    });
+  }
+
+  // Sort
+  const st=state[tab];
+  if(st&&st.sort!==undefined){
+    rows=[...rows];
+    rows.sort((a,b)=>{
+      let va,vb;
+      // generic: use array index approach per tab
+      const sv=getTabSortVals(tab,a,b,st.sort);
+      va=sv[0];vb=sv[1];
+      if(typeof va==='string') return st.asc?(va<vb?-1:1):(va>vb?-1:1);
+      return st.asc?(va-vb):(vb-va);
+    });
+  }
+  return rows;
+}
+
+function getTabSortVals(tab,a,b,col){
+  const nv=x=>parseFloat(x)||0;
+  const sv=x=>x||'';
+  if(tab==='open'){
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','BUY_COUNT','TOTAL_QTY','TOTAL_INVESTMENT','MARKET_DAYS','PROFIT','GAIN_PCT'];
+    const k=cols[col]||'SYMBOL';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='closed'){
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','TOTAL_INVESTMENT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
+    const k=cols[col]||'EXIT_DATE';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='fe'){
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','MARKET_DAYS','_DAYS_LEFT','PROFIT','GAIN_PCT','BUY_COUNT'];
+    const k=cols[col]||'MARKET_DAYS';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='ledger'){
+    const cols=[0,'date','total','profit','loss','pnl','cum'];
+    const k=cols[col]||'date';
+    if(k==='date')return[sv(a.date),sv(b.date)];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='trades'){
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','STATUS','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','BUY_COUNT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
+    const k=cols[col]||'SIGNAL_DATE';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='signals'){
+    // cols: #, DATE, STOCK, 1D%, 5D%, BUY PRICE, LTP, TARGET, SL, STATUS
+    if(col===1)return[sv(a.SIGNAL_DATE||a.signal_date||''),sv(b.SIGNAL_DATE||b.signal_date||'')];
+    if(col===2)return[sv(a.SYMBOL||a.symbol||''),sv(b.SYMBOL||b.symbol||'')];
+    if(col===3)return[nv(a.CHG_PCT||a.chg_pct||0),nv(b.CHG_PCT||b.chg_pct||0)];
+    if(col===5||col===6){
+      const ac=parseFloat(a.CLOSE||a.close||0);
+      const bc=parseFloat(b.CLOSE||b.close||0);
+      return[ac,bc];
+    }
+    if(col===9){
+      const as=openSymbols.has(a.SYMBOL||'')?'Open Call':'Fresh Call';
+      const bs=openSymbols.has(b.SYMBOL||'')?'Open Call':'Fresh Call';
+      return[sv(as),sv(bs)];
+    }
+    return[0,0];
+  }
+  return[0,0];
+}
+
+
+function renderTab(tab){
+  const rows=getFiltered(tab);
+  if(tab==='ledger'){ renderLedger(rows);return; }
+  if(tab==='signals'){ renderSignals(rows);return; }
+  if(tab==='open') renderBadges('open-badges', rows, 'open');
+  else if(tab==='closed') renderBadges('closed-badges', rows, 'closed');
+  else if(tab==='fe') renderBadges('fe-badges', rows, 'open');
+  else if(tab==='trades'){
+    const tProfit=rows.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
+    const tLoss=rows.filter(r=>(parseFloat(r.PROFIT)||0)<0).length;
+    const tOpen=rows.filter(r=>r.STATUS==='Open').length;
+    const tNet=rows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+    const bd=document.getElementById('trades-badges');
+    if(bd) bd.innerHTML=`<span class="tbadge blue">Total: ${rows.length}</span><span class="tbadge">Open: ${tOpen}</span><span class="tbadge green">Profit: ${tProfit}</span><span class="tbadge red">Loss: ${tLoss}</span><span class="tbadge ${tNet>=0?'green':'red'}">Net P&L: &#8377;${fN(tNet)}</span>`;
+  }
+  const pgSzEl=document.getElementById(tab+'-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=state[tab].page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager(tab,page,rows.length,pgSz);
+  const body=document.getElementById(tab+'-body');
+  if(!slice.length){
+    const emptyMsg=tab==='fe'?
+      '<tr><td colspan="13" class="empty">&#10003; No trades approaching Force Exit threshold — all open positions are within safe limits.</td></tr>':
+      `<tr><td colspan="20" class="empty">No data.</td></tr>`;
+    body.innerHTML=emptyMsg;return;
+  }
+  body.innerHTML=slice.map((r,i)=>rowHTML(tab,r,start+i+1)).join('');
+}
+
+function rowHTML(tab,r,n){
+  if(tab==='open'){
+    const pl=parseFloat(r.PROFIT)||0;
+    const gp=parseFloat(r.GAIN_PCT)||0;
+    const bc=parseInt(r.BUY_COUNT||1);
+    const bcHtml=bc>1
+      ?`<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:900;background:linear-gradient(135deg,var(--blue2),var(--cyan2));color:#fff">${bc}x</span>`
+      :`<span style="color:var(--text3)">${bc}</span>`;
+    return `<tr>
+      <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td><td>&#8377;${fN(r.CURRENT_LTP)}</td>
+      <td>&#8377;${fN(r.TARGET_PRICE)}</td><td>&#8377;${fN(r.STOP_PRICE)}</td>
+      <td>${bcHtml}</td><td>${fI(r.TOTAL_QTY)}</td>
+      <td>&#8377;${fN(r.TOTAL_INVESTMENT)}</td><td>${fI(r.MARKET_DAYS)}</td>
+      <td ${pnlColor(r.PROFIT)}>&#8377;${fN(r.PROFIT)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${gp>=0?'+':''}${f2(r.GAIN_PCT)}%</td>
+    </tr>`;
+  }
+  if(tab==='closed'){
+    return `<tr>
+      <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td><td>${fD(r.EXIT_DATE)}</td>
+      <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td><td>&#8377;${fN(r.EXIT_PRICE)}</td>
+      <td>${fI(r.TOTAL_QTY)}</td><td>&#8377;${fN(r.TOTAL_INVESTMENT)}</td>
+      <td ${pnlColor(r.PROFIT)}>&#8377;${fN(r.PROFIT)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}${f2(r.GAIN_PCT)}%</td>
+      <td>${fI(r.MARKET_DAYS)}</td>
+      <td>${resultBadge(r.RESULT)}</td>
+    </tr>`;
+  }
+  if(tab==='fe'){
+    const held=parseInt(r.MARKET_DAYS)||0;
+    const left=r._DAYS_LEFT!=null?r._DAYS_LEFT:Math.max(0,(r._MAX_DUR||90)-held);
+    const urgCls=left<=5?'color:#dc2626;font-weight:900':left<=15?'color:#d97706;font-weight:800':'color:#059669;font-weight:700';
+    const urgIcon=left<=5?'🔴':left<=15?'⚠️':'✅';
+    const bc=parseInt(r.BUY_COUNT||1);
+    const bcHtml=bc>1?`<span style="font-weight:800;color:var(--blue2)">${bc}x</span>`:`${bc}`;
+    return `<tr>
+      <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td>
+      <td class="${(parseFloat(r.GAIN_PCT)||0)>=0?'green':'red'}">&#8377;${fN(r.CURRENT_LTP)}</td>
+      <td>&#8377;${fN(r.TARGET_PRICE)}</td><td>&#8377;${fN(r.STOP_PRICE)}</td>
+      <td>${held}d</td>
+      <td style="${urgCls}">${urgIcon} ${left}d</td>
+      <td ${pnlColor(r.PROFIT)}>&#8377;${fN(r.PROFIT)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}${f2(r.GAIN_PCT)}%</td>
+      <td>${bcHtml}</td>
+    </tr>`;
+  }
+  if(tab==='trades'){
+    const bc=parseInt(r.BUY_COUNT||1);
+    const bcHtml=bc>1?`<span style="font-weight:800;color:var(--blue2)">${bc}x</span>`:`${bc}`;
+    const cardKey=`${r.CONFIG}|${r.SYMBOL}`;
+    return `<tr>
+      <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${fD(r.SIGNAL_DATE)}</td><td>${fD(r.EXIT_DATE)}</td>
+      <td>${r.STATUS||'—'}</td>
+      <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td><td>&#8377;${fN(r.EXIT_PRICE)}</td>
+      <td>${fI(r.TOTAL_QTY)}</td><td>${bcHtml}</td>
+      <td ${pnlColor(r.PROFIT)}>&#8377;${fN(r.PROFIT)}</td>
+      <td ${pnlColor(r.GAIN_PCT)}>${(parseFloat(r.GAIN_PCT)||0)>=0?'+':''}${f2(r.GAIN_PCT)}%</td>
+      <td>${fI(r.MARKET_DAYS)}</td>
+      <td>${resultBadge(r.RESULT)}</td>
+      <td><button onclick="openTradeDetail('${cardKey}')" class="btn-sm btn-outline" style="padding:3px 8px;font-size:11px;">View</button></td>
+    </tr>`;
+  }
+  return '';
+}
+
+function renderLedger(rows){
+  const body=document.getElementById('ledger-body');
+  if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No closed trades yet.</td></tr>';
+    document.getElementById('ledger-info').textContent='';return;}
+  body.innerHTML=rows.map((r,i)=>`<tr>
+    <td>${i+1}</td><td>${r.date}</td>
+    <td>${r.total}</td>
+    <td class="green">${r.profit}</td>
+    <td class="red">${r.loss}</td>
+    <td ${pnlColor(r.pnl)}>&#8377;${fN(r.pnl)}</td>
+    <td ${pnlColor(r.cum)}>&#8377;${fN(r.cum)}</td>
+  </tr>`).join('');
+  document.getElementById('ledger-info').textContent=`${rows.length} trading days`;
+}
+
+function renderSignals(rows){
+  const pgSz=parseInt((document.getElementById('signals-pgsize')||{}).value||50);
+  const page=state.signals.page;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('signals',page,rows.length,pgSz);
+  const body=document.getElementById('signals-body');
+  if(!slice.length){body.innerHTML='<tr><td colspan="11" class="empty">No signals.</td></tr>';return;}
+  body.innerHTML=slice.map((r,i)=>{
+    const sym=r.SYMBOL||r.symbol||'—';
+    const date=r.SIGNAL_DATE||r.signal_date||'—';
+    const close=parseFloat(r.CLOSE||r.close||r.SIGNAL_CLOSE||0);
+    const chg1d=parseFloat(r.CHG_PCT||r.chg_pct||r.PCT_1D_CHANGE||0);
+    const chg5dRaw=r.CHG_5D||r.PCT_5D||r.pct_5d||r.CHG5D||r.CHANGE_5D||null;
+    const chg5d=chg5dRaw!=null?parseFloat(chg5dRaw):null;
+    const ltp=openMap[sym]||close;
+    const target=close*1.10;
+    const sl=close*0.75;
+    const isOpen=openSymbols.has(sym);
+    const statusBadge=isOpen?'<span class="badge-opencall">Open Call</span>':'<span class="badge-fresh">Fresh Call</span>';
+    const ltpHtml=isOpen?`<span class="green">&#8377;${fN(ltp)}</span>`:`&#8377;${fN(close)}`;
+    const sigCfgRaw=r.CONFIGS_MATCHED||r.configs_matched||r.CONFIG||r.config||'';
+    const sigCfgs=sigCfgRaw.split(',').map(s=>s.trim()).filter(Boolean);
+    return `<tr>
+      <td>${start+i+1}</td>
+      <td>${date}</td>
+      <td>${sigCfgs.length?sigCfgs.map(c=>cfgBadge(c)).join(' '):'—'}</td>
+      <td><strong>${sym}</strong></td>
+      <td ${pnlColor(chg1d)}>${chg1d>=0?'+':''}${f2(chg1d)}%</td>
+      <td>${chg5d!=null?`<span ${chg5d>=0?'class="green"':'class="red"'}>${chg5d>=0?'+':''}${f2(chg5d)}%</span>`:'—'}</td>
+      <td>&#8377;${fN(close)}</td>
+      <td>${ltpHtml}</td>
+      <td style="color:#059669;font-weight:700">&#8377;${fN(target)}</td>
+      <td style="color:#dc2626;font-weight:700">&#8377;${fN(sl)}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join('');
+  // Update summary badges
+  const freshCount=SIGNALS_RAW.filter(r=>!openSymbols.has(r.SYMBOL||r.symbol||'')).length;
+  const openCount=SIGNALS_RAW.length-freshCount;
+  const sigBadges=document.getElementById('sig-total-badges');
+  if(sigBadges)sigBadges.innerHTML=`
+    <span class="tbadge blue">Total: ${SIGNALS_RAW.length}</span>
+    <span class="tbadge green">Fresh Call: ${freshCount}</span>
+    <span class="tbadge amber">Open Call: ${openCount}</span>`;
+}
+
+
+function renderAvgTrigger(){
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  
+  // Map the configured buy_drop for every config dynamically
+  const cfgMap = {};
+  CONFIGS_DEF.forEach(c => cfgMap[c.id || c.ID] = parseFloat(c.buy_drop || c.BUY_DROP || 0.1));
+
+  rows=rows.filter(r=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-    const dropPct=cfgMap[r.CONFIG]||0.1;
-    const bc=parseInt(r.BUY_COUNT||0);
-    const cfgDef=CONFIGS_DEF.find(c=>c.id===r.CONFIG||c.ID===r.CONFIG)||{};
-    const maxBuys=parseInt(cfgDef.max_buys||cfgDef.MAX_BUYS||4);
-    if(bc>=maxBuys) return false;
-    const nextBuy=avg*(1-dropPct);
-    // Show only when LTP is within 2% ABOVE next buy trigger (be-ready zone)
-    return avg>0&&ltp>0&&ltp>nextBuy&&ltp<=nextBuy*1.02;
+    const dropPct = cfgMap[r.CONFIG] || 0.1;
+    
+    // Show stocks that have dropped at least 80% of the way to the required config dip
+    return avg>0 && ltp>0 && ltp <= avg * (1 - dropPct * 0.8);
   }).sort((a,b)=>{
-    const ca=cfgMap[a.CONFIG]||0.1, cb_=cfgMap[b.CONFIG]||0.1;
-    const na=(parseFloat(a.AVG_BUY_PRICE)||0)*(1-ca);
-    const nb=(parseFloat(b.AVG_BUY_PRICE)||0)*(1-cb_);
-    const da=na>0?((parseFloat(a.CURRENT_LTP)||0)-na)/na*100:999;
-    const db=nb>0?((parseFloat(b.CURRENT_LTP)||0)-nb)/nb*100:999;
-    return da-db;
+    const da=((parseFloat(a.CURRENT_LTP)||0)-(parseFloat(a.AVG_BUY_PRICE)||0))/(parseFloat(a.AVG_BUY_PRICE)||1);
+    const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
+    return da-db; // most dropped first
   });
 
   renderBadges('avgtrigger-badges', rows, 'open');
   const body=document.getElementById('avgtrigger-body');
-  document.getElementById('avgtrigger-info').textContent=`${rows.length} stocks within 2% of avg buy trigger`;
+  document.getElementById('avgtrigger-info').textContent=`${rows.length} stocks triggered or near trigger`;
   
-  if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty">No stocks within 2% of avg buy trigger right now</td></tr>';return;}
+  if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}
   
   body.innerHTML=rows.map((r,i)=>{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
@@ -1569,6 +1816,8 @@ function getFiltered(tab){
     </tr>`;
   }).join('');
 }
+
+
 
 // ─── SELL TRIGGER ─────────────────────────────────────────────────────────────
 function renderSellTrigger(){
