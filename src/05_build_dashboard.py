@@ -1525,15 +1525,20 @@ function renderLedger(rows){{
   const body=document.getElementById('ledger-body');
   if(!rows.length){{body.innerHTML='<tr><td colspan="7" class="empty">No closed trades yet.</td></tr>';
     document.getElementById('ledger-info').textContent='';return;}}
-  body.innerHTML=rows.map((r,i)=>`<tr>
-    <td>${{i+1}}</td><td>${{r.date}}</td>
+   const pgSzEl=document.getElementById('ledger-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=state.ledger.page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('ledger',page,rows.length,pgSz);
+  body.innerHTML=slice.map((r,i)=>`<tr>
+    <td>${{start+i+1}}</td><td>${{r.date}}</td>
     <td>${{r.total}}</td>
     <td class="green">${{r.profit}}</td>
     <td class="red">${{r.loss}}</td>
     <td ${{pnlColor(r.pnl)}}>&#8377;${{fN(r.pnl)}}</td>
     <td ${{pnlColor(r.cum)}}>&#8377;${{fN(r.cum)}}</td>
   </tr>`).join('');
-  document.getElementById('ledger-info').textContent=`${{rows.length}} trading days`;
 }}
 
 function renderSignals(rows){{
@@ -1549,7 +1554,7 @@ function renderSignals(rows){{
     const date=r.SIGNAL_DATE||r.signal_date||'—';
     const close=parseFloat(r.CLOSE||r.close||r.SIGNAL_CLOSE||0);
     const chg1d=parseFloat(r.CHG_PCT||r.chg_pct||r.PCT_1D_CHANGE||0);
-    const chg5dRaw=r.CHG_5D||r.PCT_5D||r.pct_5d||r.CHG5D||r.CHANGE_5D||null;
+    const chg5dRaw=r.CHG_5D||r.PCT_5D||r.pct_5d||r.CHG5D||r.CHANGE_5D||r.PCT_FROM_LOW||null;
     const chg5d=chg5dRaw!=null?parseFloat(chg5dRaw):null;
     const ltp=openMap[sym]||close;
     const target=close*1.10;
@@ -1637,6 +1642,320 @@ function renderAvgTrigger(){{
 
 
 
+
+// ─── STOCK HISTORY ────────────────────────────────────────────────────────────
+function buildHistory(){{
+  const q=(document.getElementById('hist-search')||{{}}).value||'';
+  const cfg=state.hist.cfg;
+  const statusF=state.hist.status;
+
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed');
+  if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
+  
+  if(statusF==='Open') rows=rows.filter(r=>r.STATUS==='Open');
+  if(statusF==='Closed') rows=rows.filter(r=>r.STATUS!=='Open');
+  
+  if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE)); 
+
+  // Stats bar
+  const holdRows=rows.filter(r=>r.STATUS==='Open');
+  const soldRows=rows.filter(r=>r.STATUS!=='Open');
+  const holdNet=holdRows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  const soldNet=soldRows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  const statEl=document.getElementById('hist-stats');
+  if(statEl) statEl.innerHTML=`
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Hold Count</div>
+      <div style="font-size:22px;font-weight:700;color:#2563eb">${{holdRows.length}}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Hold Net</div>
+      <div style="font-size:22px;font-weight:700;color:${{holdNet>=0?'#059669':'#dc2626'}}">&#8377;${{fN(holdNet)}}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Sold Count</div>
+      <div style="font-size:22px;font-weight:700;color:#2563eb">${{soldRows.length}}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Sold Net</div>
+      <div style="font-size:22px;font-weight:700;color:${{soldNet>=0?'#059669':'#dc2626'}}">&#8377;${{fN(soldNet)}}</div>
+    </div>`;
+
+  // Sort: open first (by date desc), then sold (by exit date desc)
+  rows.sort((a,b)=>{{
+    const aOpen=a.STATUS==='Open',bOpen=b.STATUS==='Open';
+    if(aOpen!==bOpen) return bOpen?1:-1;
+    return (a.SIGNAL_DATE||'')<(b.SIGNAL_DATE||'')?1:-1;
+  }});
+
+  // Pagination setup for History Tab
+  const pgSzEl=document.getElementById('hist-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=state.hist.page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('hist',page,rows.length,pgSz);
+
+  if(!slice.length){{
+    document.getElementById('hist-container').innerHTML='<div class="card empty">No executed trades found.</div>';
+    return;
+  }}
+
+  document.getElementById('hist-container').innerHTML=slice.map((r,i)=>{{
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    const isSold=r.STATUS!=='Open';
+    const ltp=isSold?(r.EXIT_PRICE||0):(r.CURRENT_LTP||0);
+    const oKey=`${{r.SYMBOL}}_${{r.SIGNAL_DATE}}_${{r.CONFIG}}`;
+    const exitTypeBadge=r.EXIT_TYPE?
+      `<span style="border:1px solid #6366f1;border-radius:12px;padding:2px 10px;font-size:11px;color:#4f46e5;background:#f5f3ff">${{r.EXIT_TYPE}}</span>`
+      :'—';
+
+    // BUY HISTORY rows - dynamically calculating based on Config Dip
+    const buyCount = parseInt(r.BUY_COUNT) || 1;
+    const finalAvg = parseFloat(r.AVG_BUY_PRICE) || 0;
+    const cfgDef = CONFIGS_DEF.find(c => c.id === r.CONFIG || c.ID === r.CONFIG) || {{}};
+    const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); 
+
+    let runningAvg = 0;
+    let totalCalcQty = 0;
+    const buyDatesTracker = [];
+
+    const buyRows = Array.from({{length: buyCount}}, (_, bi) => {{
+      let legDate = r[`B${{bi}}_BoughtDate`] || (bi === 0 ? r.SIGNAL_DATE : '—');
+      if (legDate !== '—') buyDatesTracker.push(legDate);
+      
+      let legPrice;
+      if (bi === 0) {{
+         legPrice = parseFloat(r.B0_Close) || parseFloat(r.SIGNAL_CLOSE) || finalAvg;
+         runningAvg = legPrice;
+      }} else {{
+         legPrice = runningAvg * (1 - dropPct);
+         runningAvg = ((runningAvg * bi) + legPrice) / (bi + 1);
+      }}
+
+      let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
+      let avgStr = (bi === buyCount - 1) ? `&#8377;${{fN(displayAvg)}}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${{fN(displayAvg)}}</span>`;
+
+      // Get individual leg specific OHLC
+      let pPrev = parseFloat(r[`B${{bi}}_PrevClose`]) || (bi===0?parseFloat(r.PREV_CLOSE):0);
+      let pOp = parseFloat(r[`B${{bi}}_Open`]) || (bi===0?parseFloat(r.OPEN_PRICE):0);
+      let pHi = parseFloat(r[`B${{bi}}_High`]) || (bi===0?parseFloat(r.HIGH_PRICE):0);
+      let pLo = parseFloat(r[`B${{bi}}_Low`]) || (bi===0?parseFloat(r.LOW_PRICE):0);
+      let pCl = parseFloat(r[`B${{bi}}_Close`]) || (bi===0?parseFloat(r.SIGNAL_CLOSE):0);
+
+      const legQty = legPrice > 0 ? Math.floor(10000 / legPrice) : 0;
+      const legInv = legQty * legPrice;
+      totalCalcQty += legQty;
+      return `
+      <tr style="border-top:1px solid #e2e8f0">
+        <td style="padding:5px 8px">${{bi+1}}</td>
+        <td style="padding:5px 8px">${{fD(legDate)}}</td>
+        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${{fN(legPrice)}}</td>
+        <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{avgStr}}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${{fI(legQty)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(legInv)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pPrev)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pOp)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pHi)}}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${{fN(pLo)}}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${{fN(pCl)}}</td>
+      </tr>`;
+    }}).join('');
+
+    // SELL HISTORY rows
+    let sPrev = parseFloat(r.SoldPrevClose)||0;
+    let sOp = parseFloat(r.SoldOpen)||0;
+    let sHi = parseFloat(r.SoldHigh)||0;
+    let sLo = parseFloat(r.SoldLow)||0;
+    let sCl = parseFloat(r.SoldClose)||parseFloat(r.EXIT_PRICE)||0;
+
+    const sellSection=isSold?`
+      <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
+      <div class="table-area" style="margin-bottom:8px">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+          <thead><tr style="background:#fff5f5">
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Sell #</th>
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Sell Price</th>
+            <th style="padding:5px 8px;text-align:center;font-weight:600">Exit Type</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">Qty</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Value &#8377;</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Low</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Close</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid #fee2e2">
+              <td style="padding:5px 8px">1</td>
+              <td style="padding:5px 8px">${{fD(r.EXIT_DATE)}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#dc2626">&#8377;${{fN(r.EXIT_PRICE)}}</td>
+              <td style="padding:5px 8px;text-align:center">${{exitTypeBadge}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${{fI(totalCalcQty)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(totalCalcQty*(parseFloat(r.EXIT_PRICE)||0))}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sPrev)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sOp)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sHi)}}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${{fN(sLo)}}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${{fN(sCl)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`:'';
+
+    const buyDatesJson = JSON.stringify(buyDatesTracker).replace(/"/g, '&quot;');
+    const sellDateStr = isSold ? r.EXIT_DATE : '—';
+
+    return `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+      <div style="padding:12px 16px;background:linear-gradient(135deg,#f8faff,#eef2ff);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <strong style="font-size:15px;color:#1e3a5f">${{start+i+1}}. ${{r.SYMBOL}}</strong>
+        <span style="font-size:12px;color:#64748b">(${{fD(r.SIGNAL_DATE)}})</span>
+        ${{cfgBadge(r.CONFIG)}}
+      </div>
+      <div style="padding:0 16px 8px">
+        <div style="font-size:11px;font-weight:700;color:#059669;letter-spacing:.5px;margin:12px 0 6px">BUY HISTORY</div>
+        <div class="table-area" style="margin-bottom:8px">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+            <thead><tr style="background:#f0fdf4">
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Buy #</th>
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Buy Price</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600;color:#2563eb">Avg Buy</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Qty (&#8377;10k)</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Low</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Close</th>
+            </tr></thead>
+            <tbody>${{buyRows}}</tbody>
+          </table>
+        </div>
+        ${{sellSection}}
+        <div style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:.5px;margin:10px 0 6px">FINAL SUMMARY</div>
+        <div class="table-area" style="margin-bottom:8px">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+            <thead><tr style="background:#eff6ff">
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Status</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Total Qty</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Avg Buy Price</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Exit/LTP</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Duration</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L &#8377;</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L %</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid #dbeafe">
+                <td style="padding:5px 8px;color:${{isSold?'#dc2626':'#2563eb'}};font-weight:700">${{isSold?'SOLD':'HOLD'}}</td>
+                <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${{fI(totalCalcQty)}}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.AVG_BUY_PRICE)}}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${{fN(ltp)}}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${{fN(r.TOTAL_INVESTMENT)}}</td>
+                <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">${{fI(r.MARKET_DAYS)}} Days</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.PROFIT)}}>&#8377;${{fN(pnl)}}</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600" ${{pnlColor(r.GAIN_PCT)}}>${{pct>=0?'+':''}}${{f2(pct)}}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})', '${{buyDatesJson}}', '${{sellDateStr}}', '${{r.B0_BoughtDate||r.SIGNAL_DATE||\'\'}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="exportHistCard(this,'${{r.SYMBOL}}_${{r.CONFIG}}_${{r.SIGNAL_DATE}}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
+        <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
+      </div>
+    </div>`;
+  }}).join('');
+}}
+function exportHistCard(btn,name){{
+  const card=btn.closest('.card');
+  if(!card){{toast('Cannot export','error');return;}}
+  if(typeof html2canvas==='undefined'){{
+    toast('Export Image loading... try again','info');
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    document.head.appendChild(s);
+    return;
+  }}
+  html2canvas(card,{{scale:2,backgroundColor:'#fff',useCORS:true}}).then(canvas=>{{
+    const a=document.createElement('a');
+    a.download=`Stock_${{name}}.png`;
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    toast('Image downloaded!','success');
+  }});
+}}
+
+// ─── EXPORTS ─────────────────────────────────────────────────────────────────
+function exportTab(tab){{
+  const rows=getFiltered(tab);
+  if(!rows.length){{toast('No data','info');return;}}
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,ws,tab);
+  XLSX.writeFile(wb,`NSE_BTST_${{tab}}_${{new Date().toISOString().slice(0,10)}}.xlsx`);
+  toast('Excel downloaded!','success');
+}}
+function exportCSVTab(tab){{
+  const rows=getFiltered(tab);
+  if(!rows.length){{toast('No data','info');return;}}
+  const keys=Object.keys(rows[0]);
+  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${{r[k]!=null?r[k]:''}}"`)
+    .join(','))].join('\\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`NSE_BTST_${{tab}}.csv`;a.click();
+  toast('CSV downloaded!','success');
+}}
+
+// ─── TAB BADGES ──────────────────────────────────────────────────────────────
+function renderBadges(containerId, rows, type){{
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  const profit=rows.reduce((s,r)=>{{const p=parseFloat(r.PROFIT)||0;return p>0?s+p:s;}},0);
+  const loss=rows.reduce((s,r)=>{{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;}},0);
+  const net=profit+loss;
+  const totalInv=rows.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
+  let lastBadge='';
+  if(type==='open'){{
+    const mktVal=rows.reduce((s,r)=>{{const ltp=parseFloat(r.CURRENT_LTP)||0;const qty=parseInt(r.TOTAL_QTY)||0;return s+ltp*qty;}},0);
+    lastBadge=`<span class="tbadge navy">Market Val: ₹${{fN(mktVal)}}</span>`;
+  }}else{{
+    const exitVal=rows.reduce((s,r)=>{{const ep=parseFloat(r.EXIT_PRICE)||0;const qty=parseInt(r.TOTAL_QTY)||0;return s+ep*qty;}},0);
+    lastBadge=`<span class="tbadge navy">Exit Val: ₹${{fN(exitVal)}}</span>`;
+  }}
+  el.innerHTML=`
+    <span class="tbadge blue">Trades: ${{rows.length}}</span>
+    <span class="tbadge green">Profit: ₹${{fN(profit)}}</span>
+    <span class="tbadge red">Loss: ₹${{fN(loss)}}</span>
+    <span class="tbadge ${{net>=0?'green':'red'}}">Net: ₹${{fN(net)}}</span>
+    <span class="tbadge amber">Total Inv: ₹${{fN(totalInv)}}</span>
+    ${{lastBadge}}`;
+}}
+
+// ─── MARKET DATA SUB-TAB ──────────────────────────────────────────────────────
+let mdSubFilter='all';
+let mdCfg='ALL';
+function mdCfgFilter(val,btn){{
+  mdCfg=val;
+  document.querySelectorAll('#tab-marketdata .btn-filter:not([id^="md-"])').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketData();
+}}
+function mdSubTab(type, btn){{
+  mdSubFilter=type;
+  document.querySelectorAll('[id^="md-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketData();
+}}
+
+
+// ─── TAB: AVG TRIGGER ─────────────────────────────────────────────────────────
 // ─── SELL TRIGGER ─────────────────────────────────────────────────────────────
 function renderSellTrigger(){{
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
@@ -2157,7 +2476,7 @@ async function renderMTFOutput() {{
     const addPayload = JSON.stringify({{
       symbol: r.SYMBOL, signal_date: sigDate,
       avg_buy: avg, ltp: ltp, target: parseFloat(target)
-    }}).replace(/'/g, '&#39;');
+    }}).replace(/'/g, '&#39;').replace(/\"/g, '&quot;');
     return '<tr>' +
       '<td>' + (i+1) + '</td>' +
       '<td><strong>' + r.SYMBOL + '</strong></td>' +
@@ -2187,7 +2506,7 @@ function exportMTFCSV() {{
   );
   if (!rows.length) {{ toast('No data to export', 'info'); return; }}
   const hdr = 'S.No,Symbol,Signal Date,Signal Price,Duration,Avg Buy,Current LTP,Drop%,Qty,Investment,Target';
-  const blob = new Blob([hdr + '\\n' + rows.join('\\n')], {{ type: 'text/csv' }});
+  const blob = new Blob([hdr + '\n' + rows.join('\n')], {{ type: 'text/csv' }});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'mtf_output.csv';
