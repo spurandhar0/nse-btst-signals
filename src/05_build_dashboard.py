@@ -983,7 +983,7 @@ let _dataReady = false;
 
 // ─── OPEN POSITION MAPS (populated after data loads) ─────────────────────────
 const openSymbols = new Set();
-const openMap = {};
+const openMap = {{}};
 
 // ─── INDICES ─────────────────────────────────────────────────────────────────
 (function(){{
