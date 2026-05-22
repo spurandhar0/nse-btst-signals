@@ -621,11 +621,7 @@ def fmt_date_str(val):
 
 
 def export_sim_json(consolidated_data, price_dict, global_last_date):
-    """Export simulation results split across two JSON files to stay under GitHub's 100 MB limit.
-
-    docs/data/sim_results.json  — lightweight trade metadata (no per-day OHLC candles)
-    docs/data/trade_ohlc.json   — per-buy and sell-day OHLC rows keyed by SYMBOL_SIGNALDATE_CONFIG
-    """
+    """Export simulation results to JSON files."""
     results  = {}
     ohlc_out = {}   # key → {buys: [...], sell: {...}}
 
@@ -634,10 +630,17 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
 
         def g(row, col, default=None):
             idx = col_map.get(col)
-            if idx is None:
+            if idx is None or idx >= len(row):
                 return default
-            val = row[idx] if idx < len(row) else default
+            val = row[idx]
+            try:
+                if pd.isna(val): return default
+            except:
+                pass
             return default if val is None else val
+
+        # Dynamically determine the exact max buys available in these columns
+        max_b = sum(1 for c in columns if isinstance(c, str) and c.endswith('_BoughtDate'))
 
         config_rows = []
         for row in rows:
@@ -664,7 +667,7 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                     profit   = round((current_ltp - avg_buy) * qty, 2)
                     gain_pct = round(((current_ltp - avg_buy) / avg_buy) * 100, 2)
 
-            # ── Lightweight row (no raw OHLC candles) ─────────────────────────
+            # ── Lightweight row ─────────────────────────
             r = {
                 'CONFIG':           cid,
                 'SYMBOL':           sym,
@@ -692,49 +695,58 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                 'EXIT_DATE':        fmt_date_str(g(row, 'SoldDate')),
                 'EXIT_PRICE':       g(row, 'SoldPrice'),
                 'TODAY_DATE':       fmt_date_str(g(row, 'TodayDate')),
+                
+                # Restore the legacy dashboard OHLC support
+                'PREV_CLOSE':       g(row, 'B0_PrevClose'),
+                'OPEN_PRICE':       g(row, 'B0_Open'),
+                'HIGH_PRICE':       g(row, 'B0_High'),
+                'LOW_PRICE':        g(row, 'B0_Low'),
             }
+
+            # Embed ALL bought level columns explicitly so the dashboard correctly maps prices
+            for b in range(max_b):
+                r[f'B{b}_BoughtDate'] = fmt_date_str(g(row, f'B{b}_BoughtDate'))
+                r[f'B{b}_PrevClose']  = g(row, f'B{b}_PrevClose')
+                r[f'B{b}_Open']       = g(row, f'B{b}_Open')
+                r[f'B{b}_High']       = g(row, f'B{b}_High')
+                r[f'B{b}_Low']        = g(row, f'B{b}_Low')
+                r[f'B{b}_Close']      = g(row, f'B{b}_Close')
+
+            r['SoldDate']      = fmt_date_str(g(row, 'SoldDate'))
+            r['SoldPrevClose'] = g(row, 'SoldPrevClose')
+            r['SoldOpen']      = g(row, 'SoldOpen')
+            r['SoldHigh']      = g(row, 'SoldHigh')
+            r['SoldLow']       = g(row, 'SoldLow')
+            r['SoldClose']     = g(row, 'SoldClose')
+
             config_rows.append(r)
 
             # ── Per-buy OHLC → trade_ohlc.json ────────────────────────────────
-            # Only bother for executed trades (open or closed)
             if order == 'Executed' and sig_date:
                 ohlc_key = f"{sym}_{sig_date}_{cid}"
                 if ohlc_key not in ohlc_out:
-                    # Direct index lookup using captured col_map (avoids closure rebinding)
-                    _cm = col_map
-                    def _get(col, _row=row, _cm=_cm):
-                        idx = _cm.get(col)
-                        if idx is None or idx >= len(_row):
-                            return None
-                        v = _row[idx]
-                        return None if v is None else v
-
                     buys = []
-                    # Loop dynamically until no more bought dates are found for this config
-                    b = 0
-                    while True:
-                        bd = fmt_date_str(_get(f'B{b}_BoughtDate'))
-                        if bd is None:
-                            break
+                    for b in range(max_b):
+                        bd = fmt_date_str(g(row, f'B{b}_BoughtDate'))
+                        if not bd or bd == 'nan':
+                            continue
                         buys.append({
                             'date': bd,
-                            'pc':   _get(f'B{b}_PrevClose'),
-                            'o':    _get(f'B{b}_Open'),
-                            'h':    _get(f'B{b}_High'),
-                            'l':    _get(f'B{b}_Low'),
-                            'c':    _get(f'B{b}_Close'),
+                            'pc':   g(row, f'B{b}_PrevClose'),
+                            'o':    g(row, f'B{b}_Open'),
+                            'h':    g(row, f'B{b}_High'),
+                            'l':    g(row, f'B{b}_Low'),
+                            'c':    g(row, f'B{b}_Close'),
                         })
-                        b += 1
-                        
                     sell = None
-                    sold_c = _get('SoldClose')
+                    sold_c = g(row, 'SoldClose')
                     if sold_c is not None:
                         sell = {
-                            'date': fmt_date_str(_get('SoldDate')),
-                            'pc':   _get('SoldPrevClose'),
-                            'o':    _get('SoldOpen'),
-                            'h':    _get('SoldHigh'),
-                            'l':    _get('SoldLow'),
+                            'date': fmt_date_str(g(row, 'SoldDate')),
+                            'pc':   g(row, 'SoldPrevClose'),
+                            'o':    g(row, 'SoldOpen'),
+                            'h':    g(row, 'SoldHigh'),
+                            'l':    g(row, 'SoldLow'),
                             'c':    sold_c,
                         }
                     ohlc_out[ohlc_key] = {'buys': buys, 'sell': sell}
