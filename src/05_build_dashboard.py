@@ -191,20 +191,18 @@ def build_html(logo, nifty, configs, sim_meta, sim_results, signals_rows, sig_da
     last_date = sim_meta.get('last_date', '')
     today_date = datetime.now(tz=IST).strftime('%Y-%m-%d')
 
-    # Flatten all results across configs for JS
+    # Lightweight data only — bulk trade rows and OHLC are loaded at runtime via fetch()
+    signals_js = json.dumps(signals_rows, default=str)
+    nifty_js   = json.dumps(nifty, default=str)
+    configs_js = json.dumps(configs, default=str)
+
+    # Flatten all_rows is only needed here for the config-table HTML; we don't embed it in JS.
     all_rows = []
     for cid, rows in sim_results.items():
         for r in rows:
             r2 = dict(r)
             r2['CONFIG'] = cid
             all_rows.append(r2)
-
-    rows_js    = json.dumps(all_rows, default=str)
-    signals_js = json.dumps(signals_rows, default=str)
-    nifty_js   = json.dumps(nifty, default=str)
-    configs_js = json.dumps(configs, default=str)
-    trade_ohlc = load_bhav_ohlc(all_rows)
-    trade_ohlc_js = json.dumps(trade_ohlc, default=str)
 
     # Config table rows
     cfg_html = ''
@@ -924,19 +922,68 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
 <div id="toast-container"></div>
 
 <script>
-// ─── DATA ─────────────────────────────────────────────────────────────────────
-const ALL_ROWS    = {rows_js};
+// ─── DATA — loaded asynchronously to keep index.html small ────────────────────
+// SIGNALS_RAW, NIFTY_DATA, CONFIGS_DEF are small enough to inline safely.
+// ALL_ROWS and TRADE_OHLC are fetched from separate JSON files at runtime.
 const SIGNALS_RAW = {signals_js};
 const NIFTY_DATA  = {nifty_js};
 const CONFIGS_DEF = {configs_js};
-const TRADE_OHLC  = {trade_ohlc_js};
 
-// ─── OPEN POSITION MAPS ────────────────────────────────────────────────────────
-const openSymbols = new Set(ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').map(r=>r.SYMBOL));
-const openMap = {{}};
-ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open').forEach(r=>{{
-  if(!openMap[r.SYMBOL]) openMap[r.SYMBOL]=parseFloat(r.CURRENT_LTP)||0;
-}});
+let ALL_ROWS   = [];
+let TRADE_OHLC = {{}};
+let _dataReady = false;
+
+(async function loadData() {{
+  // Show a non-blocking loading indicator
+  const banner = document.getElementById('liveBanner');
+  const origBanner = banner ? banner.innerHTML : '';
+  if (banner) banner.innerHTML = '&#8987; Loading trade data&hellip;';
+
+  try {{
+    const [simRes, ohlcRes] = await Promise.all([
+      fetch('data/sim_results.json'),
+      fetch('data/trade_ohlc.json'),
+    ]);
+
+    if (!simRes.ok) throw new Error('sim_results.json not found (' + simRes.status + ')');
+    const simData = await simRes.json();
+
+    // Flatten results the same way the old inline code did
+    const raw = simData.results || {{}};
+    for (const [cid, rows] of Object.entries(raw)) {{
+      for (const r of rows) {{
+        r.CONFIG = cid;
+        ALL_ROWS.push(r);
+      }}
+    }}
+
+    if (ohlcRes.ok) {{
+      TRADE_OHLC = await ohlcRes.json();
+    }}
+
+    _dataReady = true;
+    if (banner) banner.innerHTML = origBanner;
+
+    // Rebuild open-position helpers that used to run at parse time
+    openSymbols.clear();
+    for (const k of Object.keys(openMap)) delete openMap[k];
+    ALL_ROWS.filter(r => r.ORDER === 'Executed' && r.STATUS === 'Open').forEach(r => {{
+      openSymbols.add(r.SYMBOL);
+      if (!openMap[r.SYMBOL]) openMap[r.SYMBOL] = parseFloat(r.CURRENT_LTP) || 0;
+    }});
+
+    buildOverview();
+  }} catch (err) {{
+    console.error('Dashboard data load failed:', err);
+    if (banner) banner.innerHTML =
+      '<span style="color:#dc2626">&#9888; Failed to load trade data: ' + err.message +
+      ' &mdash; check docs/data/ in your repo.</span>';
+  }}
+}})();
+
+// ─── OPEN POSITION MAPS (populated after data loads) ─────────────────────────
+const openSymbols = new Set();
+const openMap = {};
 
 // ─── INDICES ─────────────────────────────────────────────────────────────────
 (function(){{
@@ -2244,7 +2291,7 @@ document.addEventListener('keydown', e=>{{
         closeOHLC();
     }}
 }});
-buildOverview();
+// buildOverview() is called by the async data loader above once ALL_ROWS is ready
 </script>
 </body>
 </html>"""
