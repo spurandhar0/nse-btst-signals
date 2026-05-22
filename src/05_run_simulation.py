@@ -1,5 +1,5 @@
 """
-Script 5: Run Simulation for All 4 Configs
+Script 5: Run Simulation for All Configs
 ============================================
 Reads:
   db/signals_C1.parquet .. db/signals_C4.parquet   (accumulated per-config signals)
@@ -710,8 +710,9 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                         return None if v is None else v
 
                     buys = []
-                    # Use max_buys from the enclosing config loop (not a hardcoded 4)
-                    for b in range(max_buys):
+                    # Loop dynamically until no more bought dates are found for this config
+                    b = 0
+                    while True:
                         bd = fmt_date_str(_get(f'B{b}_BoughtDate'))
                         if bd is None:
                             break
@@ -723,6 +724,8 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                             'l':    _get(f'B{b}_Low'),
                             'c':    _get(f'B{b}_Close'),
                         })
+                        b += 1
+                        
                     sell = None
                     sold_c = _get('SoldClose')
                     if sold_c is not None:
