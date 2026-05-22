@@ -700,29 +700,38 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
             if order == 'Executed' and sig_date:
                 ohlc_key = f"{sym}_{sig_date}_{cid}"
                 if ohlc_key not in ohlc_out:
+                    # Direct index lookup using captured col_map (avoids closure rebinding)
+                    _cm = col_map
+                    def _get(col, _row=row, _cm=_cm):
+                        idx = _cm.get(col)
+                        if idx is None or idx >= len(_row):
+                            return None
+                        v = _row[idx]
+                        return None if v is None else v
+
                     buys = []
-                    max_b = 4  # B0..B3
-                    for b in range(max_b):
-                        bd = fmt_date_str(g(row, f'B{b}_BoughtDate'))
+                    # Use max_buys from the enclosing config loop (not a hardcoded 4)
+                    for b in range(max_buys):
+                        bd = fmt_date_str(_get(f'B{b}_BoughtDate'))
                         if bd is None:
                             break
                         buys.append({
                             'date': bd,
-                            'pc':   g(row, f'B{b}_PrevClose'),
-                            'o':    g(row, f'B{b}_Open'),
-                            'h':    g(row, f'B{b}_High'),
-                            'l':    g(row, f'B{b}_Low'),
-                            'c':    g(row, f'B{b}_Close'),
+                            'pc':   _get(f'B{b}_PrevClose'),
+                            'o':    _get(f'B{b}_Open'),
+                            'h':    _get(f'B{b}_High'),
+                            'l':    _get(f'B{b}_Low'),
+                            'c':    _get(f'B{b}_Close'),
                         })
                     sell = None
-                    sold_c = g(row, 'SoldClose')
+                    sold_c = _get('SoldClose')
                     if sold_c is not None:
                         sell = {
-                            'date': fmt_date_str(g(row, 'SoldDate')),
-                            'pc':   g(row, 'SoldPrevClose'),
-                            'o':    g(row, 'SoldOpen'),
-                            'h':    g(row, 'SoldHigh'),
-                            'l':    g(row, 'SoldLow'),
+                            'date': fmt_date_str(_get('SoldDate')),
+                            'pc':   _get('SoldPrevClose'),
+                            'o':    _get('SoldOpen'),
+                            'h':    _get('SoldHigh'),
+                            'l':    _get('SoldLow'),
                             'c':    sold_c,
                         }
                     ohlc_out[ohlc_key] = {'buys': buys, 'sell': sell}
