@@ -628,16 +628,20 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
     for cid, columns, rows in consolidated_data:
         col_map = {c: i for i, c in enumerate(columns)}
 
+        # Bulletproof getter function bypassing Pandas type checks entirely
         def g(row, col, default=None):
             idx = col_map.get(col)
             if idx is None or idx >= len(row):
                 return default
             val = row[idx]
-            try:
-                if pd.isna(val): return default
-            except:
-                pass
-            return default if val is None else val
+            
+            # Universal safe check against None and math.nan
+            if val is None:
+                return default
+            if type(val) is float and val != val:
+                return default
+                
+            return val
 
         # Dynamically determine the exact max buys available in these columns
         max_b = sum(1 for c in columns if isinstance(c, str) and c.endswith('_BoughtDate'))
@@ -663,7 +667,7 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
             if order == 'Executed' and status == 'Open':
                 avg_buy = g(row, 'AvgBuyPrice')
                 qty     = g(row, 'TotalQty')
-                if avg_buy and avg_buy > 0 and current_ltp and qty:
+                if avg_buy and avg_buy > 0 and current_ltp is not None and qty:
                     profit   = round((current_ltp - avg_buy) * qty, 2)
                     gain_pct = round(((current_ltp - avg_buy) / avg_buy) * 100, 2)
 
@@ -728,7 +732,7 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                     buys = []
                     for b in range(max_b):
                         bd = fmt_date_str(g(row, f'B{b}_BoughtDate'))
-                        if not bd or bd == 'nan':
+                        if not bd or str(bd).lower() == 'nan':
                             continue
                         buys.append({
                             'date': bd,
