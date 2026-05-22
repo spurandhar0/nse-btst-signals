@@ -1649,12 +1649,14 @@ function buildHistory(){{
       let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
       let avgStr = (bi === buyCount - 1) ? `&#8377;${{fN(displayAvg)}}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${{fN(displayAvg)}}</span>`;
 
-      // Get individual leg specific OHLC
-      let pPrev = parseFloat(r[`B${{bi}}_PrevClose`]) || (bi===0?parseFloat(r.PREV_CLOSE):0);
-      let pOp = parseFloat(r[`B${{bi}}_Open`]) || (bi===0?parseFloat(r.OPEN_PRICE):0);
-      let pHi = parseFloat(r[`B${{bi}}_High`]) || (bi===0?parseFloat(r.HIGH_PRICE):0);
-      let pLo = parseFloat(r[`B${{bi}}_Low`]) || (bi===0?parseFloat(r.LOW_PRICE):0);
-      let pCl = parseFloat(r[`B${{bi}}_Close`]) || (bi===0?parseFloat(r.SIGNAL_CLOSE):0);
+      // Get individual leg OHLC from trade_ohlc.json
+      const _tc = TRADE_OHLC[oKey]||{{}};
+      const _bc = (_tc.buys||[])[bi]||{{}};
+      let pPrev = parseFloat(_bc.pc)||0;
+      let pOp   = parseFloat(_bc.o) ||0;
+      let pHi   = parseFloat(_bc.h) ||0;
+      let pLo   = parseFloat(_bc.l) ||0;
+      let pCl   = parseFloat(_bc.c) ||(bi===0?parseFloat(r.SIGNAL_CLOSE):0);
 
       const legQty = legPrice > 0 ? Math.floor(10000 / legPrice) : 0;
       const legInv = legQty * legPrice;
@@ -1676,11 +1678,12 @@ function buildHistory(){{
     }}).join('');
 
     // SELL HISTORY rows
-    let sPrev = parseFloat(r.SoldPrevClose)||0;
-    let sOp = parseFloat(r.SoldOpen)||0;
-    let sHi = parseFloat(r.SoldHigh)||0;
-    let sLo = parseFloat(r.SoldLow)||0;
-    let sCl = parseFloat(r.SoldClose)||parseFloat(r.EXIT_PRICE)||0;
+    const _sc = (TRADE_OHLC[oKey]||{{}}).sell||{{}};
+    let sPrev = parseFloat(_sc.pc)||0;
+    let sOp   = parseFloat(_sc.o) ||0;
+    let sHi   = parseFloat(_sc.h) ||0;
+    let sLo   = parseFloat(_sc.l) ||0;
+    let sCl   = parseFloat(_sc.c) ||parseFloat(r.EXIT_PRICE)||0;
 
     const sellSection=isSold?`
       <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
@@ -2212,14 +2215,15 @@ function closeTradeDetail(){{
 
 // ─── OHLC (DAILY HISTORY) MODAL ───────────────────────────────────────────────
 function showOHLCDirect(key, label, buyDatesStr, sellDateStr, startDateStr){{
-  const allData=TRADE_OHLC[key]||[];
-  // Filter to: startDate (first buy) → sellDate (or today for open)
-  const data = startDateStr ? allData.filter(d => {{
-    if(startDateStr && d.date < startDateStr) return false;
-    if(sellDateStr && sellDateStr !== '—' && d.date > sellDateStr) return false;
-    return true;
-  }}) : allData;
-  document.getElementById('ohlc-title').textContent=`📈 Daily Historical Data — ${{label}} (${{data.length}} days)`;
+  const ohlcData = TRADE_OHLC[key]||{{}};
+  const buyCandles = ohlcData.buys||[];
+  const sellCandle = ohlcData.sell||null;
+  // Combine buy candles + sell candle (avoid duplicates)
+  const data = [...buyCandles];
+  if(sellCandle && sellCandle.date && !data.find(d=>d.date===sellCandle.date)){{
+    data.push({{...sellCandle, _isSell:true}});
+  }}
+  document.getElementById('ohlc-title').textContent=`📈 Buy/Sell OHLC — ${{label}} (${{data.length}} candle${{data.length!==1?'s':''}})`;
   const modal=document.getElementById('ohlcModal');
   modal.classList.add('open');
   document.body.style.overflow='hidden';
@@ -2232,7 +2236,7 @@ function showOHLCDirect(key, label, buyDatesStr, sellDateStr, startDateStr){{
   document.getElementById('ohlc-body').innerHTML=data.map(d=>{{
     const chg=parseFloat(d.chg)||0;
     const isBuy = buyDates.includes(d.date);
-    const isSell = (d.date === sellDateStr);
+    const isSell = d._isSell||(d.date===sellDateStr);
     
     let note = '';
     if(isBuy) note += '<span style="background:#dcfce7;color:#059669;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;margin-right:4px;">BOUGHT</span>';
