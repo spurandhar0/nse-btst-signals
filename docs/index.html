@@ -131,7 +131,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </div>
     </div>
     <div class="hdr-right">
-      <span class="hdr-badge">&#9679; 22-May-2026 23:45 IST</span>
+      <span class="hdr-badge">&#9679; 23-May-2026 00:34 IST</span>
       <button class="hdr-btn" onclick="location.reload()">&#8635; Refresh</button>
     </div>
   </div>
@@ -148,7 +148,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="liveBanner">
-  &#10003; Last simulation: <strong id="bannerDate">22-May-2026 23:45 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
+  &#10003; Last simulation: <strong id="bannerDate">23-May-2026 00:34 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
 </div>
 
 <div class="container">
@@ -157,7 +157,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <span class="slbl">Range:</span>
   <input type="date" id="fromDate" value="" placeholder="From Date" style="padding:6px 10px;font-size:12px;min-width:130px;">
   <span style="color:var(--text3);font-weight:600;">to</span>
-  <input type="date" id="toDate" value="2026-05-22" style="padding:6px 10px;font-size:12px;min-width:130px;">
+  <input type="date" id="toDate" value="2026-05-23" style="padding:6px 10px;font-size:12px;min-width:130px;">
   <button onclick="applyDateRange()" style="padding:6px 14px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 14px;font-size:12px;background:#64748b;">Reset</button>
   <span id="filterPill" class="pill" style="display:none;"></span>
@@ -180,6 +180,8 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="tab" onclick="showTab('marketdata',this)">&#128200; Market Data</div>
   <div class="tab" onclick="showTab('performance',this)">&#128202; Performance</div>
   <div class="tab" onclick="showTab('disclaimer',this)">&#9432; Disclaimer</div>
+  <div class="tab" onclick="showTab('mtfoutput',this)">&#127775; MTF Output</div>
+  <div class="tab" onclick="showTab('portfolio',this)">&#128197; Portfolio</div>
 </div>
 
 <div id="tab-overview">
@@ -1100,6 +1102,86 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   </div>
 </div>
 
+
+<div id="tab-mtfoutput" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#127775; MTF Output</h3>
+      <span style="font-size:12px;color:var(--text3);">Open positions: MTF eligible &middot; LTP below avg buy &middot; not in Force Exit &middot; not in active Portfolio</span>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);">Investment &#8377;</label>
+        <input type="number" id="mtf-inv-input" value="5000" min="100" step="500"
+               style="width:100px;padding:5px 8px;font-size:13px;border:1px solid var(--border);border-radius:6px;"
+               onchange="mtfInvChange()">
+        <button class="btn-sm btn-green" onclick="exportMTFCSV()">&#8595; CSV</button>
+      </div>
+    </div>
+    <div class="table-area">
+      <table><thead><tr>
+        <th>#</th><th>Symbol</th><th>Signal Date</th><th>Signal Price &#8377;</th>
+        <th>Duration</th><th>Avg Buy &#8377;</th><th>Current LTP &#8377;</th><th>Drop%</th>
+        <th>Qty</th><th>Investment &#8377;</th><th>Target (5%) &#8377;</th><th>Action</th>
+      </tr></thead><tbody id="mtf-body"><tr><td colspan="12" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="mtf-info"></span></div>
+  </div>
+</div>
+
+<div id="tab-portfolio" class="hidden">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128197; Portfolio</h3>
+      <span style="font-size:12px;color:var(--text3);">Your holdings &mdash; synced via GitHub &middot; LTP from sim data &middot; &#127902; = target met</span>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn-sm btn-green" onclick="showPortfolioAddModal()">&#43; Add</button>
+        <button class="btn-sm btn-teal" onclick="syncPortfolioFromGitHub().then(d=>{if(d){savePortfolio(d);renderPortfolio();}})">&#8635; Sync</button>
+        <button class="btn-sm" style="background:#64748b;color:#fff;" onclick="showPATModal()">&#9881; Settings</button>
+      </div>
+    </div>
+    <div class="table-area">
+      <table><thead><tr>
+        <th>#</th><th>Symbol</th><th>Added Date</th><th>Avg Buy &#8377;</th>
+        <th>Qty</th><th>Investment &#8377;</th><th>Current LTP &#8377;</th><th>Drop%</th>
+        <th>Target &#8377;</th><th>Status</th><th>Action</th>
+      </tr></thead><tbody id="portfolio-body"><tr><td colspan="11" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="portfolio-info"></span></div>
+  </div>
+</div>
+
+<div id="pat-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px;width:440px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.28);">
+    <h3 style="margin-bottom:14px;color:var(--navy);">&#9881; GitHub Settings</h3>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Enter your GitHub PAT with repo write access to enable cross-device portfolio sync. Stored only in your browser.</p>
+    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">GitHub Personal Access Token</label>
+    <input type="password" id="pat-input" placeholder="ghp_..." autocomplete="off"
+           style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:18px;">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn-sm" style="background:#64748b;color:#fff;" onclick="document.getElementById('pat-modal').classList.add('hidden')">Cancel</button>
+      <button class="btn-sm btn-green" onclick="savePAT()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="port-add-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px;width:380px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.28);">
+    <h3 style="margin-bottom:16px;color:var(--navy);">&#43; Add to Portfolio</h3>
+    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Symbol</label>
+    <input type="text" id="port-sym" placeholder="e.g. RELIANCE"
+           style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin-bottom:12px;text-transform:uppercase;">
+    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Avg Buy Price &#8377;</label>
+    <input type="number" id="port-avg" placeholder="0.00" step="0.01" min="0"
+           style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin-bottom:12px;">
+    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Qty</label>
+    <input type="number" id="port-qty" placeholder="1" min="1"
+           style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin-bottom:18px;">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn-sm" style="background:#64748b;color:#fff;" onclick="closePortfolioAddModal()">Cancel</button>
+      <button class="btn-sm btn-green" onclick="portfolioManualAdd()">Add</button>
+    </div>
+  </div>
+</div>
+
 </div><footer><strong>PS Market</strong> &mdash; NSE BTST Signals &nbsp;|&nbsp; Educational Purpose Only &nbsp;|&nbsp; Not SEBI Registered</footer>
 <div id="toast-container"></div>
 
@@ -1311,6 +1393,8 @@ function showTab(name,el){
   else if(name==='avghistory')  renderAvgHistory();
   else if(name==='marketdata')  renderMarketData();
   else if(name==='performance') renderPerformance();
+  else if(name==='mtfoutput')   renderMTFOutput();
+  else if(name==='portfolio')   renderPortfolio();
 }
 
 // ─── FILTER HELPERS ──────────────────────────────────────────────────────────
@@ -1864,6 +1948,311 @@ document.addEventListener('keydown', e=>{
     }
 });
 // buildOverview() is called by the async data loader above once ALL_ROWS is ready
+
+// ─── MTF OUTPUT ──────────────────────────────────────────────────────────────
+let MTF_SYMS = null;
+
+async function _loadMTFSymbols() {
+  if (MTF_SYMS !== null) return MTF_SYMS;
+  try {
+    const r = await fetch('data/mtf_symbols.json');
+    if (r.ok) MTF_SYMS = await r.json();
+  } catch(e) { console.warn('MTF load failed', e); }
+  return MTF_SYMS;
+}
+
+async function renderMTFOutput() {
+  const body = document.getElementById('mtf-body');
+  body.innerHTML = '<tr><td colspan="12" class="empty">Loading MTF symbols…</td></tr>';
+
+  const syms = await _loadMTFSymbols();
+  if (!syms) {
+    body.innerHTML = '<tr><td colspan="12" class="empty">⚠ Failed to load MTF symbols (data/mtf_symbols.json missing)</td></tr>';
+    return;
+  }
+  const mtfSet = new Set(syms.map(s => s.toUpperCase()));
+
+  // FE symbols: open positions using >= 60% of max duration
+  const cfgDurMap = {};
+  CONFIGS_DEF.forEach(c => { cfgDurMap[c.id||c.ID] = parseInt(c.max_duration||c.MAXDURA||90); });
+  const feSyms = new Set();
+  ALL_ROWS.filter(r => r.ORDER==='Executed' && r.STATUS==='Open').forEach(r => {
+    const maxD = cfgDurMap[r.CONFIG] || 90;
+    if ((parseInt(r.MARKET_DAYS)||0) >= maxD * 0.6) feSyms.add(r.SYMBOL);
+  });
+
+  // Portfolio map: symbol -> status
+  const portArr = getPortfolio();
+  const portMap = {};
+  portArr.forEach(p => { portMap[(p.symbol||'').toUpperCase()] = p.status; });
+
+  // Aggregate open: symbol -> row with lowest avg_buy_price
+  const symMap = {};
+  ALL_ROWS.filter(r => r.ORDER==='Executed' && r.STATUS==='Open').forEach(r => {
+    const sym = r.SYMBOL.toUpperCase();
+    const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
+    if (!symMap[sym] || avg < symMap[sym].avg) symMap[sym] = { r, avg };
+  });
+
+  const inv = parseInt(localStorage.getItem('btst_mtf_inv') || '5000') || 5000;
+  const inp = document.getElementById('mtf-inv-input');
+  if (inp) inp.value = inv;
+
+  let filtered = Object.values(symMap).filter(function(item) {
+    const sym = item.r.SYMBOL.toUpperCase();
+    const ltp = parseFloat(item.r.CURRENT_LTP) || 0;
+    const avg = item.avg;
+    if (!mtfSet.has(sym)) return false;
+    if (avg === 0 || ltp >= avg) return false;
+    if (feSyms.has(item.r.SYMBOL)) return false;
+    if (portMap[sym] === 'No') return false;  // active portfolio holding
+    return true;
+  });
+
+  // Sort: signal date descending
+  filtered.sort(function(a, b) {
+    return (b.r.SIGNAL_DATE||'').localeCompare(a.r.SIGNAL_DATE||'');
+  });
+
+  document.getElementById('mtf-info').textContent =
+    filtered.length + ' symbol(s) matched (MTF eligible · LTP < avg buy · no FE · no active holding)';
+
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="12" class="empty">No MTF matches right now</td></tr>';
+    return;
+  }
+
+  const today = new Date();
+  body.innerHTML = filtered.map(function(item, i) {
+    const r = item.r, avg = item.avg;
+    const ltp  = parseFloat(r.CURRENT_LTP) || 0;
+    const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
+    const qty  = Math.max(1, Math.floor(inv / (ltp || 1)));
+    const invAmt  = (qty * ltp).toFixed(2);
+    const target  = (avg * 1.05).toFixed(2);
+    const sigDate = r.SIGNAL_DATE || '';
+    const sigPrice = parseFloat(r.SIGNAL_CLOSE || r.B0_Close || 0) || avg;
+    const sigDt = sigDate ? new Date(sigDate) : null;
+    const dur = sigDt ? (Math.max(0, Math.round((today - sigDt) / 86400000)) + 'd') : '—';
+    const addPayload = JSON.stringify({
+      symbol: r.SYMBOL, signal_date: sigDate,
+      avg_buy: avg, ltp: ltp, target: parseFloat(target)
+    }).replace(/'/g, '&#39;');
+    return '<tr>' +
+      '<td>' + (i+1) + '</td>' +
+      '<td><strong>' + r.SYMBOL + '</strong></td>' +
+      '<td>' + fD(sigDate) + '</td>' +
+      '<td>₹' + fN(sigPrice) + '</td>' +
+      '<td>' + dur + '</td>' +
+      '<td>₹' + fN(avg) + '</td>' +
+      '<td class="red">₹' + fN(ltp) + '</td>' +
+      '<td class="red">' + drop.toFixed(2) + '%</td>' +
+      '<td>' + qty + '</td>' +
+      '<td>₹' + fN(invAmt) + '</td>' +
+      '<td class="green">₹' + fN(target) + '</td>' +
+      '<td><button class="btn-sm btn-green" onclick="addToPortfolio(' + addPayload + ')">➕ Add</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function mtfInvChange() {
+  const v = parseInt(document.getElementById('mtf-inv-input').value) || 5000;
+  localStorage.setItem('btst_mtf_inv', v);
+  renderMTFOutput();
+}
+
+function exportMTFCSV() {
+  const rows = [...document.getElementById('mtf-body').querySelectorAll('tr')].map(tr =>
+    [...tr.querySelectorAll('td')].slice(0, 11).map(td => '"' + td.innerText.replace(/"/g, '""') + '"').join(',')
+  );
+  if (!rows.length) { toast('No data to export', 'info'); return; }
+  const hdr = 'S.No,Symbol,Signal Date,Signal Price,Duration,Avg Buy,Current LTP,Drop%,Qty,Investment,Target';
+  const blob = new Blob([hdr + '
+' + rows.join('
+')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mtf_output.csv';
+  a.click();
+  toast('CSV downloaded!', 'success');
+}
+
+// ─── PORTFOLIO ────────────────────────────────────────────────────────────────
+const _PORTREPO = 'spurandhar0/nse-btst-signals-dashboard';
+const _PORTPATH = 'docs/data/portfolio.json';
+
+function getPortfolio() {
+  try { return JSON.parse(localStorage.getItem('btst_portfolio') || '[]'); } catch(e) { return []; }
+}
+
+function savePortfolio(arr) {
+  localStorage.setItem('btst_portfolio', JSON.stringify(arr));
+}
+
+async function syncPortfolioFromGitHub() {
+  try {
+    const url = 'https://raw.githubusercontent.com/' + _PORTREPO + '/main/' + _PORTPATH + '?t=' + Date.now();
+    const r = await fetch(url);
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('Portfolio GitHub sync failed', e); }
+  return null;
+}
+
+async function _pushPortfolioToGitHub(arr) {
+  const pat = localStorage.getItem('btst_gh_pat');
+  if (!pat) { toast('Enter GitHub PAT in Settings (⚙) first', 'info'); return false; }
+  try {
+    const apiUrl = 'https://api.github.com/repos/' + _PORTREPO + '/contents/' + _PORTPATH;
+    let sha = null;
+    const infoRes = await fetch(apiUrl, { headers: { Authorization: 'token ' + pat } });
+    if (infoRes.ok) { const info = await infoRes.json(); sha = info.sha; }
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(arr, null, 2))));
+    const body = { message: 'Update portfolio.json via dashboard', content: content };
+    if (sha) body.sha = sha;
+    const res = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { Authorization: 'token ' + pat, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) { toast('Portfolio saved to GitHub ✓', 'success'); return true; }
+    toast('GitHub save failed: ' + res.status, 'info'); return false;
+  } catch(e) { toast('GitHub error: ' + e.message, 'info'); return false; }
+}
+
+async function renderPortfolio() {
+  document.getElementById('portfolio-body').innerHTML =
+    '<tr><td colspan="11" class="empty">Syncing from GitHub…</td></tr>';
+
+  const synced = await syncPortfolioFromGitHub();
+  if (synced) savePortfolio(synced);
+
+  const arr = getPortfolio();
+
+  // Refresh LTPs from live sim data
+  arr.forEach(function(p) {
+    const sym = (p.symbol || '').toUpperCase();
+    const ltp = openMap[sym] || openMap[p.symbol] || 0;
+    if (ltp) p.current_ltp = ltp;
+    if (p.avg_buy > 0 && p.current_ltp) {
+      p.status = p.current_ltp >= p.avg_buy * 1.05 ? 'Yes' : 'No';
+    }
+  });
+  savePortfolio(arr);
+
+  const body = document.getElementById('portfolio-body');
+  document.getElementById('portfolio-info').textContent = arr.length + ' holdings';
+
+  if (!arr.length) {
+    body.innerHTML = '<tr><td colspan="11" class="empty">No holdings yet — add from MTF Output tab or use + Add</td></tr>';
+    return;
+  }
+
+  body.innerHTML = arr.map(function(p, i) {
+    const ltp  = p.current_ltp || 0;
+    const avg  = p.avg_buy || 0;
+    const tgt  = p.target || avg * 1.05;
+    const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
+    const invAmt = ((p.qty || 0) * avg).toFixed(2);
+    const isGreen = p.status === 'Yes';
+    const icon = isGreen ? '??' : '??';
+    const cls  = isGreen ? 'green' : 'red';
+    return '<tr>' +
+      '<td>' + (i+1) + '</td>' +
+      '<td><strong>' + (p.symbol||'') + '</strong></td>' +
+      '<td>' + fD(p.added_date) + '</td>' +
+      '<td>₹' + fN(avg) + '</td>' +
+      '<td>' + (p.qty || '—') + '</td>' +
+      '<td>₹' + fN(invAmt) + '</td>' +
+      '<td class="' + cls + '">₹' + fN(ltp) + '</td>' +
+      '<td class="' + cls + '">' + drop.toFixed(2) + '%</td>' +
+      '<td class="green">₹' + fN(tgt) + '</td>' +
+      '<td class="' + cls + '" style="font-weight:700">' + icon + ' ' + (p.status||'—') + '</td>' +
+      '<td><button class="btn-sm" style="background:#ef4444;color:#fff;padding:3px 8px;" ' +
+        'onclick="deletePortfolioItem(' + i + ')">&#128465;</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function addToPortfolio(data) {
+  const inv = parseInt(localStorage.getItem('btst_mtf_inv') || '5000') || 5000;
+  const ltp = data.ltp || data.avg_buy || 1;
+  const qty = Math.max(1, Math.floor(inv / ltp));
+  const arr = getPortfolio();
+  const sym = (data.symbol || '').toUpperCase();
+  if (arr.find(function(p) { return (p.symbol||'').toUpperCase() === sym; })) {
+    toast(data.symbol + ' already in Portfolio', 'info'); return;
+  }
+  arr.push({
+    symbol: data.symbol,
+    added_date: new Date().toISOString().slice(0, 10),
+    avg_buy: data.avg_buy,
+    qty: qty,
+    current_ltp: data.ltp,
+    target: data.target || data.avg_buy * 1.05,
+    status: 'No'
+  });
+  savePortfolio(arr);
+  _pushPortfolioToGitHub(arr);
+  toast(data.symbol + ' added to Portfolio ✓', 'success');
+}
+
+async function deletePortfolioItem(idx) {
+  const arr = getPortfolio();
+  const sym = arr[idx] ? arr[idx].symbol : '?';
+  if (!confirm('Delete ' + sym + ' from Portfolio?')) return;
+  arr.splice(idx, 1);
+  savePortfolio(arr);
+  await _pushPortfolioToGitHub(arr);
+  renderPortfolio();
+}
+
+function showPortfolioAddModal() {
+  document.getElementById('port-add-modal').classList.remove('hidden');
+  document.getElementById('port-sym').value = '';
+  document.getElementById('port-avg').value = '';
+  document.getElementById('port-qty').value = '';
+}
+
+function closePortfolioAddModal() {
+  document.getElementById('port-add-modal').classList.add('hidden');
+}
+
+async function portfolioManualAdd() {
+  const sym = (document.getElementById('port-sym').value || '').trim().toUpperCase();
+  const avg = parseFloat(document.getElementById('port-avg').value);
+  const qty = parseInt(document.getElementById('port-qty').value);
+  if (!sym || !avg || !qty) { toast('Fill all fields', 'info'); return; }
+  const arr = getPortfolio();
+  if (arr.find(function(p) { return (p.symbol||'').toUpperCase() === sym; })) {
+    toast(sym + ' already in Portfolio', 'info'); return;
+  }
+  const ltp = openMap[sym] || avg;
+  arr.push({
+    symbol: sym,
+    added_date: new Date().toISOString().slice(0, 10),
+    avg_buy: avg, qty: qty,
+    current_ltp: ltp,
+    target: avg * 1.05,
+    status: ltp >= avg * 1.05 ? 'Yes' : 'No'
+  });
+  savePortfolio(arr);
+  await _pushPortfolioToGitHub(arr);
+  closePortfolioAddModal();
+  toast(sym + ' added to Portfolio ✓', 'success');
+  renderPortfolio();
+}
+
+function showPATModal() {
+  document.getElementById('pat-modal').classList.remove('hidden');
+  document.getElementById('pat-input').value = localStorage.getItem('btst_gh_pat') || '';
+}
+
+function savePAT() {
+  const pat = (document.getElementById('pat-input').value || '').trim();
+  if (pat) { localStorage.setItem('btst_gh_pat', pat); toast('PAT saved ✓', 'success'); }
+  document.getElementById('pat-modal').classList.add('hidden');
+}
+
 </script>
 </body>
 </html>
