@@ -1,19 +1,14 @@
 name: Generate Signals (Historical Backfill)
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/generate_signals.yml'
   workflow_dispatch:
     inputs:
       signal_start_date:
-        description: 'Start date for signal scan (YYYY-MM-DD)'
+        description: 'Start date for signal scan (YYYY-MM-DD). Default: 2025-01-01'
         required: false
         default: '2025-01-01'
       rebuild_db:
-        description: 'Rebuild DB from bhav CSVs? (yes/no)'
+        description: 'Rebuild DB from bhav CSVs? (yes/no). Use yes after new bhav data added.'
         required: false
         default: 'yes'
 
@@ -49,80 +44,48 @@ jobs:
           find bhav_data/ -name "*.csv" -delete || true
           echo "Bhav CSVs removed"
 
-      - name: Step 2 – Precompute indicators
+      - name: Step 2 – Filter EQ series
         if: ${{ github.event.inputs.rebuild_db != 'no' }}
-        run: python src/02_precompute_indicators.py
+        run: python src/02_filter_eq.py
 
-      - name: Fetch Latest Nifty Indices
-        run: |
-          mkdir -p docs/data
-          python -c "
-          import requests, json
-          headers = {'User-Agent': 'Mozilla/5.0'}
-          try:
-              res = requests.get('https://www.nseindia.com/api/allIndices', headers=headers, timeout=10)
-              data = res.json().get('data', [])
-              with open('docs/data/nifty_index.json', 'w') as f:
-                  json.dump(data, f)
-              print('✅ Nifty indices updated')
-          except Exception as e:
-              print(f'⚠️ Failed to fetch Nifty indices: {e}')
-          " || true
+      - name: Step 3 – Compute ATH per symbol
+        if: ${{ github.event.inputs.rebuild_db != 'no' }}
+        run: python src/03_find_ath.py
 
-      - name: Set start date
-        id: set_date
-        run: |
-          if [ "${{ github.event.inputs.signal_start_date }}" != "" ]; then
-            echo "START_DATE=${{ github.event.inputs.signal_start_date }}" >> $GITHUB_ENV
-          else
-            echo "START_DATE=2025-01-01" >> $GITHUB_ENV
-          fi
+      - name: Step 4 – Historical signal backfill (all dates)
+        run: python src/00b_historical_backfill.py
+        env:
+          SIGNAL_START_DATE: ${{ github.event.inputs.signal_start_date || '2025-01-01' }}
 
-      - name: Step 3 – Generate signals (C1..C4)
-        run: |
-          python src/03_generate_signals.py --config C1 --start ${{ env.START_DATE }}
-          python src/03_generate_signals.py --config C2 --start ${{ env.START_DATE }}
-          python src/03_generate_signals.py --config C3 --start ${{ env.START_DATE }}
-          python src/03_generate_signals.py --config C4 --start ${{ env.START_DATE }}
+      - name: Step 5 – Run simulation & generate per-config Excel files
+        run: python src/05_run_simulation.py
 
-      - name: Step 4 – Compile daily picks
-        run: python src/04_compile_daily_picks.py
+      - name: Step 6 – Build dashboard HTML
+        run: python src/05_build_dashboard.py
 
-      - name: Step 5 – Run simulation & build dashboard
-        run: |
-          python src/05_run_simulation.py
-          python src/05_build_dashboard.py
-
-      - name: Dashboard repo update
+      - name: Push dashboard to public repo
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           cd /tmp
-          # Clone the public dashboard repo
           git clone https://x-access-token:${GH_PAT}@github.com/spurandhar0/nse-btst-signals-dashboard.git pub-dashboard
-          
-          # Create the data directory in the root of the dashboard repo
-          mkdir -p pub-dashboard/data
-          
-          # Copy the newly generated HTML and the JSON data files
-          cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/index.html
-          cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/data/sim_results.json || true
-          cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/data/trade_ohlc.json || true
-          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/data/nifty_index.json || true
-          
+          mkdir -p pub-dashboard/docs/data
+          cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/docs/index.html
+          cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/docs/data/sim_results.json
+          cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/trade_ohlc.json
+          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json || true
           cd pub-dashboard
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Track and commit the root index.html and data folder
-          git add index.html data/
-          git diff --staged --quiet && echo "Nothing to push to public repo" || git commit -m "Dashboard automated update: $(date +'%Y-%m-%d')"
-          git push origin main || echo "Failed to push to public repo"
+          git add docs/
+          git diff --staged --quiet && echo "Nothing to push to public repo" || git commit -m "Dashboard update: $(date +'%Y-%m-%d')"
+          git push origin main
 
       - name: Commit private repo data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add db/ output/ docs/ || true
-          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Auto-update DB & results: $(date +'%Y-%m-%d')"
-          git push origin main
+          git diff --staged --quiet && echo "Nothing to commit" || git commit -m "Backfill signals + simulation + dashboard: $(date +'%Y-%m-%d')"
+          git pull --rebase origin main || true
+          git push origin HEAD:main
