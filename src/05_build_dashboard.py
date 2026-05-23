@@ -597,7 +597,11 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
       </tr></thead>
       <tbody id="ledger-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="ledger-info"></span></div>
+    <div class="pager"><span class="info" id="ledger-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('ledger',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('ledger',1)">Next &#8250;</button>
+<select id="ledger-pgsize" onchange="(function(){{{{if(!state['ledger']) state['ledger']={{{{page:1}}}};state['ledger'].page=1;pgTab('ledger',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -745,7 +749,11 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th>Next Buy Price</th><th>Distance</th><th>Days Held</th>
       </tr></thead><tbody id="avgtrigger-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="avgtrigger-info"></span></div>
+    <div class="pager"><span class="info" id="avgtrigger-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('avgtrigger',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('avgtrigger',1)">Next &#8250;</button>
+<select id="avgtrigger-pgsize" onchange="(function(){{{{if(!state['avgtrigger']) state['avgtrigger']={{{{page:1}}}};state['avgtrigger'].page=1;pgTab('avgtrigger',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -766,7 +774,11 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th>Distance to TGT</th><th>P&amp;L ₹</th><th>P&amp;L%</th><th>Days Held</th>
       </tr></thead><tbody id="selltrigger-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="selltrigger-info"></span></div>
+    <div class="pager"><span class="info" id="selltrigger-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('selltrigger',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('selltrigger',1)">Next &#8250;</button>
+<select id="selltrigger-pgsize" onchange="(function(){{{{if(!state['selltrigger']) state['selltrigger']={{{{page:1}}}};state['selltrigger'].page=1;pgTab('selltrigger',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -800,7 +812,11 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
       </tr></thead><tbody id="avghistory-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="avghistory-info"></span></div>
+    <div class="pager"><span class="info" id="avghistory-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('avghistory',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('avghistory',1)">Next &#8250;</button>
+<select id="avghistory-pgsize" onchange="(function(){{{{if(!state['avghistory']) state['avghistory']={{{{page:1}}}};state['avghistory'].page=1;pgTab('avghistory',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -827,10 +843,14 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
         <th>Avg Buy ₹</th><th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
-        <th>Target ₹</th><th>Stop ₹</th><th>Total Inv ₹</th><th>Mkt Val ₹</th><th>Days</th>
+        <th>Target ₹</th><th>Stop ₹</th><th>Total Inv ₹</th><th>Mkt Val ₹</th><th>Recovery %</th><th>Days</th>
       </tr></thead><tbody id="marketdata-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="marketdata-info"></span></div>
+    <div class="pager"><span class="info" id="marketdata-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('marketdata',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('marketdata',1)">Next &#8250;</button>
+<select id="marketdata-pgsize" onchange="(function(){{{{if(!state['marketdata']) state['marketdata']={{{{page:1}}}};state['marketdata'].page=1;pgTab('marketdata',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -941,7 +961,11 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th>Qty</th><th>Investment &#8377;</th><th>Target (5%) &#8377;</th><th>Action</th>
       </tr></thead><tbody id="mtf-body"><tr><td colspan="12" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="mtf-info"></span></div>
+    <div class="pager"><span class="info" id="mtf-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('mtf',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('mtf',1)">Next &#8250;</button>
+<select id="mtf-pgsize" onchange="(function(){{{{if(!state['mtf']) state['mtf']={{{{page:1}}}};state['mtf'].page=1;pgTab('mtf',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -963,7 +987,11 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
         <th>Target &#8377;</th><th>Status</th><th>Action</th>
       </tr></thead><tbody id="portfolio-body"><tr><td colspan="11" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="portfolio-info"></span></div>
+    <div class="pager"><span class="info" id="portfolio-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('portfolio',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('portfolio',1)">Next &#8250;</button>
+<select id="portfolio-pgsize" onchange="(function(){{{{if(!state['portfolio']) state['portfolio']={{{{page:1}}}};state['portfolio'].page=1;pgTab('portfolio',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -1145,16 +1173,20 @@ function inDateRange(dateStr){{
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {{
-  open:    {{cfg:'ALL', page:1, sort:0, asc:false}},
-  closed:  {{cfg:'ALL', res:'ALL', page:1, sort:0, asc:false}},
-  fe:      {{cfg:'ALL', page:1, sort:0, asc:false}},
-  hist:    {{cfg:'ALL', status:'ALL', page:1}},
-  avghistory: {{cfg:'ALL'}},
-  marketdata: {{cfg:'ALL'}},
-  perf:    {{cfg:'ALL'}},
-  ledger:  {{cfg:'ALL', page:1, sort:0, asc:false}},
-  trades:  {{cfg:'ALL', status:'ALL', page:1, sort:0, asc:false}},
-  signals: {{cfg:'ALL', page:1, sort:0, asc:false}},
+  open:        {{cfg:'ALL', page:1, sort:0, asc:false}},
+  closed:      {{cfg:'ALL', res:'ALL', page:1, sort:0, asc:false}},
+  fe:          {{cfg:'ALL', page:1, sort:0, asc:false}},
+  hist:        {{cfg:'ALL', status:'ALL', page:1}},
+  avghistory:  {{cfg:'ALL', page:1}},
+  marketdata:  {{cfg:'ALL', page:1}},
+  avgtrigger:  {{page:1}},
+  selltrigger: {{page:1}},
+  mtf:         {{page:1}},
+  portfolio:   {{page:1}},
+  perf:        {{cfg:'ALL'}},
+  ledger:      {{cfg:'ALL', page:1, sort:0, asc:false}},
+  trades:      {{cfg:'ALL', status:'ALL', page:1, sort:0, asc:false}},
+  signals:     {{cfg:'ALL', page:1, sort:0, asc:false}},
 }};
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -1260,6 +1292,17 @@ function srt(tab,col){{
 function pg(tab,dir){{
   state[tab].page=Math.max(1,state[tab].page+dir);
   renderTab(tab);
+}}
+function pgTab(tab,dir){{
+  if(!state[tab]) state[tab]={{page:1}};
+  state[tab].page=Math.max(1,(state[tab].page||1)+dir);
+  if(tab==='avgtrigger') renderAvgTrigger();
+  else if(tab==='selltrigger') renderSellTrigger();
+  else if(tab==='avghistory') renderAvgHistory();
+  else if(tab==='marketdata') renderMarketData();
+  else if(tab==='mtf') renderMTFOutput();
+  else if(tab==='portfolio') renderPortfolio();
+  else if(tab==='ledger') renderTab('ledger');
 }}
 
 function pgHist(dir){{
@@ -1601,40 +1644,39 @@ function renderAvgTrigger(){{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const dropPct = cfgMap[r.CONFIG] || 0.1;
-    
-    // Show stocks that have dropped at least 80% of the way to the required config dip
     return avg>0 && ltp>0 && ltp <= avg * (1 - dropPct * 0.8);
   }}).sort((a,b)=>{{
     const da=((parseFloat(a.CURRENT_LTP)||0)-(parseFloat(a.AVG_BUY_PRICE)||0))/(parseFloat(a.AVG_BUY_PRICE)||1);
     const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
-    return da-db; // most dropped first
+    return da-db;
   }});
 
   renderBadges('avgtrigger-badges', rows, 'open');
   const body=document.getElementById('avgtrigger-body');
-  document.getElementById('avgtrigger-info').textContent=`${{rows.length}} stocks triggered or near trigger`;
+  const pgSzEl=document.getElementById('avgtrigger-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.avgtrigger||{{}}).page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('avgtrigger',page,rows.length,pgSz);
   
-  if(!rows.length){{body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}}
+  if(!slice.length){{body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}}
   
-  body.innerHTML=rows.map((r,i)=>{{
+  body.innerHTML=slice.map((r,i)=>{{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const dropPct = cfgMap[r.CONFIG] || 0.1;
-    
     const drop=avg>0?((ltp-avg)/avg*100):0;
-    
-    // Calculate exact Next Buy Price based on Config %
     const nextBuy=avg*(1 - dropPct); 
     const dist=ltp>0?((ltp-nextBuy)/nextBuy*100):0;
-    
     return `<tr>
-      <td>${{i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
+      <td>${{start+i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
       <td>₹${{fN(avg)}}</td>
       <td class="red">₹${{fN(ltp)}}</td>
       <td class="red">${{drop.toFixed(2)}}%</td>
       <td style="color:#f59e0b;font-weight:700">₹${{fN(nextBuy)}}</td>
-      <td class="${{dist<=0?'red':'green'}}">${{dist.toFixed(2)}}%</td>
+      <td class="${{dist<=0?'red':'amber'}}">${{dist.toFixed(2)}}%</td>
       <td>${{fI(r.MARKET_DAYS)}}d</td>
     </tr>`;
   }}).join('');
@@ -1723,7 +1765,7 @@ function buildHistory(){{
     const buyDatesTracker = [];
 
     const buyRows = Array.from({{length: buyCount}}, (_, bi) => {{
-      let legDate = r[`B${{bi}}_BoughtDate`] || (bi === 0 ? r.SIGNAL_DATE : '—');
+      let legDate = _buyCandle.date || (bi === 0 ? r.SIGNAL_DATE : '—');
       if (legDate !== '—') buyDatesTracker.push(legDate);
       
       let legPrice;
@@ -1738,11 +1780,13 @@ function buildHistory(){{
       let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
       let avgStr = (bi === buyCount - 1) ? `&#8377;${{fN(displayAvg)}}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${{fN(displayAvg)}}</span>`;
 
-      // Get individual leg specific OHLC
-      let pPrev = parseFloat(r[`B${{bi}}_PrevClose`]) || (bi===0?parseFloat(r.PREV_CLOSE):0);
-      let pOp = parseFloat(r[`B${{bi}}_Open`]) || (bi===0?parseFloat(r.OPEN_PRICE):0);
-      let pHi = parseFloat(r[`B${{bi}}_High`]) || (bi===0?parseFloat(r.HIGH_PRICE):0);
-      let pLo = parseFloat(r[`B${{bi}}_Low`]) || (bi===0?parseFloat(r.LOW_PRICE):0);
+      // Get individual leg specific OHLC from TRADE_OHLC
+      const _oTc=(TRADE_OHLC[oKey]||{{}});
+      const _buyCandle=(_oTc.buys&&_oTc.buys[bi])||{{}};
+      let pPrev = parseFloat(_buyCandle.pc)||0;
+      let pOp   = parseFloat(_buyCandle.o)||0;
+      let pHi   = parseFloat(_buyCandle.h)||0;
+      let pLo   = parseFloat(_buyCandle.l)||0;
       let pCl = parseFloat(r[`B${{bi}}_Close`]) || (bi===0?parseFloat(r.SIGNAL_CLOSE):0);
 
       const legQty = legPrice > 0 ? Math.floor(10000 / legPrice) : 0;
@@ -1764,12 +1808,14 @@ function buildHistory(){{
       </tr>`;
     }}).join('');
 
-    // SELL HISTORY rows
-    let sPrev = parseFloat(r.SoldPrevClose)||0;
-    let sOp = parseFloat(r.SoldOpen)||0;
-    let sHi = parseFloat(r.SoldHigh)||0;
-    let sLo = parseFloat(r.SoldLow)||0;
-    let sCl = parseFloat(r.SoldClose)||parseFloat(r.EXIT_PRICE)||0;
+    // SELL HISTORY rows - use TRADE_OHLC sell candle
+    const _oTcSell=(TRADE_OHLC[oKey]||{{}});
+    const _sellCandle=_oTcSell.sell||{{}};
+    let sPrev = parseFloat(_sellCandle.pc)||0;
+    let sOp   = parseFloat(_sellCandle.o)||0;
+    let sHi   = parseFloat(_sellCandle.h)||0;
+    let sLo   = parseFloat(_sellCandle.l)||0;
+    let sCl   = parseFloat(_sellCandle.c)||parseFloat(r.EXIT_PRICE)||0;
 
     const sellSection=isSold?`
       <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
@@ -1865,7 +1911,7 @@ function buildHistory(){{
         </div>
       </div>
       <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})', '${{buyDatesJson}}', '${{sellDateStr}}', '${{r.B0_BoughtDate||r.SIGNAL_DATE||\'\'}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="showOHLCDirect('${{oKey}}', '${{r.SYMBOL}} (${{r.CONFIG}})', '${{buyDatesJson}}', '${{sellDateStr}}', '${{r.B0_BoughtDate||r.SIGNAL_DATE||''}}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
         <button onclick="exportHistCard(this,'${{r.SYMBOL}}_${{r.CONFIG}}_${{r.SIGNAL_DATE}}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
         <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
       </div>
@@ -1967,13 +2013,18 @@ function renderSellTrigger(){{
   }}).sort((a,b)=>{{
     const da=(parseFloat(a.CURRENT_LTP)||0)/(parseFloat(a.TARGET_PRICE)||1);
     const db=(parseFloat(b.CURRENT_LTP)||0)/(parseFloat(b.TARGET_PRICE)||1);
-    return db-da; // closest to target first
+    return db-da;
   }});
   renderBadges('selltrigger-badges', rows, 'open');
   const body=document.getElementById('selltrigger-body');
-  document.getElementById('selltrigger-info').textContent=`${{rows.length}} stocks near target`;
-  if(!rows.length){{body.innerHTML='<tr><td colspan="11" class="empty">No stocks near sell trigger</td></tr>';return;}}
-  body.innerHTML=rows.map((r,i)=>{{
+  const pgSzEl=document.getElementById('selltrigger-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.selltrigger||{{}}).page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('selltrigger',page,rows.length,pgSz);
+  if(!slice.length){{body.innerHTML='<tr><td colspan="11" class="empty">No stocks near sell trigger</td></tr>';return;}}
+  body.innerHTML=slice.map((r,i)=>{{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const tgt=parseFloat(r.TARGET_PRICE)||0;
@@ -1981,7 +2032,7 @@ function renderSellTrigger(){{
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
     return `<tr>
-      <td>${{i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
+      <td>${{start+i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
       <td>₹${{fN(avg)}}</td>
       <td class="green">₹${{fN(ltp)}}</td>
@@ -2024,11 +2075,18 @@ function renderAvgHistory(){{
   const body=document.getElementById('avghistory-body');
   document.getElementById('avghistory-info').textContent=`${{rows.length}} open averaging positions`;
 
-  if(!rows.length){{body.innerHTML='<tr><td colspan="14" class="empty">No open averaging positions found</td></tr>';return;}}
+  const pgSzEl2=document.getElementById('avghistory-pgsize');
+  const pgSz2=pgSzEl2?parseInt(pgSzEl2.value):50;
+  const page2=(state.avghistory||{{}}).page||1;
+  const start2=(page2-1)*pgSz2;
+  const pageRows2=rows.slice(start2,start2+pgSz2);
+  setPager('avghistory',page2,rows.length,pgSz2);
+
+  if(!pageRows2.length){{body.innerHTML='<tr><td colspan="14" class="empty">No open averaging positions found</td></tr>';return;}}
 
   // Expand each trade into per-buy step rows
   const htmlRows=[];
-  rows.forEach((r,ri)=>{{
+  pageRows2.forEach((r,ri)=>{{
     const buyCount=parseInt(r.BUY_COUNT)||1;
     const finalAvg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
@@ -2086,16 +2144,25 @@ function renderMarketData(){{
   rows.sort((a,b)=>(parseFloat(b.GAIN_PCT)||0)-(parseFloat(a.GAIN_PCT)||0));
   renderBadges('marketdata-badges', rows, 'open');
   const body=document.getElementById('marketdata-body');
-  document.getElementById('marketdata-info').textContent=`${{rows.length}} open positions`;
-  if(!rows.length){{body.innerHTML='<tr><td colspan="13" class="empty">No open positions</td></tr>';return;}}
-  body.innerHTML=rows.map((r,i)=>{{
+  const pgSzEl=document.getElementById('marketdata-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.marketdata||{{}}).page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('marketdata',page,rows.length,pgSz);
+  if(!slice.length){{body.innerHTML='<tr><td colspan="14" class="empty">No open positions</td></tr>';return;}}
+  body.innerHTML=slice.map((r,i)=>{{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const qty=parseInt(r.TOTAL_QTY)||0;
     const mktVal=ltp*qty;
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
+    // Recovery: prev close to today close
+    const prevCl=parseFloat(r.PREV_CLOSE_PRICE||r.ENTRY_PREV_CLOSE||0)||0;
+    const recPct=prevCl>0?((ltp-prevCl)/prevCl*100):null;
+    const recStr=recPct!==null?`${{recPct>=0?'+':''}}${{recPct.toFixed(2)}}%`:'—';
     return `<tr>
-      <td>${{i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
+      <td>${{start+i+1}}</td><td>${{cfgBadge(r.CONFIG)}}</td><td><strong>${{r.SYMBOL}}</strong></td>
       <td>${{fD(r.SIGNAL_DATE)}}</td>
       <td>₹${{fN(r.AVG_BUY_PRICE)}}</td>
       <td class="${{pct>=0?'green':'red'}}">₹${{fN(ltp)}}</td>
@@ -2105,6 +2172,7 @@ function renderMarketData(){{
       <td>₹${{fN(r.STOP_PRICE)}}</td>
       <td>₹${{fN(r.TOTAL_INVESTMENT)}}</td>
       <td>₹${{fN(mktVal)}}</td>
+      <td ${{pnlColor(recPct)}}>${{recStr}}</td>
       <td>${{fI(r.MARKET_DAYS)}}d</td>
     </tr>`;
   }}).join('');
@@ -2402,11 +2470,11 @@ async function _loadMTFSymbols() {{
 
 async function renderMTFOutput() {{
   const body = document.getElementById('mtf-body');
-  body.innerHTML = '<tr><td colspan="12" class="empty">Loading MTF symbols\u2026</td></tr>';
+  body.innerHTML = '<tr><td colspan="12" class="empty">Loading MTF symbols…</td></tr>';
 
   const syms = await _loadMTFSymbols();
   if (!syms) {{
-    body.innerHTML = '<tr><td colspan="12" class="empty">\u26a0 Failed to load MTF symbols (data/mtf_symbols.json missing)</td></tr>';
+    body.innerHTML = '<tr><td colspan="12" class="empty">⚠ Failed to load MTF symbols (data/mtf_symbols.json missing)</td></tr>';
     return;
   }}
   const mtfSet = new Set(syms.map(s => s.toUpperCase()));
@@ -2454,15 +2522,29 @@ async function renderMTFOutput() {{
   }});
 
   document.getElementById('mtf-info').textContent =
-    filtered.length + ' symbol(s) matched (MTF eligible \u00b7 LTP < avg buy \u00b7 no FE \u00b7 no active holding)';
+    filtered.length + ' symbol(s) matched (MTF eligible · LTP < avg buy · no FE · no active holding)';
 
   if (!filtered.length) {{
     body.innerHTML = '<tr><td colspan="12" class="empty">No MTF matches right now</td></tr>';
     return;
   }}
 
+  const pgSzEl=document.getElementById('mtf-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.mtf||{{}}).page||1;
+  const start=(page-1)*pgSz;
+  const pageFiltered=filtered.slice(start,start+pgSz);
+  setPager('mtf',page,filtered.length,pgSz);
+
+  document.getElementById('mtf-info').textContent=`${{filtered.length}} MTF opportunities`;
+
+  if(!pageFiltered.length){{
+    body.innerHTML='<tr><td colspan="12" class="empty">No MTF opportunities right now</td></tr>';
+    return;
+  }}
+
   const today = new Date();
-  body.innerHTML = filtered.map(function(item, i) {{
+  body.innerHTML = pageFiltered.map(function(item, i) {{
     const r = item.r, avg = item.avg;
     const ltp  = parseFloat(r.CURRENT_LTP) || 0;
     const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
@@ -2472,24 +2554,24 @@ async function renderMTFOutput() {{
     const sigDate = r.SIGNAL_DATE || '';
     const sigPrice = parseFloat(r.SIGNAL_CLOSE || r.B0_Close || 0) || avg;
     const sigDt = sigDate ? new Date(sigDate) : null;
-    const dur = sigDt ? (Math.max(0, Math.round((today - sigDt) / 86400000)) + 'd') : '\u2014';
+    const dur = sigDt ? (Math.max(0, Math.round((today - sigDt) / 86400000)) + 'd') : '—';
     const addPayload = JSON.stringify({{
       symbol: r.SYMBOL, signal_date: sigDate,
       avg_buy: avg, ltp: ltp, target: parseFloat(target)
-    }}).replace(/'/g, '&#39;').replace(/\"/g, '&quot;');
+    }}).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
     return '<tr>' +
-      '<td>' + (i+1) + '</td>' +
+      '<td>' + (start+i+1) + '</td>' +
       '<td><strong>' + r.SYMBOL + '</strong></td>' +
       '<td>' + fD(sigDate) + '</td>' +
-      '<td>\u20b9' + fN(sigPrice) + '</td>' +
+      '<td>₹' + fN(sigPrice) + '</td>' +
       '<td>' + dur + '</td>' +
-      '<td>\u20b9' + fN(avg) + '</td>' +
-      '<td class="red">\u20b9' + fN(ltp) + '</td>' +
+      '<td>₹' + fN(avg) + '</td>' +
+      '<td class="red">₹' + fN(ltp) + '</td>' +
       '<td class="red">' + drop.toFixed(2) + '%</td>' +
       '<td>' + qty + '</td>' +
-      '<td>\u20b9' + fN(invAmt) + '</td>' +
-      '<td class="green">\u20b9' + fN(target) + '</td>' +
-      '<td><button class="btn-sm btn-green" onclick="addToPortfolio(' + addPayload + ')">\u2795 Add</button></td>' +
+      '<td>₹' + fN(invAmt) + '</td>' +
+      '<td class="green">₹' + fN(target) + '</td>' +
+      '<td><button class="btn-sm btn-green" onclick="addToPortfolio(' + addPayload + ')">➕ Add</button></td>' +
       '</tr>';
   }}).join('');
 }}
@@ -2558,7 +2640,7 @@ async function _pushPortfolioToGitHub(arr) {{
 
 async function renderPortfolio() {{
   document.getElementById('portfolio-body').innerHTML =
-    '<tr><td colspan="11" class="empty">Syncing from GitHub\u2026</td></tr>';
+    '<tr><td colspan="11" class="empty">Syncing from GitHub…</td></tr>';
 
   const synced = await syncPortfolioFromGitHub();
   if (synced) savePortfolio(synced);
@@ -2577,35 +2659,41 @@ async function renderPortfolio() {{
   savePortfolio(arr);
 
   const body = document.getElementById('portfolio-body');
+  const pgSzEl = document.getElementById('portfolio-pgsize');
+  const pgSz = pgSzEl ? parseInt(pgSzEl.value) : 50;
+  const page = (state.portfolio||{{}}).page || 1;
+  const start = (page - 1) * pgSz;
+  const pageArr = arr.slice(start, start + pgSz);
+  setPager('portfolio', page, arr.length, pgSz);
   document.getElementById('portfolio-info').textContent = arr.length + ' holdings';
 
   if (!arr.length) {{
-    body.innerHTML = '<tr><td colspan="11" class="empty">No holdings yet \u2014 add from MTF Output tab or use + Add</td></tr>';
+    body.innerHTML = '<tr><td colspan="11" class="empty">No holdings yet — add from MTF Output tab or use + Add</td></tr>';
     return;
   }}
 
-  body.innerHTML = arr.map(function(p, i) {{
+  body.innerHTML = pageArr.map(function(p, i) {{
     const ltp  = p.current_ltp || 0;
     const avg  = p.avg_buy || 0;
     const tgt  = p.target || avg * 1.05;
     const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
     const invAmt = ((p.qty || 0) * avg).toFixed(2);
     const isGreen = p.status === 'Yes';
-    const icon = isGreen ? '\ud83d\udfe2' : '\ud83d\udd34';
+    const icon = isGreen ? '✅' : '❌';
     const cls  = isGreen ? 'green' : 'red';
     return '<tr>' +
-      '<td>' + (i+1) + '</td>' +
+      '<td>' + (start+i+1) + '</td>' +
       '<td><strong>' + (p.symbol||'') + '</strong></td>' +
       '<td>' + fD(p.added_date) + '</td>' +
-      '<td>\u20b9' + fN(avg) + '</td>' +
-      '<td>' + (p.qty || '\u2014') + '</td>' +
-      '<td>\u20b9' + fN(invAmt) + '</td>' +
-      '<td class="' + cls + '">\u20b9' + fN(ltp) + '</td>' +
+      '<td>₹' + fN(avg) + '</td>' +
+      '<td>' + (p.qty || '—') + '</td>' +
+      '<td>₹' + fN(invAmt) + '</td>' +
+      '<td class="' + cls + '">₹' + fN(ltp) + '</td>' +
       '<td class="' + cls + '">' + drop.toFixed(2) + '%</td>' +
-      '<td class="green">\u20b9' + fN(tgt) + '</td>' +
+      '<td class="green">₹' + fN(tgt) + '</td>' +
       '<td class="' + cls + '" style="font-weight:700">' + icon + ' ' + (p.status||'—') + '</td>' +
       '<td><button class="btn-sm" style="background:#ef4444;color:#fff;padding:3px 8px;" ' +
-        'onclick="deletePortfolioItem(' + i + ')">&#128465;</button></td>' +
+        'onclick="deletePortfolioItem(' + (start+i) + ')">&#128465;</button></td>' +
       '</tr>';
   }}).join('');
 }}
@@ -2630,7 +2718,10 @@ function addToPortfolio(data) {{
   }});
   savePortfolio(arr);
   _pushPortfolioToGitHub(arr);
-  toast(data.symbol + ' added to Portfolio \u2713', 'success');
+  toast(data.symbol + ' added to Portfolio ✓', 'success');
+  if(document.getElementById('tab-portfolio')&&!document.getElementById('tab-portfolio').classList.contains('hidden')){{
+    renderPortfolio();
+  }}
 }}
 
 async function deletePortfolioItem(idx) {{
