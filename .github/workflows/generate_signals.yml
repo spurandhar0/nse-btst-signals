@@ -70,10 +70,25 @@ jobs:
           cd /tmp
           git clone https://x-access-token:${GH_PAT}@github.com/spurandhar0/nse-btst-signals-dashboard.git pub-dashboard
           mkdir -p pub-dashboard/docs/data
+
+          # index.html — always required
           cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/docs/index.html
-          cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/docs/data/sim_results.json
-          cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/trade_ohlc.json
-          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json || true
+
+          # sim_results.json — safe copy (may not exist if no signal parquets)
+          [ -f "$GITHUB_WORKSPACE/docs/data/sim_results.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/docs/data/sim_results.json \
+            || echo "⚠  sim_results.json not found — skipping"
+
+          # trade_ohlc.json — safe copy
+          [ -f "$GITHUB_WORKSPACE/docs/data/trade_ohlc.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/trade_ohlc.json \
+            || echo "⚠  trade_ohlc.json not found — skipping"
+
+          # nifty_index.json — optional
+          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json \
+            || true
+
           cd pub-dashboard
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
