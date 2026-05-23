@@ -873,6 +873,20 @@ def main():
     else:
         print("\n⚠️  No config data to consolidate — no signal parquets found yet")
         print("   Run the Bootstrap workflow first, then Daily Signals.")
+        # Write empty sim_results.json so the dashboard push step never fails
+        os.makedirs('docs/data', exist_ok=True)
+        empty_out = {
+            'meta': {
+                'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
+                'last_date':    str(global_last_date.date()),
+            },
+            'results': {},
+        }
+        with open('docs/data/sim_results.json', 'w') as f:
+            json.dump(empty_out, f)
+        with open('docs/data/trade_ohlc.json', 'w') as f:
+            json.dump({}, f)
+        print("   ✅ Wrote empty docs/data/sim_results.json + trade_ohlc.json")
 
     print(f"\n{'='*60}")
     print(f"Simulation complete — {datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST')}")
