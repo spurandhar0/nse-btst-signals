@@ -4,7 +4,7 @@ NSE BTST Signals — Dashboard Builder v3
 Full tabs: Overview, Open, Closed, Force Exit, Stock History, Daily Ledger,
            Trade History, Today's Signals, Configs, Disclaimer
 """
-import os, json, csv, glob, re
+import os, json, csv, re
 from datetime import datetime, timezone, timedelta
 
 IST  = timezone(timedelta(hours=5, minutes=30))
@@ -86,104 +86,6 @@ def load_signals_csv():
     dates = [r.get('SIGNAL_DATE', '') for r in rows if r.get('SIGNAL_DATE')]
     sig_date = max(dates) if dates else ''
     return rows, sig_date
-
-
-def load_bhav_ohlc(all_rows):
-    """Build per-trade OHLC lookup from bhav CSVs."""
-    try:
-        bhav_files = sorted(glob.glob(os.path.join(BHAV_DIR, '*.csv')))
-        if not bhav_files:
-            return {}
-        # Build date -> symbol -> {pc,o,h,l,c} mapping
-        date_sym_map = {}
-        for fpath in bhav_files:
-            fname = os.path.basename(fpath)
-            # Extract date from filename: bhav_YYYYMMDD.csv or YYYYMMDD.csv
-            dm = re.search(r'(\d{8})', fname)
-            if not dm:
-                continue
-            ds = dm.group(1)
-            # Detect format: YYYYMMDD (year first, e.g. 20250101) vs DDMMYYYY (day first, e.g. 01012025)
-            if 2000 <= int(ds[:4]) <= 2099:
-                date_str = f"{ds[:4]}-{ds[4:6]}-{ds[6:]}"
-            else:
-                date_str = f"{ds[4:]}-{ds[2:4]}-{ds[:2]}"
-            try:
-                with open(fpath, newline='', encoding='utf-8', errors='replace') as cf:
-                    reader = csv.DictReader(cf)
-                    hdrs = reader.fieldnames or []
-                    # Detect column names
-                    sym_col = next((h for h in hdrs if h.strip().upper() in ('SYMBOL','SC_CODE')), None)
-                    o_col   = next((h for h in hdrs if h.strip().upper() in ('OPEN','OPEN_PRICE','OP')), None)
-                    h_col   = next((h for h in hdrs if h.strip().upper() in ('HIGH','HIGH_PRICE','HP')), None)
-                    l_col   = next((h for h in hdrs if h.strip().upper() in ('LOW','LOW_PRICE','LP')), None)
-                    c_col   = next((h for h in hdrs if h.strip().upper() in ('CLOSE','CLOSE_PRICE','CP')), None)
-                    prev_col= next((h for h in hdrs if h.strip().upper() in ('PREVCLOSE','PREV_CLOSE','PRP')), None)
-                    
-                    if not all([sym_col, o_col, h_col, l_col, c_col]):
-                        continue
-                    sym_map = {}
-                    for row in reader:
-                        sym = row.get(sym_col,'').strip()
-                        if not sym:
-                            continue
-                        try:
-                            sym_map[sym] = {
-                                'pc': round(float(row.get(prev_col,0) or 0), 2) if prev_col else 0,
-                                'o': round(float(row.get(o_col,0) or 0), 2),
-                                'h': round(float(row.get(h_col,0) or 0), 2),
-                                'l': round(float(row.get(l_col,0) or 0), 2),
-                                'c': round(float(row.get(c_col,0) or 0), 2),
-                            }
-                        except:
-                            pass
-                    date_sym_map[date_str] = sym_map
-            except:
-                pass
-
-        # Build per-trade OHLC
-        trade_ohlc = {}
-        for r in all_rows:
-            if r.get('ORDER') != 'Executed':
-                continue
-            sym = r.get('SYMBOL','')
-            sig = r.get('SIGNAL_DATE','')
-            ext = r.get('EXIT_DATE','') or ''
-            cfg = r.get('CONFIG','')
-            key = f"{sym}_{sig}_{cfg}"
-            if key in trade_ohlc:
-                continue
-            end_d = ext if ext else datetime.now(tz=IST).strftime('%Y-%m-%d')
-            ohlc_list = []
-            prev_c = 0
-            for d in sorted(date_sym_map.keys()):
-                if d < sig or d > end_d:
-                    continue
-                if sym in date_sym_map[d]:
-                    rec = dict(date_sym_map[d][sym])
-                    if prev_c and prev_c > 0:
-                        rec['chg'] = round((rec['c'] - prev_c) / prev_c * 100, 2)
-                    else:
-                        rec['chg'] = 0
-                    rec['date'] = d
-                    prev_c = rec['c']
-                    ohlc_list.append(rec)
-            # For sold trades: ensure EXIT_DATE row present (use SoldOHLC from row)
-            if ext and (not ohlc_list or ohlc_list[-1]['date'] != ext):
-                sold_c = float(r.get('SoldClose') or r.get('EXIT_PRICE') or 0)
-                sold_o = float(r.get('SoldOpen') or 0)
-                sold_h = float(r.get('SoldHigh') or 0)
-                sold_l = float(r.get('SoldLow') or 0)
-                sold_pc = float(r.get('SoldPrevClose') or 0)
-                if sold_c > 0:
-                    prev_last = ohlc_list[-1]['c'] if ohlc_list else sold_pc
-                    chg = round((sold_c - prev_last) / prev_last * 100, 2) if prev_last else 0
-                    ohlc_list.append({'date': ext, 'pc': sold_pc, 'o': sold_o,
-                                      'h': sold_h, 'l': sold_l, 'c': sold_c, 'chg': chg})
-            trade_ohlc[key] = ohlc_list
-        return trade_ohlc
-    except Exception as e:
-        return {}
 
 
 def build_html(logo, nifty, configs, sim_meta, sim_results, signals_rows, sig_date):
@@ -600,7 +502,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="ledger-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('ledger',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('ledger',1)">Next &#8250;</button>
-<select id="ledger-pgsize" onchange="(function(){{{{if(!state['ledger']) state['ledger']={{{{page:1}}}};state['ledger'].page=1;pgTab('ledger',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="ledger-pgsize" onchange="(function(){{if(!state['ledger']) state['ledger']={{page:1}};state['ledger'].page=1;pgTab('ledger',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
@@ -752,7 +654,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="avgtrigger-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('avgtrigger',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('avgtrigger',1)">Next &#8250;</button>
-<select id="avgtrigger-pgsize" onchange="(function(){{{{if(!state['avgtrigger']) state['avgtrigger']={{{{page:1}}}};state['avgtrigger'].page=1;pgTab('avgtrigger',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="avgtrigger-pgsize" onchange="(function(){{if(!state['avgtrigger']) state['avgtrigger']={{page:1}};state['avgtrigger'].page=1;pgTab('avgtrigger',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
@@ -777,7 +679,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="selltrigger-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('selltrigger',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('selltrigger',1)">Next &#8250;</button>
-<select id="selltrigger-pgsize" onchange="(function(){{{{if(!state['selltrigger']) state['selltrigger']={{{{page:1}}}};state['selltrigger'].page=1;pgTab('selltrigger',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="selltrigger-pgsize" onchange="(function(){{if(!state['selltrigger']) state['selltrigger']={{page:1}};state['selltrigger'].page=1;pgTab('selltrigger',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
@@ -815,7 +717,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="avghistory-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('avghistory',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('avghistory',1)">Next &#8250;</button>
-<select id="avghistory-pgsize" onchange="(function(){{{{if(!state['avghistory']) state['avghistory']={{{{page:1}}}};state['avghistory'].page=1;pgTab('avghistory',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="avghistory-pgsize" onchange="(function(){{if(!state['avghistory']) state['avghistory']={{page:1}};state['avghistory'].page=1;pgTab('avghistory',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
@@ -849,7 +751,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="marketdata-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('marketdata',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('marketdata',1)">Next &#8250;</button>
-<select id="marketdata-pgsize" onchange="(function(){{{{if(!state['marketdata']) state['marketdata']={{{{page:1}}}};state['marketdata'].page=1;pgTab('marketdata',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="marketdata-pgsize" onchange="(function(){{if(!state['marketdata']) state['marketdata']={{page:1}};state['marketdata'].page=1;pgTab('marketdata',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
@@ -964,7 +866,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="mtf-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('mtf',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('mtf',1)">Next &#8250;</button>
-<select id="mtf-pgsize" onchange="(function(){{{{if(!state['mtf']) state['mtf']={{{{page:1}}}};state['mtf'].page=1;pgTab('mtf',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="mtf-pgsize" onchange="(function(){{if(!state['mtf']) state['mtf']={{page:1}};state['mtf'].page=1;pgTab('mtf',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
@@ -990,7 +892,7 @@ footer{{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padd
     <div class="pager"><span class="info" id="portfolio-info"></span><div style="flex:1"></div>
 <button class="btn-sm btn-outline" onclick="pgTab('portfolio',-1)">&#8249; Prev</button>
 <button class="btn-sm btn-outline" onclick="pgTab('portfolio',1)">Next &#8250;</button>
-<select id="portfolio-pgsize" onchange="(function(){{{{if(!state['portfolio']) state['portfolio']={{{{page:1}}}};state['portfolio'].page=1;pgTab('portfolio',0);}}}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+<select id="portfolio-pgsize" onchange="(function(){{if(!state['portfolio']) state['portfolio']={{page:1}};state['portfolio'].page=1;pgTab('portfolio',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
 </div>
   </div>
 </div>
