@@ -131,7 +131,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </div>
     </div>
     <div class="hdr-right">
-      <span class="hdr-badge">&#9679; 23-May-2026 04:52 IST</span>
+      <span class="hdr-badge">&#9679; 23-May-2026 06:17 IST</span>
       <button class="hdr-btn" onclick="location.reload()">&#8635; Refresh</button>
     </div>
   </div>
@@ -148,7 +148,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="liveBanner">
-  &#10003; Last simulation: <strong id="bannerDate">23-May-2026 04:52 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
+  &#10003; Last simulation: <strong id="bannerDate">23-May-2026 06:17 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
 </div>
 
 <div class="container">
@@ -487,7 +487,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </tr></thead>
       <tbody id="ledger-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="ledger-info"></span></div>
+    <div class="pager"><span class="info" id="ledger-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('ledger',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('ledger',1)">Next &#8250;</button>
+<select id="ledger-pgsize" onchange="(function(){{if(!state['ledger']) state['ledger']={{page:1}};state['ledger'].page=1;pgTab('ledger',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -861,7 +865,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <th>Next Buy Price</th><th>Distance</th><th>Days Held</th>
       </tr></thead><tbody id="avgtrigger-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="avgtrigger-info"></span></div>
+    <div class="pager"><span class="info" id="avgtrigger-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('avgtrigger',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('avgtrigger',1)">Next &#8250;</button>
+<select id="avgtrigger-pgsize" onchange="(function(){{if(!state['avgtrigger']) state['avgtrigger']={{page:1}};state['avgtrigger'].page=1;pgTab('avgtrigger',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -882,7 +890,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <th>Distance to TGT</th><th>P&amp;L ₹</th><th>P&amp;L%</th><th>Days Held</th>
       </tr></thead><tbody id="selltrigger-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="selltrigger-info"></span></div>
+    <div class="pager"><span class="info" id="selltrigger-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('selltrigger',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('selltrigger',1)">Next &#8250;</button>
+<select id="selltrigger-pgsize" onchange="(function(){{if(!state['selltrigger']) state['selltrigger']={{page:1}};state['selltrigger'].page=1;pgTab('selltrigger',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -938,7 +950,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
       </tr></thead><tbody id="avghistory-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="avghistory-info"></span></div>
+    <div class="pager"><span class="info" id="avghistory-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('avghistory',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('avghistory',1)">Next &#8250;</button>
+<select id="avghistory-pgsize" onchange="(function(){{if(!state['avghistory']) state['avghistory']={{page:1}};state['avghistory'].page=1;pgTab('avghistory',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -987,10 +1003,14 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
         <th>Avg Buy ₹</th><th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
-        <th>Target ₹</th><th>Stop ₹</th><th>Total Inv ₹</th><th>Mkt Val ₹</th><th>Days</th>
+        <th>Target ₹</th><th>Stop ₹</th><th>Total Inv ₹</th><th>Mkt Val ₹</th><th>Recovery %</th><th>Days</th>
       </tr></thead><tbody id="marketdata-body"></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="marketdata-info"></span></div>
+    <div class="pager"><span class="info" id="marketdata-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('marketdata',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('marketdata',1)">Next &#8250;</button>
+<select id="marketdata-pgsize" onchange="(function(){{if(!state['marketdata']) state['marketdata']={{page:1}};state['marketdata'].page=1;pgTab('marketdata',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -1123,7 +1143,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <th>Qty</th><th>Investment &#8377;</th><th>Target (5%) &#8377;</th><th>Action</th>
       </tr></thead><tbody id="mtf-body"><tr><td colspan="12" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="mtf-info"></span></div>
+    <div class="pager"><span class="info" id="mtf-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('mtf',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('mtf',1)">Next &#8250;</button>
+<select id="mtf-pgsize" onchange="(function(){{if(!state['mtf']) state['mtf']={{page:1}};state['mtf'].page=1;pgTab('mtf',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -1145,7 +1169,11 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <th>Target &#8377;</th><th>Status</th><th>Action</th>
       </tr></thead><tbody id="portfolio-body"><tr><td colspan="11" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
     </div>
-    <div class="pager"><span class="info" id="portfolio-info"></span></div>
+    <div class="pager"><span class="info" id="portfolio-info"></span><div style="flex:1"></div>
+<button class="btn-sm btn-outline" onclick="pgTab('portfolio',-1)">&#8249; Prev</button>
+<button class="btn-sm btn-outline" onclick="pgTab('portfolio',1)">Next &#8250;</button>
+<select id="portfolio-pgsize" onchange="(function(){{if(!state['portfolio']) state['portfolio']={{page:1}};state['portfolio'].page=1;pgTab('portfolio',0);}})()"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="200">200</option></select>
+</div>
   </div>
 </div>
 
@@ -1327,16 +1355,20 @@ function inDateRange(dateStr){
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {
-  open:    {cfg:'ALL', page:1, sort:0, asc:false},
-  closed:  {cfg:'ALL', res:'ALL', page:1, sort:0, asc:false},
-  fe:      {cfg:'ALL', page:1, sort:0, asc:false},
-  hist:    {cfg:'ALL', status:'ALL', page:1},
-  avghistory: {cfg:'ALL'},
-  marketdata: {cfg:'ALL'},
-  perf:    {cfg:'ALL'},
-  ledger:  {cfg:'ALL', page:1, sort:0, asc:false},
-  trades:  {cfg:'ALL', status:'ALL', page:1, sort:0, asc:false},
-  signals: {cfg:'ALL', page:1, sort:0, asc:false},
+  open:        {cfg:'ALL', page:1, sort:0, asc:false},
+  closed:      {cfg:'ALL', res:'ALL', page:1, sort:0, asc:false},
+  fe:          {cfg:'ALL', page:1, sort:0, asc:false},
+  hist:        {cfg:'ALL', status:'ALL', page:1},
+  avghistory:  {cfg:'ALL', page:1},
+  marketdata:  {cfg:'ALL', page:1},
+  avgtrigger:  {page:1},
+  selltrigger: {page:1},
+  mtf:         {page:1},
+  portfolio:   {page:1},
+  perf:        {cfg:'ALL'},
+  ledger:      {cfg:'ALL', page:1, sort:0, asc:false},
+  trades:      {cfg:'ALL', status:'ALL', page:1, sort:0, asc:false},
+  signals:     {cfg:'ALL', page:1, sort:0, asc:false},
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -1442,6 +1474,17 @@ function srt(tab,col){
 function pg(tab,dir){
   state[tab].page=Math.max(1,state[tab].page+dir);
   renderTab(tab);
+}
+function pgTab(tab,dir){
+  if(!state[tab]) state[tab]={page:1};
+  state[tab].page=Math.max(1,(state[tab].page||1)+dir);
+  if(tab==='avgtrigger') renderAvgTrigger();
+  else if(tab==='selltrigger') renderSellTrigger();
+  else if(tab==='avghistory') renderAvgHistory();
+  else if(tab==='marketdata') renderMarketData();
+  else if(tab==='mtf') renderMTFOutput();
+  else if(tab==='portfolio') renderPortfolio();
+  else if(tab==='ledger') renderTab('ledger');
 }
 
 function pgHist(dir){
@@ -1707,15 +1750,20 @@ function renderLedger(rows){
   const body=document.getElementById('ledger-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No closed trades yet.</td></tr>';
     document.getElementById('ledger-info').textContent='';return;}
-  body.innerHTML=rows.map((r,i)=>`<tr>
-    <td>${i+1}</td><td>${r.date}</td>
+   const pgSzEl=document.getElementById('ledger-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=state.ledger.page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('ledger',page,rows.length,pgSz);
+  body.innerHTML=slice.map((r,i)=>`<tr>
+    <td>${start+i+1}</td><td>${r.date}</td>
     <td>${r.total}</td>
     <td class="green">${r.profit}</td>
     <td class="red">${r.loss}</td>
     <td ${pnlColor(r.pnl)}>&#8377;${fN(r.pnl)}</td>
     <td ${pnlColor(r.cum)}>&#8377;${fN(r.cum)}</td>
   </tr>`).join('');
-  document.getElementById('ledger-info').textContent=`${rows.length} trading days`;
 }
 
 function renderSignals(rows){
@@ -1731,7 +1779,7 @@ function renderSignals(rows){
     const date=r.SIGNAL_DATE||r.signal_date||'—';
     const close=parseFloat(r.CLOSE||r.close||r.SIGNAL_CLOSE||0);
     const chg1d=parseFloat(r.CHG_PCT||r.chg_pct||r.PCT_1D_CHANGE||0);
-    const chg5dRaw=r.CHG_5D||r.PCT_5D||r.pct_5d||r.CHG5D||r.CHANGE_5D||null;
+    const chg5dRaw=r.CHG_5D||r.PCT_5D||r.pct_5d||r.CHG5D||r.CHANGE_5D||r.PCT_FROM_LOW||null;
     const chg5d=chg5dRaw!=null?parseFloat(chg5dRaw):null;
     const ltp=openMap[sym]||close;
     const target=close*1.10;
@@ -1778,40 +1826,39 @@ function renderAvgTrigger(){
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const dropPct = cfgMap[r.CONFIG] || 0.1;
-    
-    // Show stocks that have dropped at least 80% of the way to the required config dip
     return avg>0 && ltp>0 && ltp <= avg * (1 - dropPct * 0.8);
   }).sort((a,b)=>{
     const da=((parseFloat(a.CURRENT_LTP)||0)-(parseFloat(a.AVG_BUY_PRICE)||0))/(parseFloat(a.AVG_BUY_PRICE)||1);
     const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
-    return da-db; // most dropped first
+    return da-db;
   });
 
   renderBadges('avgtrigger-badges', rows, 'open');
   const body=document.getElementById('avgtrigger-body');
-  document.getElementById('avgtrigger-info').textContent=`${rows.length} stocks triggered or near trigger`;
+  const pgSzEl=document.getElementById('avgtrigger-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.avgtrigger||{}).page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('avgtrigger',page,rows.length,pgSz);
   
-  if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}
+  if(!slice.length){body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}
   
-  body.innerHTML=rows.map((r,i)=>{
+  body.innerHTML=slice.map((r,i)=>{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const dropPct = cfgMap[r.CONFIG] || 0.1;
-    
     const drop=avg>0?((ltp-avg)/avg*100):0;
-    
-    // Calculate exact Next Buy Price based on Config %
     const nextBuy=avg*(1 - dropPct); 
     const dist=ltp>0?((ltp-nextBuy)/nextBuy*100):0;
-    
     return `<tr>
-      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${start+i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
       <td>${fD(r.SIGNAL_DATE)}</td>
       <td>₹${fN(avg)}</td>
       <td class="red">₹${fN(ltp)}</td>
       <td class="red">${drop.toFixed(2)}%</td>
       <td style="color:#f59e0b;font-weight:700">₹${fN(nextBuy)}</td>
-      <td class="${dist<=0?'red':'green'}">${dist.toFixed(2)}%</td>
+      <td class="${dist<=0?'red':'amber'}">${dist.toFixed(2)}%</td>
       <td>${fI(r.MARKET_DAYS)}d</td>
     </tr>`;
   }).join('');
@@ -1819,6 +1866,324 @@ function renderAvgTrigger(){
 
 
 
+
+// ─── STOCK HISTORY ────────────────────────────────────────────────────────────
+function buildHistory(){
+  const q=(document.getElementById('hist-search')||{}).value||'';
+  const cfg=state.hist.cfg;
+  const statusF=state.hist.status;
+
+  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed');
+  if(cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===cfg);
+  
+  if(statusF==='Open') rows=rows.filter(r=>r.STATUS==='Open');
+  if(statusF==='Closed') rows=rows.filter(r=>r.STATUS!=='Open');
+  
+  if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
+  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE)); 
+
+  // Stats bar
+  const holdRows=rows.filter(r=>r.STATUS==='Open');
+  const soldRows=rows.filter(r=>r.STATUS!=='Open');
+  const holdNet=holdRows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  const soldNet=soldRows.reduce((s,r)=>s+(parseFloat(r.PROFIT)||0),0);
+  const statEl=document.getElementById('hist-stats');
+  if(statEl) statEl.innerHTML=`
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Hold Count</div>
+      <div style="font-size:22px;font-weight:700;color:#2563eb">${holdRows.length}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Hold Net</div>
+      <div style="font-size:22px;font-weight:700;color:${holdNet>=0?'#059669':'#dc2626'}">&#8377;${fN(holdNet)}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Sold Count</div>
+      <div style="font-size:22px;font-weight:700;color:#2563eb">${soldRows.length}</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Sold Net</div>
+      <div style="font-size:22px;font-weight:700;color:${soldNet>=0?'#059669':'#dc2626'}">&#8377;${fN(soldNet)}</div>
+    </div>`;
+
+  // Sort: open first (by date desc), then sold (by exit date desc)
+  rows.sort((a,b)=>{
+    const aOpen=a.STATUS==='Open',bOpen=b.STATUS==='Open';
+    if(aOpen!==bOpen) return bOpen?1:-1;
+    return (a.SIGNAL_DATE||'')<(b.SIGNAL_DATE||'')?1:-1;
+  });
+
+  // Pagination setup for History Tab
+  const pgSzEl=document.getElementById('hist-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=state.hist.page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('hist',page,rows.length,pgSz);
+
+  if(!slice.length){
+    document.getElementById('hist-container').innerHTML='<div class="card empty">No executed trades found.</div>';
+    return;
+  }
+
+  document.getElementById('hist-container').innerHTML=slice.map((r,i)=>{
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    const isSold=r.STATUS!=='Open';
+    const ltp=isSold?(r.EXIT_PRICE||0):(r.CURRENT_LTP||0);
+    const oKey=`${r.SYMBOL}_${r.SIGNAL_DATE}_${r.CONFIG}`;
+    const exitTypeBadge=r.EXIT_TYPE?
+      `<span style="border:1px solid #6366f1;border-radius:12px;padding:2px 10px;font-size:11px;color:#4f46e5;background:#f5f3ff">${r.EXIT_TYPE}</span>`
+      :'—';
+
+    // BUY HISTORY rows - dynamically calculating based on Config Dip
+    const buyCount = parseInt(r.BUY_COUNT) || 1;
+    const finalAvg = parseFloat(r.AVG_BUY_PRICE) || 0;
+    const cfgDef = CONFIGS_DEF.find(c => c.id === r.CONFIG || c.ID === r.CONFIG) || {};
+    const dropPct = parseFloat(cfgDef.buy_drop || cfgDef.BUY_DROP || 0.1); 
+
+    let runningAvg = 0;
+    let totalCalcQty = 0;
+    const buyDatesTracker = [];
+
+    const buyRows = Array.from({length: buyCount}, (_, bi) => {
+      let legDate = _buyCandle.date || (bi === 0 ? r.SIGNAL_DATE : '—');
+      if (legDate !== '—') buyDatesTracker.push(legDate);
+      
+      let legPrice;
+      if (bi === 0) {
+         legPrice = parseFloat(r.B0_Close) || parseFloat(r.SIGNAL_CLOSE) || finalAvg;
+         runningAvg = legPrice;
+      } else {
+         legPrice = runningAvg * (1 - dropPct);
+         runningAvg = ((runningAvg * bi) + legPrice) / (bi + 1);
+      }
+
+      let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
+      let avgStr = (bi === buyCount - 1) ? `&#8377;${fN(displayAvg)}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${fN(displayAvg)}</span>`;
+
+      // Get individual leg specific OHLC from TRADE_OHLC
+      const _oTc=(TRADE_OHLC[oKey]||{});
+      const _buyCandle=(_oTc.buys&&_oTc.buys[bi])||{};
+      let pPrev = parseFloat(_buyCandle.pc)||0;
+      let pOp   = parseFloat(_buyCandle.o)||0;
+      let pHi   = parseFloat(_buyCandle.h)||0;
+      let pLo   = parseFloat(_buyCandle.l)||0;
+      let pCl = parseFloat(r[`B${bi}_Close`]) || (bi===0?parseFloat(r.SIGNAL_CLOSE):0);
+
+      const legQty = legPrice > 0 ? Math.floor(10000 / legPrice) : 0;
+      const legInv = legQty * legPrice;
+      totalCalcQty += legQty;
+      return `
+      <tr style="border-top:1px solid #e2e8f0">
+        <td style="padding:5px 8px">${bi+1}</td>
+        <td style="padding:5px 8px">${fD(legDate)}</td>
+        <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">&#8377;${fN(legPrice)}</td>
+        <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${avgStr}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${fI(legQty)}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${fN(legInv)}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${fN(pPrev)}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${fN(pOp)}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${fN(pHi)}</td>
+        <td style="padding:5px 8px;text-align:right">&#8377;${fN(pLo)}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${fN(pCl)}</td>
+      </tr>`;
+    }).join('');
+
+    // SELL HISTORY rows - use TRADE_OHLC sell candle
+    const _oTcSell=(TRADE_OHLC[oKey]||{});
+    const _sellCandle=_oTcSell.sell||{};
+    let sPrev = parseFloat(_sellCandle.pc)||0;
+    let sOp   = parseFloat(_sellCandle.o)||0;
+    let sHi   = parseFloat(_sellCandle.h)||0;
+    let sLo   = parseFloat(_sellCandle.l)||0;
+    let sCl   = parseFloat(_sellCandle.c)||parseFloat(r.EXIT_PRICE)||0;
+
+    const sellSection=isSold?`
+      <div style="font-size:11px;font-weight:700;color:#dc2626;letter-spacing:.5px;margin:10px 0 6px">SELL HISTORY</div>
+      <div class="table-area" style="margin-bottom:8px">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+          <thead><tr style="background:#fff5f5">
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Sell #</th>
+            <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Sell Price</th>
+            <th style="padding:5px 8px;text-align:center;font-weight:600">Exit Type</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">Qty</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Value &#8377;</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Low</th>
+            <th style="padding:5px 8px;text-align:right;font-weight:600">Close</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid #fee2e2">
+              <td style="padding:5px 8px">1</td>
+              <td style="padding:5px 8px">${fD(r.EXIT_DATE)}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#dc2626">&#8377;${fN(r.EXIT_PRICE)}</td>
+              <td style="padding:5px 8px;text-align:center">${exitTypeBadge}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600;color:#0369a1">${fI(totalCalcQty)}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${fN(totalCalcQty*(parseFloat(r.EXIT_PRICE)||0))}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${fN(sPrev)}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${fN(sOp)}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${fN(sHi)}</td>
+              <td style="padding:5px 8px;text-align:right">&#8377;${fN(sLo)}</td>
+              <td style="padding:5px 8px;text-align:right;font-weight:600">&#8377;${fN(sCl)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`:'';
+
+    const buyDatesJson = JSON.stringify(buyDatesTracker).replace(/"/g, '&quot;');
+    const sellDateStr = isSold ? r.EXIT_DATE : '—';
+
+    return `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+      <div style="padding:12px 16px;background:linear-gradient(135deg,#f8faff,#eef2ff);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <strong style="font-size:15px;color:#1e3a5f">${start+i+1}. ${r.SYMBOL}</strong>
+        <span style="font-size:12px;color:#64748b">(${fD(r.SIGNAL_DATE)})</span>
+        ${cfgBadge(r.CONFIG)}
+      </div>
+      <div style="padding:0 16px 8px">
+        <div style="font-size:11px;font-weight:700;color:#059669;letter-spacing:.5px;margin:12px 0 6px">BUY HISTORY</div>
+        <div class="table-area" style="margin-bottom:8px">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+            <thead><tr style="background:#f0fdf4">
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Buy #</th>
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Date</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600;color:#f59e0b">Buy Price</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600;color:#2563eb">Avg Buy</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Qty (&#8377;10k)</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Prev Close</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Open</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">High</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Low</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Close</th>
+            </tr></thead>
+            <tbody>${buyRows}</tbody>
+          </table>
+        </div>
+        ${sellSection}
+        <div style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:.5px;margin:10px 0 6px">FINAL SUMMARY</div>
+        <div class="table-area" style="margin-bottom:8px">
+          <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+            <thead><tr style="background:#eff6ff">
+              <th style="padding:5px 8px;text-align:left;font-weight:600">Status</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Total Qty</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Avg Buy Price</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Exit/LTP</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Investment</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">Duration</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L &#8377;</th>
+              <th style="padding:5px 8px;text-align:right;font-weight:600">P&amp;L %</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid #dbeafe">
+                <td style="padding:5px 8px;color:${isSold?'#dc2626':'#2563eb'};font-weight:700">${isSold?'SOLD':'HOLD'}</td>
+                <td style="padding:5px 8px;text-align:right;color:#2563eb;font-weight:600">${fI(totalCalcQty)}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${fN(r.AVG_BUY_PRICE)}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${fN(ltp)}</td>
+                <td style="padding:5px 8px;text-align:right">&#8377;${fN(r.TOTAL_INVESTMENT)}</td>
+                <td style="padding:5px 8px;text-align:right;color:#f59e0b;font-weight:600">${fI(r.MARKET_DAYS)} Days</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600" ${pnlColor(r.PROFIT)}>&#8377;${fN(pnl)}</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600" ${pnlColor(r.GAIN_PCT)}>${pct>=0?'+':''}${f2(pct)}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="showOHLCDirect('${oKey}', '${r.SYMBOL} (${r.CONFIG})', '${buyDatesJson}', '${sellDateStr}', '${r.B0_BoughtDate||r.SIGNAL_DATE||''}')" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128202; Show Daily History</button>
+        <button onclick="exportHistCard(this,'${r.SYMBOL}_${r.CONFIG}_${r.SIGNAL_DATE}')" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128247; Export Image</button>
+        <button onclick="toast('Use browser Print (Ctrl+P) to save as PDF','info')" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:500">&#128196; Export PDF</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function exportHistCard(btn,name){
+  const card=btn.closest('.card');
+  if(!card){toast('Cannot export','error');return;}
+  if(typeof html2canvas==='undefined'){
+    toast('Export Image loading... try again','info');
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    document.head.appendChild(s);
+    return;
+  }
+  html2canvas(card,{scale:2,backgroundColor:'#fff',useCORS:true}).then(canvas=>{
+    const a=document.createElement('a');
+    a.download=`Stock_${name}.png`;
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    toast('Image downloaded!','success');
+  });
+}
+
+// ─── EXPORTS ─────────────────────────────────────────────────────────────────
+function exportTab(tab){
+  const rows=getFiltered(tab);
+  if(!rows.length){toast('No data','info');return;}
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,ws,tab);
+  XLSX.writeFile(wb,`NSE_BTST_${tab}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('Excel downloaded!','success');
+}
+function exportCSVTab(tab){
+  const rows=getFiltered(tab);
+  if(!rows.length){toast('No data','info');return;}
+  const keys=Object.keys(rows[0]);
+  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${r[k]!=null?r[k]:''}"`)
+    .join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`NSE_BTST_${tab}.csv`;a.click();
+  toast('CSV downloaded!','success');
+}
+
+// ─── TAB BADGES ──────────────────────────────────────────────────────────────
+function renderBadges(containerId, rows, type){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  const profit=rows.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p>0?s+p:s;},0);
+  const loss=rows.reduce((s,r)=>{const p=parseFloat(r.PROFIT)||0;return p<0?s+p:s;},0);
+  const net=profit+loss;
+  const totalInv=rows.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0),0);
+  let lastBadge='';
+  if(type==='open'){
+    const mktVal=rows.reduce((s,r)=>{const ltp=parseFloat(r.CURRENT_LTP)||0;const qty=parseInt(r.TOTAL_QTY)||0;return s+ltp*qty;},0);
+    lastBadge=`<span class="tbadge navy">Market Val: ₹${fN(mktVal)}</span>`;
+  }else{
+    const exitVal=rows.reduce((s,r)=>{const ep=parseFloat(r.EXIT_PRICE)||0;const qty=parseInt(r.TOTAL_QTY)||0;return s+ep*qty;},0);
+    lastBadge=`<span class="tbadge navy">Exit Val: ₹${fN(exitVal)}</span>`;
+  }
+  el.innerHTML=`
+    <span class="tbadge blue">Trades: ${rows.length}</span>
+    <span class="tbadge green">Profit: ₹${fN(profit)}</span>
+    <span class="tbadge red">Loss: ₹${fN(loss)}</span>
+    <span class="tbadge ${net>=0?'green':'red'}">Net: ₹${fN(net)}</span>
+    <span class="tbadge amber">Total Inv: ₹${fN(totalInv)}</span>
+    ${lastBadge}`;
+}
+
+// ─── MARKET DATA SUB-TAB ──────────────────────────────────────────────────────
+let mdSubFilter='all';
+let mdCfg='ALL';
+function mdCfgFilter(val,btn){
+  mdCfg=val;
+  document.querySelectorAll('#tab-marketdata .btn-filter:not([id^="md-"])').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketData();
+}
+function mdSubTab(type, btn){
+  mdSubFilter=type;
+  document.querySelectorAll('[id^="md-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarketData();
+}
+
+
+// ─── TAB: AVG TRIGGER ─────────────────────────────────────────────────────────
 // ─── SELL TRIGGER ─────────────────────────────────────────────────────────────
 function renderSellTrigger(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
@@ -1830,13 +2195,18 @@ function renderSellTrigger(){
   }).sort((a,b)=>{
     const da=(parseFloat(a.CURRENT_LTP)||0)/(parseFloat(a.TARGET_PRICE)||1);
     const db=(parseFloat(b.CURRENT_LTP)||0)/(parseFloat(b.TARGET_PRICE)||1);
-    return db-da; // closest to target first
+    return db-da;
   });
   renderBadges('selltrigger-badges', rows, 'open');
   const body=document.getElementById('selltrigger-body');
-  document.getElementById('selltrigger-info').textContent=`${rows.length} stocks near target`;
-  if(!rows.length){body.innerHTML='<tr><td colspan="11" class="empty">No stocks near sell trigger</td></tr>';return;}
-  body.innerHTML=rows.map((r,i)=>{
+  const pgSzEl=document.getElementById('selltrigger-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.selltrigger||{}).page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('selltrigger',page,rows.length,pgSz);
+  if(!slice.length){body.innerHTML='<tr><td colspan="11" class="empty">No stocks near sell trigger</td></tr>';return;}
+  body.innerHTML=slice.map((r,i)=>{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const tgt=parseFloat(r.TARGET_PRICE)||0;
@@ -1844,7 +2214,7 @@ function renderSellTrigger(){
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
     return `<tr>
-      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${start+i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
       <td>${fD(r.SIGNAL_DATE)}</td>
       <td>₹${fN(avg)}</td>
       <td class="green">₹${fN(ltp)}</td>
@@ -1887,11 +2257,18 @@ function renderAvgHistory(){
   const body=document.getElementById('avghistory-body');
   document.getElementById('avghistory-info').textContent=`${rows.length} open averaging positions`;
 
-  if(!rows.length){body.innerHTML='<tr><td colspan="14" class="empty">No open averaging positions found</td></tr>';return;}
+  const pgSzEl2=document.getElementById('avghistory-pgsize');
+  const pgSz2=pgSzEl2?parseInt(pgSzEl2.value):50;
+  const page2=(state.avghistory||{}).page||1;
+  const start2=(page2-1)*pgSz2;
+  const pageRows2=rows.slice(start2,start2+pgSz2);
+  setPager('avghistory',page2,rows.length,pgSz2);
+
+  if(!pageRows2.length){body.innerHTML='<tr><td colspan="14" class="empty">No open averaging positions found</td></tr>';return;}
 
   // Expand each trade into per-buy step rows
   const htmlRows=[];
-  rows.forEach((r,ri)=>{
+  pageRows2.forEach((r,ri)=>{
     const buyCount=parseInt(r.BUY_COUNT)||1;
     const finalAvg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
@@ -1949,16 +2326,25 @@ function renderMarketData(){
   rows.sort((a,b)=>(parseFloat(b.GAIN_PCT)||0)-(parseFloat(a.GAIN_PCT)||0));
   renderBadges('marketdata-badges', rows, 'open');
   const body=document.getElementById('marketdata-body');
-  document.getElementById('marketdata-info').textContent=`${rows.length} open positions`;
-  if(!rows.length){body.innerHTML='<tr><td colspan="13" class="empty">No open positions</td></tr>';return;}
-  body.innerHTML=rows.map((r,i)=>{
+  const pgSzEl=document.getElementById('marketdata-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.marketdata||{}).page||1;
+  const start=(page-1)*pgSz;
+  const slice=rows.slice(start,start+pgSz);
+  setPager('marketdata',page,rows.length,pgSz);
+  if(!slice.length){body.innerHTML='<tr><td colspan="14" class="empty">No open positions</td></tr>';return;}
+  body.innerHTML=slice.map((r,i)=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const qty=parseInt(r.TOTAL_QTY)||0;
     const mktVal=ltp*qty;
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
+    // Recovery: prev close to today close
+    const prevCl=parseFloat(r.PREV_CLOSE_PRICE||r.ENTRY_PREV_CLOSE||0)||0;
+    const recPct=prevCl>0?((ltp-prevCl)/prevCl*100):null;
+    const recStr=recPct!==null?`${recPct>=0?'+':''}${recPct.toFixed(2)}%`:'—';
     return `<tr>
-      <td>${i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${start+i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
       <td>${fD(r.SIGNAL_DATE)}</td>
       <td>₹${fN(r.AVG_BUY_PRICE)}</td>
       <td class="${pct>=0?'green':'red'}">₹${fN(ltp)}</td>
@@ -1968,6 +2354,7 @@ function renderMarketData(){
       <td>₹${fN(r.STOP_PRICE)}</td>
       <td>₹${fN(r.TOTAL_INVESTMENT)}</td>
       <td>₹${fN(mktVal)}</td>
+      <td ${pnlColor(recPct)}>${recStr}</td>
       <td>${fI(r.MARKET_DAYS)}d</td>
     </tr>`;
   }).join('');
@@ -2324,8 +2711,22 @@ async function renderMTFOutput() {
     return;
   }
 
+  const pgSzEl=document.getElementById('mtf-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.mtf||{}).page||1;
+  const start=(page-1)*pgSz;
+  const pageFiltered=filtered.slice(start,start+pgSz);
+  setPager('mtf',page,filtered.length,pgSz);
+
+  document.getElementById('mtf-info').textContent=`${filtered.length} MTF opportunities`;
+
+  if(!pageFiltered.length){
+    body.innerHTML='<tr><td colspan="12" class="empty">No MTF opportunities right now</td></tr>';
+    return;
+  }
+
   const today = new Date();
-  body.innerHTML = filtered.map(function(item, i) {
+  body.innerHTML = pageFiltered.map(function(item, i) {
     const r = item.r, avg = item.avg;
     const ltp  = parseFloat(r.CURRENT_LTP) || 0;
     const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
@@ -2339,9 +2740,9 @@ async function renderMTFOutput() {
     const addPayload = JSON.stringify({
       symbol: r.SYMBOL, signal_date: sigDate,
       avg_buy: avg, ltp: ltp, target: parseFloat(target)
-    }).replace(/'/g, '&#39;');
+    }).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
     return '<tr>' +
-      '<td>' + (i+1) + '</td>' +
+      '<td>' + (start+i+1) + '</td>' +
       '<td><strong>' + r.SYMBOL + '</strong></td>' +
       '<td>' + fD(sigDate) + '</td>' +
       '<td>₹' + fN(sigPrice) + '</td>' +
@@ -2442,6 +2843,12 @@ async function renderPortfolio() {
   savePortfolio(arr);
 
   const body = document.getElementById('portfolio-body');
+  const pgSzEl = document.getElementById('portfolio-pgsize');
+  const pgSz = pgSzEl ? parseInt(pgSzEl.value) : 50;
+  const page = (state.portfolio||{}).page || 1;
+  const start = (page - 1) * pgSz;
+  const pageArr = arr.slice(start, start + pgSz);
+  setPager('portfolio', page, arr.length, pgSz);
   document.getElementById('portfolio-info').textContent = arr.length + ' holdings';
 
   if (!arr.length) {
@@ -2449,17 +2856,17 @@ async function renderPortfolio() {
     return;
   }
 
-  body.innerHTML = arr.map(function(p, i) {
+  body.innerHTML = pageArr.map(function(p, i) {
     const ltp  = p.current_ltp || 0;
     const avg  = p.avg_buy || 0;
     const tgt  = p.target || avg * 1.05;
     const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
     const invAmt = ((p.qty || 0) * avg).toFixed(2);
     const isGreen = p.status === 'Yes';
-    const icon = isGreen ? '??' : '??';
+    const icon = isGreen ? '✅' : '❌';
     const cls  = isGreen ? 'green' : 'red';
     return '<tr>' +
-      '<td>' + (i+1) + '</td>' +
+      '<td>' + (start+i+1) + '</td>' +
       '<td><strong>' + (p.symbol||'') + '</strong></td>' +
       '<td>' + fD(p.added_date) + '</td>' +
       '<td>₹' + fN(avg) + '</td>' +
@@ -2470,7 +2877,7 @@ async function renderPortfolio() {
       '<td class="green">₹' + fN(tgt) + '</td>' +
       '<td class="' + cls + '" style="font-weight:700">' + icon + ' ' + (p.status||'—') + '</td>' +
       '<td><button class="btn-sm" style="background:#ef4444;color:#fff;padding:3px 8px;" ' +
-        'onclick="deletePortfolioItem(' + i + ')">&#128465;</button></td>' +
+        'onclick="deletePortfolioItem(' + (start+i) + ')">&#128465;</button></td>' +
       '</tr>';
   }).join('');
 }
@@ -2496,6 +2903,9 @@ function addToPortfolio(data) {
   savePortfolio(arr);
   _pushPortfolioToGitHub(arr);
   toast(data.symbol + ' added to Portfolio ✓', 'success');
+  if(document.getElementById('tab-portfolio')&&!document.getElementById('tab-portfolio').classList.contains('hidden')){
+    renderPortfolio();
+  }
 }
 
 async function deletePortfolioItem(idx) {
