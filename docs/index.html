@@ -862,7 +862,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
         <th>Avg Buy ₹</th><th>Current LTP ₹</th><th>Drop%</th>
-        <th>Next Buy Price</th><th>Distance</th><th>Days Held</th>
+        <th>Next Buy Price</th><th>Distance</th>
       </tr></thead><tbody id="avgtrigger-body"></tbody></table>
     </div>
     <div class="pager"><span class="info" id="avgtrigger-info"></span><div style="flex:1"></div>
@@ -902,7 +902,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#9400; Avg History</h3>
-      <span style="font-size:12px;color:var(--text3);">Open positions with averaging (BUY_COUNT &gt; 1) — per buy step breakdown</span>
+      <span style="font-size:12px;color:var(--text3);">Stocks with averaging (BUY_COUNT &gt; 1) — grouped by date &amp; stock</span>
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
          <span class="slbl">Search:</span>
          <input type="text" id="avghist-search" placeholder="Search symbol..." oninput="renderAvgHistory()" style="width:140px;padding:5px 8px;font-size:13px;">
@@ -944,10 +944,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div id="avghistory-badges" class="tab-badges"></div>
     <div class="table-area">
       <table><thead><tr>
-        <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
-        <th>Buy #</th><th>Buy Date</th><th>Buy Price ₹</th><th>Avg After ₹</th>
-        <th>Buy Count</th><th>Cum Qty</th><th>Cum Invested ₹</th>
-        <th>LTP ₹</th><th>P&amp;L ₹</th><th>P&amp;L%</th>
+        <th style="width:40px">#</th>
+        <th style="width:110px">DATE</th>
+        <th>CFG</th>
+        <th>STOCK</th>
       </tr></thead><tbody id="avghistory-body"></tbody></table>
     </div>
     <div class="pager"><span class="info" id="avghistory-info"></span><div style="flex:1"></div>
@@ -1817,52 +1817,58 @@ function renderSignals(rows){
 function renderAvgTrigger(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
-  
-  // Map the configured buy_drop for every config dynamically
   const cfgMap = {};
   CONFIGS_DEF.forEach(c => cfgMap[c.id || c.ID] = parseFloat(c.buy_drop || c.BUY_DROP || 0.1));
-
   rows=rows.filter(r=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const dropPct = cfgMap[r.CONFIG] || 0.1;
     return avg>0 && ltp>0 && ltp <= avg * (1 - dropPct * 0.8);
-  }).sort((a,b)=>{
-    const da=((parseFloat(a.CURRENT_LTP)||0)-(parseFloat(a.AVG_BUY_PRICE)||0))/(parseFloat(a.AVG_BUY_PRICE)||1);
-    const db=((parseFloat(b.CURRENT_LTP)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))/(parseFloat(b.AVG_BUY_PRICE)||1);
+  });
+  renderBadges('avgtrigger-badges', rows, 'open');
+  const symMap = {};
+  rows.forEach(r=>{
+    const sym = r.SYMBOL;
+    if(!symMap[sym]) symMap[sym] = { sym, rows:[] };
+    symMap[sym].rows.push(r);
+  });
+  let grouped = Object.values(symMap).sort((a,b)=>{
+    const rep_a = a.rows[0], rep_b = b.rows[0];
+    const da=((parseFloat(rep_a.CURRENT_LTP)||0)-(parseFloat(rep_a.AVG_BUY_PRICE)||0))/(parseFloat(rep_a.AVG_BUY_PRICE)||1);
+    const db=((parseFloat(rep_b.CURRENT_LTP)||0)-(parseFloat(rep_b.AVG_BUY_PRICE)||0))/(parseFloat(rep_b.AVG_BUY_PRICE)||1);
     return da-db;
   });
-
-  renderBadges('avgtrigger-badges', rows, 'open');
   const body=document.getElementById('avgtrigger-body');
   const pgSzEl=document.getElementById('avgtrigger-pgsize');
   const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
   const page=(state.avgtrigger||{}).page||1;
   const start=(page-1)*pgSz;
-  const slice=rows.slice(start,start+pgSz);
-  setPager('avgtrigger',page,rows.length,pgSz);
-  
-  if(!slice.length){body.innerHTML='<tr><td colspan="10" class="empty">No stocks near averaging trigger</td></tr>';return;}
-  
-  body.innerHTML=slice.map((r,i)=>{
+  const slice=grouped.slice(start,start+pgSz);
+  setPager('avgtrigger',page,grouped.length,pgSz);
+  if(!slice.length){body.innerHTML='<tr><td colspan="9" class="empty">No stocks near averaging trigger</td></tr>';return;}
+  body.innerHTML=slice.map((g,i)=>{
+    const r = g.rows.slice().sort((a,b)=>(parseFloat(a.AVG_BUY_PRICE)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))[0];
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const dropPct = cfgMap[r.CONFIG] || 0.1;
     const drop=avg>0?((ltp-avg)/avg*100):0;
-    const nextBuy=avg*(1 - dropPct); 
+    const nextBuy=avg*(1 - dropPct);
     const dist=ltp>0?((ltp-nextBuy)/nextBuy*100):0;
+    const cfgBadges = g.rows.map(x=>cfgBadge(x.CONFIG)).join('');
     return `<tr>
-      <td>${start+i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
+      <td>${start+i+1}</td>
+      <td style="white-space:nowrap">${cfgBadges}</td>
+      <td><strong>${g.sym}</strong></td>
       <td>${fD(r.SIGNAL_DATE)}</td>
-      <td>₹${fN(avg)}</td>
-      <td class="red">₹${fN(ltp)}</td>
+      <td>&#8377;${fN(avg)}</td>
+      <td class="red">&#8377;${fN(ltp)}</td>
       <td class="red">${drop.toFixed(2)}%</td>
-      <td style="color:#f59e0b;font-weight:700">₹${fN(nextBuy)}</td>
+      <td style="color:#f59e0b;font-weight:700">&#8377;${fN(nextBuy)}</td>
       <td class="${dist<=0?'red':'amber'}">${dist.toFixed(2)}%</td>
-      <td>${fI(r.MARKET_DAYS)}d</td>
     </tr>`;
   }).join('');
 }
+
 
 
 
@@ -1947,6 +1953,10 @@ function buildHistory(){
     const buyDatesTracker = [];
 
     const buyRows = Array.from({length: buyCount}, (_, bi) => {
+      // Declare OHLC candle data FIRST before using it
+      const _oTc=(TRADE_OHLC[oKey]||{});
+      const _buyCandle=(_oTc.buys&&_oTc.buys[bi])||{};
+
       let legDate = _buyCandle.date || (bi === 0 ? r.SIGNAL_DATE : '—');
       if (legDate !== '—') buyDatesTracker.push(legDate);
       
@@ -1962,9 +1972,7 @@ function buildHistory(){
       let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
       let avgStr = (bi === buyCount - 1) ? `&#8377;${fN(displayAvg)}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${fN(displayAvg)}</span>`;
 
-      // Get individual leg specific OHLC from TRADE_OHLC
-      const _oTc=(TRADE_OHLC[oKey]||{});
-      const _buyCandle=(_oTc.buys&&_oTc.buys[bi])||{};
+      // OHLC data already declared above
       let pPrev = parseFloat(_buyCandle.pc)||0;
       let pOp   = parseFloat(_buyCandle.o)||0;
       let pHi   = parseFloat(_buyCandle.h)||0;
@@ -2243,80 +2251,43 @@ function avgHistCfgFilter(val,btn){
 }
 function renderAvgHistory(){
   const q = (document.getElementById('avghist-search')||{}).value||'';
-  // Only OPEN positions with BUY_COUNT > 1 (averaging already happened)
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&parseInt(r.BUY_COUNT||0)>1);
   if(avgHistCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgHistCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
-  rows.sort((a,b)=>{
-    const bd=parseInt(b.BUY_COUNT||0)-parseInt(a.BUY_COUNT||0);
-    return bd!==0?bd:(a.SYMBOL||'').localeCompare(b.SYMBOL||'');
-  });
-
   renderBadges('avghistory-badges', rows, 'open');
   const body=document.getElementById('avghistory-body');
   document.getElementById('avghistory-info').textContent=`${rows.length} open averaging positions`;
-
+  // Group by (signal_date, symbol)
+  const groupMap = {};
+  rows.forEach(r=>{
+    const key = r.SIGNAL_DATE + '|' + r.SYMBOL;
+    if(!groupMap[key]) groupMap[key] = { date: r.SIGNAL_DATE, sym: r.SYMBOL, configs: [] };
+    groupMap[key].configs.push(r.CONFIG);
+  });
+  let grouped = Object.values(groupMap).sort((a,b)=>{
+    const dc = (b.date||'').localeCompare(a.date||'')||0;
+    return dc !== 0 ? dc : (a.sym||'').localeCompare(b.sym||'')||0;
+  });
   const pgSzEl2=document.getElementById('avghistory-pgsize');
   const pgSz2=pgSzEl2?parseInt(pgSzEl2.value):50;
   const page2=(state.avghistory||{}).page||1;
   const start2=(page2-1)*pgSz2;
-  const pageRows2=rows.slice(start2,start2+pgSz2);
-  setPager('avghistory',page2,rows.length,pgSz2);
-
-  if(!pageRows2.length){body.innerHTML='<tr><td colspan="14" class="empty">No open averaging positions found</td></tr>';return;}
-
-  // Expand each trade into per-buy step rows
-  const htmlRows=[];
-  pageRows2.forEach((r,ri)=>{
-    const buyCount=parseInt(r.BUY_COUNT)||1;
-    const finalAvg=parseFloat(r.AVG_BUY_PRICE)||0;
-    const ltp=parseFloat(r.CURRENT_LTP)||0;
-    const cfgDef=CONFIGS_DEF.find(c=>c.id===r.CONFIG||c.ID===r.CONFIG)||{};
-    const dropPct=parseFloat(cfgDef.buy_drop||cfgDef.BUY_DROP||0.1);
-    let runningAvg=0, cumQty=0, cumInv=0;
-
-    for(let bi=0;bi<buyCount;bi++){
-      const oKey2=`${r.SYMBOL}_${r.SIGNAL_DATE}_${r.CONFIG}`;
-      const _oTc2=TRADE_OHLC[oKey2]||{};
-      const date=(_oTc2.buys&&_oTc2.buys[bi]&&_oTc2.buys[bi].date)?_oTc2.buys[bi].date:(bi===0?r.SIGNAL_DATE:'—');
-      let price;
-      if(bi===0){
-        price=parseFloat(r.B0_Close)||parseFloat(r.SIGNAL_CLOSE)||finalAvg;
-        runningAvg=price;
-      }else{
-        price=runningAvg*(1-dropPct);
-        runningAvg=((runningAvg*bi)+price)/(bi+1);
-      }
-      const avgAfter=(bi===buyCount-1)?finalAvg:runningAvg;
-      const qty=price>0?Math.floor(10000/price):0;
-      const inv=qty*price;
-      cumQty+=qty; cumInv+=inv;
-      const pnl=ltp*cumQty-cumInv;
-      const pnlPct=cumInv>0?(pnl/cumInv)*100:0;
-      const isLast=(bi===buyCount-1);
-      const rowBg=isLast?'background:#eff6ff':'';
-
-      htmlRows.push(`<tr style="${rowBg}">
-        <td>${ri+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
-        <td>${fD(r.SIGNAL_DATE)}</td>
-        <td style="text-align:center;font-weight:700;color:#2563eb">Buy ${bi+1}</td>
-        <td>${fD(date)}</td>
-        <td style="text-align:right;color:#f59e0b;font-weight:600">&#8377;${fN(price)}</td>
-        <td style="text-align:right;color:#2563eb;font-weight:600">&#8377;${fN(avgAfter)}</td>
-        <td style="text-align:center;font-weight:700;color:#7c3aed">${bi+1}x</td>
-        <td style="text-align:right;font-weight:600">${fI(cumQty)}</td>
-        <td style="text-align:right">&#8377;${fN(cumInv)}</td>
-        <td style="text-align:right;font-weight:600">&#8377;${fN(ltp)}</td>
-        <td style="text-align:right;font-weight:600" ${pnlColor(pnl)}>&#8377;${fN(pnl)}</td>
-        <td style="text-align:right;font-weight:600" ${pnlColor(pnlPct)}>${pnlPct>=0?'+':''}${f2(pnlPct)}%</td>
-      </tr>`);
-    }
-  });
-  body.innerHTML=htmlRows.join('');
+  const pageRows2=grouped.slice(start2,start2+pgSz2);
+  setPager('avghistory',page2,grouped.length,pgSz2);
+  if(!pageRows2.length){body.innerHTML='<tr><td colspan="4" class="empty">No open averaging positions found</td></tr>';return;}
+  body.innerHTML=pageRows2.map((g,ri)=>{
+    const sortedCfgs = g.configs.slice().sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+    const badges = sortedCfgs.map(c=>cfgBadge(c)).join('');
+    return `<tr>
+      <td style="color:#64748b;font-size:12px">${start2+ri+1}</td>
+      <td style="font-size:13px;white-space:nowrap">${fD(g.date)}</td>
+      <td style="white-space:nowrap;line-height:1.8">${badges}</td>
+      <td><strong style="font-size:14px">${g.sym}</strong></td>
+    </tr>`;
+  }).join('');
 }
 
-// ─── MARKET DATA ──────────────────────────────────────────────────────────────
 function renderMarketData(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
   if(mdCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===mdCfg);
@@ -2340,9 +2311,9 @@ function renderMarketData(){
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
     // Recovery: prev close to today close
-    const prevCl=parseFloat(r.PREV_CLOSE_PRICE||r.ENTRY_PREV_CLOSE||0)||0;
-    const recPct=prevCl>0?((ltp-prevCl)/prevCl*100):null;
-    const recStr=recPct!==null?`${recPct>=0?'+':''}${recPct.toFixed(2)}%`:'—';
+    const chg1d=parseFloat(r.CHG_1D)||null;
+    const recStr=chg1d!==null?`${chg1d>=0?'+':''}${chg1d.toFixed(2)}%`:'—';
+    const recPct=chg1d;
     return `<tr>
       <td>${start+i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
       <td>${fD(r.SIGNAL_DATE)}</td>
@@ -2822,10 +2793,14 @@ async function _pushPortfolioToGitHub(arr) {
 
 async function renderPortfolio() {
   document.getElementById('portfolio-body').innerHTML =
-    '<tr><td colspan="11" class="empty">Syncing from GitHub…</td></tr>';
+    '<tr><td colspan="11" class="empty">Loading portfolio…</td></tr>';
 
-  const synced = await syncPortfolioFromGitHub();
-  if (synced) savePortfolio(synced);
+  // Only sync from GitHub if local portfolio is empty (avoids race condition with add)
+  const local = getPortfolio();
+  if (!local.length) {
+    const synced = await syncPortfolioFromGitHub();
+    if (synced && synced.length) savePortfolio(synced);
+  }
 
   const arr = getPortfolio();
 
