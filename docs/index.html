@@ -944,10 +944,17 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div id="avghistory-badges" class="tab-badges"></div>
     <div class="table-area">
       <table><thead><tr>
-        <th style="width:40px">#</th>
-        <th style="width:110px">DATE</th>
-        <th>CFG</th>
+        <th style="width:36px">#</th>
+        <th style="width:54px">CFG</th>
         <th>STOCK</th>
+        <th style="width:96px">DATE</th>
+        <th style="width:40px">BUYS</th>
+        <th style="width:90px">AVG BUY</th>
+        <th style="width:90px">LTP</th>
+        <th style="width:90px">P&amp;L (&#8377;)</th>
+        <th style="width:70px">GAIN%</th>
+        <th style="width:90px">TARGET</th>
+        <th style="width:90px">STOP</th>
       </tr></thead><tbody id="avghistory-body"></tbody></table>
     </div>
     <div class="pager"><span class="info" id="avghistory-info"></span><div style="flex:1"></div>
@@ -1817,49 +1824,59 @@ function renderSignals(rows){
 function renderAvgTrigger(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
-  const cfgMap = {};
-  CONFIGS_DEF.forEach(c => cfgMap[c.id || c.ID] = parseFloat(c.buy_drop || c.BUY_DROP || 0.1));
+
+  // Map buy_drop per config
+  const cfgMap={};
+  CONFIGS_DEF.forEach(c=>cfgMap[c.id||c.ID]=parseFloat(c.buy_drop||c.BUY_DROP||0.1));
+
+  // Filter: LTP is within 2% of next buy trigger OR already crossed below it
+  // dist = (ltp - nextBuy)/nextBuy*100; show if dist < 2 (approaching or past trigger)
   rows=rows.filter(r=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-    const dropPct = cfgMap[r.CONFIG] || 0.1;
-    return avg>0 && ltp>0 && ltp <= avg * (1 - dropPct * 0.8);
+    const dropPct=cfgMap[r.CONFIG]||0.1;
+    if(avg<=0||ltp<=0) return false;
+    const nextBuy=avg*(1-dropPct);
+    const dist=(ltp-nextBuy)/nextBuy*100;
+    return dist<2;  // within 2% above trigger, or already past trigger
   });
+
   renderBadges('avgtrigger-badges', rows, 'open');
-  const symMap = {};
-  rows.forEach(r=>{
-    const sym = r.SYMBOL;
-    if(!symMap[sym]) symMap[sym] = { sym, rows:[] };
-    symMap[sym].rows.push(r);
+
+  // Sort by dist ascending (most urgent / furthest past trigger first)
+  rows.sort((a,b)=>{
+    const getD=r=>{
+      const ltp=parseFloat(r.CURRENT_LTP)||0;
+      const avg=parseFloat(r.AVG_BUY_PRICE)||0;
+      const dropPct=cfgMap[r.CONFIG]||0.1;
+      const nextBuy=avg*(1-dropPct);
+      return avg>0?(ltp-nextBuy)/nextBuy*100:0;
+    };
+    return getD(a)-getD(b);
   });
-  let grouped = Object.values(symMap).sort((a,b)=>{
-    const rep_a = a.rows[0], rep_b = b.rows[0];
-    const da=((parseFloat(rep_a.CURRENT_LTP)||0)-(parseFloat(rep_a.AVG_BUY_PRICE)||0))/(parseFloat(rep_a.AVG_BUY_PRICE)||1);
-    const db=((parseFloat(rep_b.CURRENT_LTP)||0)-(parseFloat(rep_b.AVG_BUY_PRICE)||0))/(parseFloat(rep_b.AVG_BUY_PRICE)||1);
-    return da-db;
-  });
+
   const body=document.getElementById('avgtrigger-body');
   const pgSzEl=document.getElementById('avgtrigger-pgsize');
   const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
   const page=(state.avgtrigger||{}).page||1;
   const start=(page-1)*pgSz;
-  const slice=grouped.slice(start,start+pgSz);
-  setPager('avgtrigger',page,grouped.length,pgSz);
+  const slice=rows.slice(start,start+pgSz);
+  setPager('avgtrigger',page,rows.length,pgSz);
+
   if(!slice.length){body.innerHTML='<tr><td colspan="9" class="empty">No stocks near averaging trigger</td></tr>';return;}
-  body.innerHTML=slice.map((g,i)=>{
-    const r = g.rows.slice().sort((a,b)=>(parseFloat(a.AVG_BUY_PRICE)||0)-(parseFloat(b.AVG_BUY_PRICE)||0))[0];
+
+  body.innerHTML=slice.map((r,i)=>{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
-    const dropPct = cfgMap[r.CONFIG] || 0.1;
+    const dropPct=cfgMap[r.CONFIG]||0.1;
     const drop=avg>0?((ltp-avg)/avg*100):0;
-    const nextBuy=avg*(1 - dropPct);
+    const nextBuy=avg*(1-dropPct);
     const dist=ltp>0?((ltp-nextBuy)/nextBuy*100):0;
-    const cfgBadges = g.rows.map(x=>cfgBadge(x.CONFIG)).join('');
     return `<tr>
       <td>${start+i+1}</td>
-      <td style="white-space:nowrap">${cfgBadges}</td>
-      <td><strong>${g.sym}</strong></td>
-      <td>${fD(r.SIGNAL_DATE)}</td>
+      <td>${cfgBadge(r.CONFIG)}</td>
+      <td><strong>${r.SYMBOL}</strong></td>
+      <td style="font-size:12px;white-space:nowrap">${fD(r.SIGNAL_DATE)}</td>
       <td>&#8377;${fN(avg)}</td>
       <td class="red">&#8377;${fN(ltp)}</td>
       <td class="red">${drop.toFixed(2)}%</td>
@@ -1868,9 +1885,6 @@ function renderAvgTrigger(){
     </tr>`;
   }).join('');
 }
-
-
-
 
 
 // ─── STOCK HISTORY ────────────────────────────────────────────────────────────
@@ -1972,7 +1986,7 @@ function buildHistory(){
       let displayAvg = (bi === buyCount - 1) ? finalAvg : runningAvg;
       let avgStr = (bi === buyCount - 1) ? `&#8377;${fN(displayAvg)}` : `<span style="color:#94a3b8;font-style:italic">&#8377;${fN(displayAvg)}</span>`;
 
-      // OHLC data already declared above
+      // OHLC already declared above
       let pPrev = parseFloat(_buyCandle.pc)||0;
       let pOp   = parseFloat(_buyCandle.o)||0;
       let pHi   = parseFloat(_buyCandle.h)||0;
@@ -2250,43 +2264,48 @@ function avgHistCfgFilter(val,btn){
   renderAvgHistory();
 }
 function renderAvgHistory(){
-  const q = (document.getElementById('avghist-search')||{}).value||'';
+  const q=(document.getElementById('avghist-search')||{}).value||'';
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&parseInt(r.BUY_COUNT||0)>1);
   if(avgHistCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgHistCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   if(q) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(q.toLowerCase()));
+
   renderBadges('avghistory-badges', rows, 'open');
-  const body=document.getElementById('avghistory-body');
   document.getElementById('avghistory-info').textContent=`${rows.length} open averaging positions`;
-  // Group by (signal_date, symbol)
-  const groupMap = {};
-  rows.forEach(r=>{
-    const key = r.SIGNAL_DATE + '|' + r.SYMBOL;
-    if(!groupMap[key]) groupMap[key] = { date: r.SIGNAL_DATE, sym: r.SYMBOL, configs: [] };
-    groupMap[key].configs.push(r.CONFIG);
-  });
-  let grouped = Object.values(groupMap).sort((a,b)=>{
-    const dc = (b.date||'').localeCompare(a.date||'')||0;
-    return dc !== 0 ? dc : (a.sym||'').localeCompare(b.sym||'')||0;
-  });
-  const pgSzEl2=document.getElementById('avghistory-pgsize');
-  const pgSz2=pgSzEl2?parseInt(pgSzEl2.value):50;
-  const page2=(state.avghistory||{}).page||1;
-  const start2=(page2-1)*pgSz2;
-  const pageRows2=grouped.slice(start2,start2+pgSz2);
-  setPager('avghistory',page2,grouped.length,pgSz2);
-  if(!pageRows2.length){body.innerHTML='<tr><td colspan="4" class="empty">No open averaging positions found</td></tr>';return;}
-  body.innerHTML=pageRows2.map((g,ri)=>{
-    const sortedCfgs = g.configs.slice().sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
-    const badges = sortedCfgs.map(c=>cfgBadge(c)).join('');
+
+  // Sort: worst gain first
+  rows.sort((a,b)=>(parseFloat(a.GAIN_PCT)||0)-(parseFloat(b.GAIN_PCT)||0));
+
+  const pgSzEl=document.getElementById('avghistory-pgsize');
+  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
+  const page=(state.avghistory||{}).page||1;
+  const start=(page-1)*pgSz;
+  const pageRows=rows.slice(start,start+pgSz);
+  setPager('avghistory',page,rows.length,pgSz);
+
+  const body=document.getElementById('avghistory-body');
+  if(!pageRows.length){body.innerHTML='<tr><td colspan="11" class="empty">No open averaging positions found</td></tr>';return;}
+
+  body.innerHTML=pageRows.map((r,i)=>{
+    const pnl=parseFloat(r.PROFIT)||0;
+    const pct=parseFloat(r.GAIN_PCT)||0;
+    const ltp=parseFloat(r.CURRENT_LTP)||0;
     return `<tr>
-      <td style="color:#64748b;font-size:12px">${start2+ri+1}</td>
-      <td style="font-size:13px;white-space:nowrap">${fD(g.date)}</td>
-      <td style="white-space:nowrap;line-height:1.8">${badges}</td>
-      <td><strong style="font-size:14px">${g.sym}</strong></td>
+      <td>${start+i+1}</td>
+      <td>${cfgBadge(r.CONFIG)}</td>
+      <td><strong>${r.SYMBOL}</strong></td>
+      <td style="font-size:12px;white-space:nowrap">${fD(r.SIGNAL_DATE)}</td>
+      <td style="text-align:center;font-weight:700;color:#2563eb">${r.BUY_COUNT||1}</td>
+      <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td>
+      <td class="${pct>=0?'green':'red'}">&#8377;${fN(ltp)}</td>
+      <td ${pnlColor(pnl)}>&#8377;${fN(pnl)}</td>
+      <td ${pnlColor(pct)}>${pct>=0?'+':''}${f2(pct)}%</td>
+      <td>&#8377;${fN(r.TARGET_PRICE)}</td>
+      <td>&#8377;${fN(r.STOP_PRICE)}</td>
     </tr>`;
   }).join('');
 }
+
 
 function renderMarketData(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
