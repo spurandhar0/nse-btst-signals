@@ -2724,7 +2724,7 @@ function showOHLCDirect(key, label, buyDatesStr, sellDateStr, startDateStr){
   if(!data.length){document.getElementById('ohlc-body').innerHTML='<tr><td colspan="8" class="empty">No OHLC data</td></tr>';return;}
   
   document.getElementById('ohlc-body').innerHTML=data.map(d=>{
-    const chg=parseFloat(d.chg)||0;
+    const chg = (d.pc && parseFloat(d.pc) > 0) ? parseFloat(((parseFloat(d.c) - parseFloat(d.pc)) / parseFloat(d.pc) * 100).toFixed(2)) : 0;
     const isBuy = buyDates.includes(d.date);
     const isSell = d._isSell||(d.date===sellDateStr);
     

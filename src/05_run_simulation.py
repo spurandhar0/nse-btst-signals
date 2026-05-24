@@ -692,7 +692,14 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                 'SYMBOL':           sym,
                 'SIGNAL_DATE':      sig_date,
                 'SIGNAL_CLOSE':     g(row, 'BuyClPrice'),
-                'CHG_1D':           g(row, '1DChange%'),
+                # Recovery%: latest market day change (today's close vs prev close)
+                _chg_1d = g(row, '1DChange%')
+                if sym in price_dict:
+                    _lc  = float(price_dict[sym]['closes'][-1])
+                    _lpc = float(price_dict[sym]['prevs'][-1])
+                    if _lpc > 0:
+                        _chg_1d = round((_lc - _lpc) / _lpc * 100, 2)
+                'CHG_1D':           _chg_1d,
                 'PCT_FROM_LOW':     g(row, '5DLow%'),
                 'MIN_5D_LOW':       g(row, '5DLowPrice'),
                 'MIN_5D_DATE':      fmt_date_str(g(row, '5DLowDate')),
