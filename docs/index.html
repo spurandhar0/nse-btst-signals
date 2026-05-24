@@ -918,6 +918,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="avgTrigCfgFilter('C26',this)">C26</button>
     </div>
     <div id="avgtrigger-badges" class="tab-badges"></div>
+      <div style="margin:6px 0 4px;display:flex;gap:8px;align-items:center"><input id="avgtrig-search" type="text" placeholder="🔍 Search symbol..." oninput="renderAvgTrigger()" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:200px"></div>
     <div class="table-area">
       <table><thead><tr>
         <th style="width:36px">#</th>
@@ -1934,12 +1935,12 @@ function renderAvgTrigger(){
     };
   });
 
-  // Next buy price = AVG_BUY_PRICE * (1 - drop)
   // Distance = (nextBuy - LTP) / LTP * 100
-  //   -2% => LTP is 2% above next buy (approaching) — show
-  //    0% => LTP exactly at trigger                 — show
-  //   +ve => LTP already below trigger              — show
-  // Filter: distance >= -2 AND buy_count < max_buys
+  // Negative = LTP above nextBuy (approaching from above)
+  // Show ONLY when: -2 <= dist <= 0  (LTP within 2% above trigger, not yet blown past it)
+  const search = (document.getElementById('avgtrig-search') || {}).value || '';
+  const sq = search.trim().toUpperCase();
+
   rows = rows.filter(r => {
     const ltp = parseFloat(r.CURRENT_LTP) || 0;
     const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
@@ -1949,12 +1950,15 @@ function renderAvgTrigger(){
     if(buyCount >= cfg.maxBuys) return false;
     const nextBuy = avg * (1 - cfg.drop);
     const dist = (nextBuy - ltp) / ltp * 100;
-    return dist >= -2;
+    // Only within 2% above trigger (approaching), not already past it
+    if(dist < -2 || dist > 0) return false;
+    if(sq && !(r.SYMBOL||'').toUpperCase().includes(sq)) return false;
+    return true;
   });
 
   renderBadges('avgtrigger-badges', rows, 'open');
 
-  // Sort: most urgent first (largest positive dist = furthest past trigger, then nearest)
+  // Sort: most urgent first (dist closest to 0 = almost at trigger)
   rows.sort((a, b) => {
     const getD = r => {
       const ltp = parseFloat(r.CURRENT_LTP) || 0;
@@ -1962,7 +1966,7 @@ function renderAvgTrigger(){
       const drop = (cfgMap[r.CONFIG] || {drop:0.05}).drop;
       return avg > 0 && ltp > 0 ? (avg*(1-drop) - ltp) / ltp * 100 : -999;
     };
-    return getD(b) - getD(a);
+    return getD(b) - getD(a);  // largest (closest to 0) first
   });
 
   const body    = document.getElementById('avgtrigger-body');
@@ -1989,22 +1993,23 @@ function renderAvgTrigger(){
     const gainPct  = parseFloat(r.GAIN_PCT) || 0;
     const days     = parseInt(r.MARKET_DAYS || 0);
 
-    const distCls = dist > 0 ? 'red' : (dist >= -1 ? 'amber' : '');
+    // dist is -2 to 0: -0.5% = very close (amber/red urgency)
+    const distCls = dist >= -0.5 ? 'red' : 'amber';
     const pnlCls  = pnl >= 0 ? 'green' : 'red';
 
     return `<tr>
-      <td style="text-align:center;width:36px">${start+i+1}</td>
-      <td style="text-align:center;width:48px">${cfgBadge(r.CONFIG)}</td>
-      <td style="min-width:80px"><strong>${r.SYMBOL}</strong></td>
-      <td style="font-size:11px;white-space:nowrap;width:76px">${fD(r.SIGNAL_DATE)}</td>
-      <td style="text-align:right;width:82px">&#8377;${fN(avg)}</td>
-      <td style="text-align:right;width:82px">&#8377;${fN(ltp)}</td>
-      <td style="text-align:right;width:88px;color:#f59e0b;font-weight:700">&#8377;${fN(nextBuy)}</td>
-      <td class="${distCls}" style="text-align:right;width:72px;font-weight:700">${dist.toFixed(2)}%</td>
-      <td style="text-align:center;width:62px;font-weight:700">Buy #${buyCount+1}</td>
-      <td class="${pnlCls}" style="text-align:right;width:82px">&#8377;${fN(pnl)}</td>
-      <td class="${pnlCls}" style="text-align:right;width:62px">${gainPct.toFixed(2)}%</td>
-      <td style="text-align:center;width:48px">${days}d</td>
+      <td style="text-align:center;width:32px">${start+i+1}</td>
+      <td style="text-align:center;width:44px">${cfgBadge(r.CONFIG)}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong>${r.SYMBOL}</strong></td>
+      <td style="font-size:11px;white-space:nowrap;width:72px">${fD(r.SIGNAL_DATE)}</td>
+      <td style="text-align:right;width:76px">&#8377;${fN(avg)}</td>
+      <td style="text-align:right;width:76px">&#8377;${fN(ltp)}</td>
+      <td style="text-align:right;width:80px;color:#f59e0b;font-weight:700">&#8377;${fN(nextBuy)}</td>
+      <td class="${distCls}" style="text-align:right;width:66px;font-weight:700">${dist.toFixed(2)}%</td>
+      <td style="text-align:center;width:58px;font-weight:700">Buy #${buyCount+1}</td>
+      <td class="${pnlCls}" style="text-align:right;width:78px">&#8377;${fN(pnl)}</td>
+      <td class="${pnlCls}" style="text-align:right;width:58px">${gainPct.toFixed(2)}%</td>
+      <td style="text-align:center;width:44px">${days}d</td>
     </tr>`;
   }).join('');
 }
