@@ -185,7 +185,37 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="tab-overview">
-  <div id="ov-stats" class="stat-grid"></div>
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:10px 0 0 0;">
+      <span class="slbl">CONFIG:</span>
+      <button class="btn-filter active" onclick="ovCfgFilter('ALL',this)">All</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C1',this)">C1</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C2',this)">C2</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C3',this)">C3</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C4',this)">C4</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C5',this)">C5</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C6',this)">C6</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C7',this)">C7</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C8',this)">C8</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C9',this)">C9</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C10',this)">C10</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C11',this)">C11</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C12',this)">C12</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C13',this)">C13</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C14',this)">C14</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C15',this)">C15</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C16',this)">C16</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C17',this)">C17</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C18',this)">C18</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C19',this)">C19</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C20',this)">C20</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C21',this)">C21</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C22',this)">C22</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C23',this)">C23</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C24',this)">C24</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C25',this)">C25</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C26',this)">C26</button>
+    </div>
+<div id="ov-stats" class="stat-grid"></div>
   <div class="card" style="padding:0 0 8px">
     <div class="table-area">
       <table class="ov-table">
@@ -857,6 +887,36 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <button class="btn-sm btn-green" onclick="exportTabCSV('avgtrigger')">Export CSV</button>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <span class="slbl">CONFIG:</span>
+      <button class="btn-filter active" onclick="avgTrigCfgFilter('ALL',this)">All</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C1',this)">C1</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C2',this)">C2</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C3',this)">C3</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C4',this)">C4</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C5',this)">C5</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C6',this)">C6</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C7',this)">C7</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C8',this)">C8</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C9',this)">C9</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C10',this)">C10</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C11',this)">C11</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C12',this)">C12</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C13',this)">C13</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C14',this)">C14</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C15',this)">C15</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C16',this)">C16</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C17',this)">C17</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C18',this)">C18</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C19',this)">C19</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C20',this)">C20</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C21',this)">C21</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C22',this)">C22</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C23',this)">C23</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C24',this)">C24</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C25',this)">C25</button>
+      <button class="btn-filter" onclick="avgTrigCfgFilter('C26',this)">C26</button>
+    </div>
     <div id="avgtrigger-badges" class="tab-badges"></div>
     <div class="table-area">
       <table><thead><tr>
@@ -881,6 +941,36 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <div style="margin-left:auto;display:flex;gap:6px;">
         <button class="btn-sm btn-green" onclick="exportTabCSV('selltrigger')">Export CSV</button>
       </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <span class="slbl">CONFIG:</span>
+      <button class="btn-filter active" onclick="sellTrigCfgFilter('ALL',this)">All</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C1',this)">C1</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C2',this)">C2</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C3',this)">C3</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C4',this)">C4</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C5',this)">C5</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C6',this)">C6</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C7',this)">C7</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C8',this)">C8</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C9',this)">C9</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C10',this)">C10</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C11',this)">C11</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C12',this)">C12</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C13',this)">C13</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C14',this)">C14</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C15',this)">C15</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C16',this)">C16</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C17',this)">C17</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C18',this)">C18</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C19',this)">C19</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C20',this)">C20</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C21',this)">C21</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C22',this)">C22</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C23',this)">C23</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C24',this)">C24</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C25',this)">C25</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C26',this)">C26</button>
     </div>
     <div id="selltrigger-badges" class="tab-badges"></div>
     <div class="table-area">
@@ -1823,34 +1913,38 @@ function renderSignals(rows){
 
 function renderAvgTrigger(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(avgTrigCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgTrigCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
 
-  // Map buy_drop per config
   const cfgMap={};
-  CONFIGS_DEF.forEach(c=>cfgMap[c.id||c.ID]=parseFloat(c.buy_drop||c.BUY_DROP||0.1));
+  CONFIGS_DEF.forEach(c=>{
+    const id=c.id||c.ID;
+    cfgMap[id]={drop:parseFloat(c.buy_drop||c.BUY_DROP||0.05), maxBuys:parseInt(c.max_buys||c.MAX_BUYS||4)};
+  });
 
-  // Filter: LTP is within 2% of next buy trigger OR already crossed below it
-  // dist = (ltp - nextBuy)/nextBuy*100; show if dist < 2 (approaching or past trigger)
+  // Filter: within 2% of next avg buy trigger (measured from avg buy price)
+  // next buy = avgBuy * (1 - drop)
+  // show if LTP <= avgBuy * (1 - drop + 0.02)  [i.e. within 2% above trigger]
+  // also only show if BUY_COUNT < max_buys (more buys still possible)
   rows=rows.filter(r=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-    const dropPct=cfgMap[r.CONFIG]||0.1;
+    const cfg=cfgMap[r.CONFIG]||{drop:0.05,maxBuys:4};
+    const buyCount=parseInt(r.BUY_COUNT||1);
     if(avg<=0||ltp<=0) return false;
-    const nextBuy=avg*(1-dropPct);
-    const dist=(ltp-nextBuy)/nextBuy*100;
-    return dist<2;  // within 2% above trigger, or already past trigger
+    if(buyCount>=cfg.maxBuys) return false;
+    return ltp<=avg*(1-cfg.drop+0.02);
   });
 
   renderBadges('avgtrigger-badges', rows, 'open');
 
-  // Sort by dist ascending (most urgent / furthest past trigger first)
   rows.sort((a,b)=>{
     const getD=r=>{
       const ltp=parseFloat(r.CURRENT_LTP)||0;
       const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-      const dropPct=cfgMap[r.CONFIG]||0.1;
-      const nextBuy=avg*(1-dropPct);
-      return avg>0?(ltp-nextBuy)/nextBuy*100:0;
+      const drop=(cfgMap[r.CONFIG]||{drop:0.05}).drop;
+      const nextBuy=avg*(1-drop);
+      return avg>0?(ltp-nextBuy)/avg*100:999;
     };
     return getD(a)-getD(b);
   });
@@ -1868,20 +1962,20 @@ function renderAvgTrigger(){
   body.innerHTML=slice.map((r,i)=>{
     const avg=parseFloat(r.AVG_BUY_PRICE)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
-    const dropPct=cfgMap[r.CONFIG]||0.1;
-    const drop=avg>0?((ltp-avg)/avg*100):0;
-    const nextBuy=avg*(1-dropPct);
-    const dist=ltp>0?((ltp-nextBuy)/nextBuy*100):0;
+    const cfg=cfgMap[r.CONFIG]||{drop:0.05,maxBuys:4};
+    const drop=(parseFloat(r.GAIN_PCT)||0)<0?(parseFloat(r.GAIN_PCT)||0):((ltp-avg)/avg*100);
+    const nextBuy=avg*(1-cfg.drop);
+    const dist=(ltp-nextBuy)/avg*100;
     return `<tr>
       <td>${start+i+1}</td>
       <td>${cfgBadge(r.CONFIG)}</td>
       <td><strong>${r.SYMBOL}</strong></td>
       <td style="font-size:12px;white-space:nowrap">${fD(r.SIGNAL_DATE)}</td>
-      <td>&#8377;${fN(avg)}</td>
-      <td class="red">&#8377;${fN(ltp)}</td>
-      <td class="red">${drop.toFixed(2)}%</td>
-      <td style="color:#f59e0b;font-weight:700">&#8377;${fN(nextBuy)}</td>
-      <td class="${dist<=0?'red':'amber'}">${dist.toFixed(2)}%</td>
+      <td style="text-align:right">&#8377;${fN(avg)}</td>
+      <td class="red" style="text-align:right">&#8377;${fN(ltp)}</td>
+      <td class="red" style="text-align:right">${((ltp-avg)/avg*100).toFixed(2)}%</td>
+      <td style="color:#f59e0b;font-weight:700;text-align:right">&#8377;${fN(nextBuy)}</td>
+      <td class="${dist<=0?'red':'amber'}" style="text-align:right;font-weight:700">${dist.toFixed(2)}%</td>
     </tr>`;
   }).join('');
 }
@@ -2209,6 +2303,7 @@ function mdSubTab(type, btn){
 // ─── SELL TRIGGER ─────────────────────────────────────────────────────────────
 function renderSellTrigger(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+  if(sellTrigCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===sellTrigCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
   rows=rows.filter(r=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
@@ -2238,19 +2333,19 @@ function renderSellTrigger(){
     return `<tr>
       <td>${start+i+1}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong></td>
       <td>${fD(r.SIGNAL_DATE)}</td>
-      <td>₹${fN(avg)}</td>
-      <td class="green">₹${fN(ltp)}</td>
-      <td style="color:#059669;font-weight:700">₹${fN(tgt)}</td>
-      <td class="${dist<=2?'green':''}">${dist.toFixed(2)}%</td>
-      <td ${pnlColor(r.PROFIT)}>₹${fN(pnl)}</td>
-      <td ${pnlColor(r.GAIN_PCT)}>${pct>=0?'+':''}${f2(pct)}%</td>
-      <td>${fI(r.MARKET_DAYS)}d</td>
+      <td style="text-align:right">&#8377;${fN(avg)}</td>
+      <td class="green" style="text-align:right">&#8377;${fN(ltp)}</td>
+      <td style="color:#059669;font-weight:700;text-align:right">&#8377;${fN(tgt)}</td>
+      <td class="${dist<=2?'green':''}" style="text-align:right">${dist.toFixed(2)}%</td>
+      <td ${pnlColor(r.PROFIT)} style="text-align:right">&#8377;${fN(pnl)}</td>
+      <td ${pnlColor(r.GAIN_PCT)} style="text-align:right">${pct>=0?'+':''}${f2(pct)}%</td>
+      <td style="text-align:right">${fI(r.MARKET_DAYS)}d</td>
     </tr>`;
   }).join('');
 }
 
 // ─── AVG HISTORY ──────────────────────────────────────────────────────────────
-let avgHistCfg='ALL', sigCfg='ALL';
+let avgHistCfg='ALL', sigCfg='ALL', avgTrigCfg='ALL', sellTrigCfg='ALL', ovCfg='ALL';
 function sigCfgFilter(val,btn){
   sigCfg=val;
   document.querySelectorAll('#tab-signals .btn-filter').forEach(b=>b.classList.remove('active'));
@@ -2263,6 +2358,24 @@ function avgHistCfgFilter(val,btn){
   btn.classList.add('active');
   renderAvgHistory();
 }
+function avgTrigCfgFilter(val,btn){
+  avgTrigCfg=val;
+  document.querySelectorAll('#tab-avgtrigger .btn-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAvgTrigger();
+}
+function sellTrigCfgFilter(val,btn){
+  sellTrigCfg=val;
+  document.querySelectorAll('#tab-selltrigger .btn-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSellTrigger();
+}
+function ovCfgFilter(val,btn){
+  ovCfg=val;
+  document.querySelectorAll('#tab-overview .btn-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildOverview();
+}
 function renderAvgHistory(){
   const q=(document.getElementById('avghist-search')||{}).value||'';
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&parseInt(r.BUY_COUNT||0)>1);
@@ -2272,9 +2385,35 @@ function renderAvgHistory(){
 
   renderBadges('avghistory-badges', rows, 'open');
   document.getElementById('avghistory-info').textContent=`${rows.length} open averaging positions`;
-
-  // Sort: worst gain first
   rows.sort((a,b)=>(parseFloat(a.GAIN_PCT)||0)-(parseFloat(b.GAIN_PCT)||0));
+
+  // Config maps
+  const cfgDropMap={}, cfgMaxMap={};
+  CONFIGS_DEF.forEach(c=>{
+    const id=c.id||c.ID;
+    cfgDropMap[id]=parseFloat(c.buy_drop||c.BUY_DROP||0.05);
+    cfgMaxMap[id]=parseInt(c.max_buys||c.MAX_BUYS||4);
+  });
+  const globalMax=Math.max(...CONFIGS_DEF.map(c=>parseInt(c.max_buys||c.MAX_BUYS||4)),1);
+
+  // Update thead dynamically
+  const headRow=document.querySelector('#tab-avghistory thead tr');
+  if(headRow){
+    let buyHdrs='';
+    for(let b=1;b<=globalMax;b++) buyHdrs+=`<th style="width:74px;white-space:nowrap">BUY ${b}</th>`;
+    headRow.innerHTML=`
+      <th style="width:34px">#</th>
+      <th style="width:48px">CFG</th>
+      <th style="width:120px;max-width:120px">STOCK</th>
+      <th style="width:88px">DATE</th>
+      ${buyHdrs}
+      <th style="width:82px">AVG BUY</th>
+      <th style="width:82px">LTP</th>
+      <th style="width:88px">P&L (&#8377;)</th>
+      <th style="width:66px">GAIN%</th>
+      <th style="width:82px">TARGET</th>
+      <th style="width:82px">STOP</th>`;
+  }
 
   const pgSzEl=document.getElementById('avghistory-pgsize');
   const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
@@ -2284,24 +2423,48 @@ function renderAvgHistory(){
   setPager('avghistory',page,rows.length,pgSz);
 
   const body=document.getElementById('avghistory-body');
-  if(!pageRows.length){body.innerHTML='<tr><td colspan="11" class="empty">No open averaging positions found</td></tr>';return;}
+  const totalCols=4+globalMax+6;
+  if(!pageRows.length){body.innerHTML=`<tr><td colspan="${totalCols}" class="empty">No open averaging positions found</td></tr>`;return;}
 
   body.innerHTML=pageRows.map((r,i)=>{
     const pnl=parseFloat(r.PROFIT)||0;
     const pct=parseFloat(r.GAIN_PCT)||0;
     const ltp=parseFloat(r.CURRENT_LTP)||0;
+    const drop=cfgDropMap[r.CONFIG]||0.05;
+    const maxB=cfgMaxMap[r.CONFIG]||4;
+    const buyCount=parseInt(r.BUY_COUNT||1);
+    const b0=parseFloat(r.B0_Close)||parseFloat(r.SIGNAL_CLOSE)||parseFloat(r.AVG_BUY_PRICE)||0;
+    // Compute per-step buy prices using running avg formula
+    const buyPrices=[];
+    let runAvg=b0;
+    for(let bi=0;bi<globalMax;bi++){
+      if(bi===0){ buyPrices.push(b0); }
+      else {
+        const p=runAvg*(1-drop);
+        buyPrices.push(p);
+        runAvg=((runAvg*bi)+p)/(bi+1);
+      }
+    }
+    let buyCols='';
+    for(let b=0;b<globalMax;b++){
+      if(b<buyCount && b<maxB && buyPrices[b]>0){
+        buyCols+=`<td style="text-align:right;font-size:12px;white-space:nowrap;padding:4px 6px">&#8377;${fN(buyPrices[b])}</td>`;
+      } else {
+        buyCols+=`<td style="text-align:center;color:#cbd5e1;font-size:12px">&#8212;</td>`;
+      }
+    }
     return `<tr>
       <td>${start+i+1}</td>
       <td>${cfgBadge(r.CONFIG)}</td>
-      <td><strong>${r.SYMBOL}</strong></td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong>${r.SYMBOL}</strong></td>
       <td style="font-size:12px;white-space:nowrap">${fD(r.SIGNAL_DATE)}</td>
-      <td style="text-align:center;font-weight:700;color:#2563eb">${r.BUY_COUNT||1}</td>
-      <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td>
-      <td class="${pct>=0?'green':'red'}">&#8377;${fN(ltp)}</td>
-      <td ${pnlColor(pnl)}>&#8377;${fN(pnl)}</td>
-      <td ${pnlColor(pct)}>${pct>=0?'+':''}${f2(pct)}%</td>
-      <td>&#8377;${fN(r.TARGET_PRICE)}</td>
-      <td>&#8377;${fN(r.STOP_PRICE)}</td>
+      ${buyCols}
+      <td style="text-align:right">&#8377;${fN(r.AVG_BUY_PRICE)}</td>
+      <td class="${pct>=0?'green':'red'}" style="text-align:right">&#8377;${fN(ltp)}</td>
+      <td ${pnlColor(pnl)} style="text-align:right">&#8377;${fN(pnl)}</td>
+      <td ${pnlColor(pct)} style="text-align:right">${pct>=0?'+':''}${f2(pct)}%</td>
+      <td style="text-align:right">&#8377;${fN(r.TARGET_PRICE)}</td>
+      <td style="text-align:right">&#8377;${fN(r.STOP_PRICE)}</td>
     </tr>`;
   }).join('');
 }
@@ -2575,7 +2738,8 @@ document.addEventListener('keydown', e=>{
 });
 // ─── OVERVIEW ────────────────────────────────────────────────────────────────
 function buildOverview(){
-  const cfgIds = CONFIGS_DEF.map(c=>c.id||c.ID).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+  const allCfgIds = CONFIGS_DEF.map(c=>c.id||c.ID).filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+  const cfgIds = ovCfg==='ALL' ? allCfgIds : [ovCfg];
   let totExec=0,totOpen=0,totClosed=0,totPnl=0,totPT=0,totLoss=0;
   const rows=[];
 
@@ -2616,7 +2780,7 @@ function buildOverview(){
   document.getElementById('ov-body').innerHTML=rows.join('');
   const totWr=totPT+totLoss>0?(totPT/(totPT+totLoss)*100).toFixed(1)+'%':'—';
 
-  let totalSigsFiltered = ALL_ROWS;
+  let totalSigsFiltered = ovCfg==='ALL' ? ALL_ROWS : ALL_ROWS.filter(r=>r.CONFIG===ovCfg);
   if(dateRangeActive) totalSigsFiltered = totalSigsFiltered.filter(r=>inDateRange(r.SIGNAL_DATE));
 
   document.getElementById('ov-stats').innerHTML=`
