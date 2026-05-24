@@ -920,19 +920,19 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     </div>
     <div id="avgtrigger-badges" class="tab-badges"></div>
     <div class="table-area">
-      <table><thead><tr>
-        <th>#</th>
-        <th>CFG</th>
-        <th>Symbol</th>
-        <th>Date</th>
-        <th>Avg Buy</th>
-        <th>LTP</th>
-        <th>Next Buy</th>
-        <th>Distance</th>
-        <th>Next Buy#</th>
-        <th>P&amp;L (&#8377;)</th>
-        <th>P&amp;L%</th>
-        <th>Days</th>
+      <table style="table-layout:fixed;width:100%"><thead><tr>
+        <th style="width:32px;text-align:center">#</th>
+        <th style="width:48px;text-align:center">CFG</th>
+        <th style="width:120px;overflow:hidden;text-overflow:ellipsis">Symbol</th>
+        <th style="width:72px">Date</th>
+        <th style="width:74px;text-align:right">Avg Buy</th>
+        <th style="width:74px;text-align:right">LTP</th>
+        <th style="width:74px;text-align:right">Next Buy</th>
+        <th style="width:68px;text-align:right">Distance</th>
+        <th style="width:56px;text-align:center">Buy#</th>
+        <th style="width:78px;text-align:right">P&amp;L (&#8377;)</th>
+        <th style="width:56px;text-align:right">P&amp;L%</th>
+        <th style="width:42px;text-align:center">Days</th>
       </tr></thead><tbody id="avgtrigger-body"></tbody></table>
     </div>
     <div class="pager"><span class="info" id="avgtrigger-info"></span><div style="flex:1"></div>
@@ -2000,7 +2000,7 @@ function renderAvgTrigger(){
     return `<tr>
       <td style="text-align:center;width:32px">${start+i+1}</td>
       <td style="text-align:center;width:44px">${cfgBadge(r.CONFIG)}</td>
-      <td style="white-space:nowrap;padding-right:8px"><strong>${r.SYMBOL}</strong></td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.SYMBOL}"><strong>${r.SYMBOL}</strong></td>
       <td style="font-size:11px;white-space:nowrap;width:72px">${fD(r.SIGNAL_DATE)}</td>
       <td style="text-align:right;width:76px">&#8377;${fN(avg)}</td>
       <td style="text-align:right;width:76px">&#8377;${fN(ltp)}</td>
