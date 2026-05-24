@@ -60,14 +60,6 @@ jobs:
       - name: Step 5 – Run simulation & generate per-config Excel files
         run: python src/05_run_simulation.py
 
-      - name: Fetch latest Nifty index data
-        run: |
-          mkdir -p docs/data
-          curl -sf "https://spurandhar0.github.io/nse-btst-dashboard/nifty_index.json" \
-            -o docs/data/nifty_index.json \
-            && echo "Fetched nifty_index.json" \
-            || echo "Failed to fetch nifty_index.json (using existing)"
-
       - name: Step 6 – Build dashboard HTML
         run: python src/05_build_dashboard.py
 
