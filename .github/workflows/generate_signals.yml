@@ -74,10 +74,15 @@ jobs:
           # index.html — always required
           cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/docs/index.html
 
-          # sim_results.json — safe copy (may not exist if no signal parquets)
-          [ -f "$GITHUB_WORKSPACE/docs/data/sim_results.json" ] \
-            && cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/docs/data/sim_results.json \
-            || echo "⚠  sim_results.json not found — skipping"
+          # sim_results per-config JSON files (MTF filtered, one per config)
+          for cfg_file in $GITHUB_WORKSPACE/docs/data/sim_results_C*.json; do
+            [ -f "$cfg_file" ] && cp "$cfg_file" pub-dashboard/docs/data/ || true
+          done
+
+          # sim_meta.json — metadata (generated_at, last_date, config list)
+          [ -f "$GITHUB_WORKSPACE/docs/data/sim_meta.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/sim_meta.json pub-dashboard/docs/data/sim_meta.json \
+            || echo "⚠  sim_meta.json not found — skipping"
 
           # trade_ohlc.json — safe copy
           [ -f "$GITHUB_WORKSPACE/docs/data/trade_ohlc.json" ] \
