@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -47,7 +47,7 @@ jobs:
       - name: Step 4 - Run daily signals (today only)
         run: python src/04_run_daily_signals.py
 
-      - name: Step 5 - Run simulation & generate Excel
+      - name: Step 5 - Run simulation & generate per-config JSON files
         run: python src/05_run_simulation.py
 
       - name: Fetch latest Nifty index data
@@ -68,10 +68,30 @@ jobs:
           cd /tmp
           git clone https://x-access-token:${GH_PAT}@github.com/spurandhar0/nse-btst-signals-dashboard.git pub-dashboard
           mkdir -p pub-dashboard/docs/data
+
+          # index.html — always required
           cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/docs/index.html
-          cp $GITHUB_WORKSPACE/docs/data/sim_results.json pub-dashboard/docs/data/sim_results.json
-          cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/trade_ohlc.json
-          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json || true
+
+          # sim_results per-config JSON files (MTF filtered, one per config)
+          for cfg_file in $GITHUB_WORKSPACE/docs/data/sim_results_C*.json; do
+            [ -f "$cfg_file" ] && cp "$cfg_file" pub-dashboard/docs/data/ || true
+          done
+
+          # sim_meta.json — metadata (generated_at, last_date, config list)
+          [ -f "$GITHUB_WORKSPACE/docs/data/sim_meta.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/sim_meta.json pub-dashboard/docs/data/sim_meta.json \
+            || echo "sim_meta.json not found — skipping"
+
+          # trade_ohlc.json — safe copy
+          [ -f "$GITHUB_WORKSPACE/docs/data/trade_ohlc.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/trade_ohlc.json \
+            || echo "trade_ohlc.json not found — skipping"
+
+          # nifty_index.json — optional
+          [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] \
+            && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json \
+            || true
+
           cd pub-dashboard
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
