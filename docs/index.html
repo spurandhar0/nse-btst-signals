@@ -131,7 +131,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </div>
     </div>
     <div class="hdr-right">
-      <span class="hdr-badge">&#9679; 24-May-2026 23:59 IST</span>
+      <span class="hdr-badge">&#9679; 24-May-2026 15:44 IST</span>
       <button class="hdr-btn" onclick="location.reload()">&#8635; Refresh</button>
     </div>
   </div>
@@ -148,7 +148,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="liveBanner">
-  &#10003; Last simulation: <strong id="bannerDate">24-May-2026 23:59 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
+  &#10003; Last simulation: <strong id="bannerDate">24-May-2026 15:44 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-22</strong>
 </div>
 
 <div class="container">
@@ -1339,23 +1339,38 @@ let _dataReady = false;
   if (banner) banner.innerHTML = '&#8987; Loading trade data&hellip;';
 
   try {
-    const [simRes, ohlcRes] = await Promise.all([
-      fetch('data/sim_results.json'),
+    // Fetch all per-config sim files + trade_ohlc in parallel
+    const configIds = CONFIGS_DEF.map(c => c.id);
+    const allFetches = [
+      ...configIds.map(cid => fetch('data/sim_results_' + cid + '.json')),
       fetch('data/trade_ohlc.json'),
-    ]);
+    ];
+    const allResults = await Promise.all(allFetches);
 
-    if (!simRes.ok) throw new Error('sim_results.json not found (' + simRes.status + ')');
-    const simData = await simRes.json();
-
-    // Flatten results the same way the old inline code did
-    const raw = simData.results || {};
-    for (const [cid, rows] of Object.entries(raw)) {
-      for (const r of rows) {
-        r.CONFIG = cid;
+    // Process per-config sim files — merge all signals into ALL_ROWS
+    let totalSignals = 0;
+    for (let i = 0; i < configIds.length; i++) {
+      const res = allResults[i];
+      const cid = configIds[i];
+      if (!res.ok) { console.warn('sim_results_' + cid + '.json not found (' + res.status + ')'); continue; }
+      const data = await res.json();
+      const signals = data.signals || [];
+      for (const r of signals) {
         ALL_ROWS.push(r);
+        totalSignals++;
       }
     }
 
+    if (totalSignals === 0) {
+      if (banner) banner.innerHTML =
+        '<span style="color:#d97706">&#9888; No trade data found yet. Run the Generate Signal workflow first.</span>';
+      _dataReady = true;
+      buildOverview();
+      return;
+    }
+
+    // Process trade_ohlc (combined file, MTF filtered)
+    const ohlcRes = allResults[configIds.length];
     if (ohlcRes.ok) {
       TRADE_OHLC = await ohlcRes.json();
     }
@@ -1363,7 +1378,7 @@ let _dataReady = false;
     _dataReady = true;
     if (banner) banner.innerHTML = origBanner;
 
-    // Rebuild open-position helpers that used to run at parse time
+    // Rebuild open-position helpers
     openSymbols.clear();
     for (const k of Object.keys(openMap)) delete openMap[k];
     ALL_ROWS.filter(r => r.ORDER === 'Executed' && r.STATUS === 'Open').forEach(r => {

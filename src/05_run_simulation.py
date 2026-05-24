@@ -621,13 +621,31 @@ def fmt_date_str(val):
 
 
 def export_sim_json(consolidated_data, price_dict, global_last_date):
-    """Export simulation results split across two JSON files to stay under GitHub's 100 MB limit.
+    """Export simulation results as per-config JSON files (MTF stocks only).
 
-    docs/data/sim_results.json  — lightweight trade metadata (no per-day OHLC candles)
-    docs/data/trade_ohlc.json   — per-buy and sell-day OHLC rows keyed by SYMBOL_SIGNALDATE_CONFIG
+    docs/data/sim_results_{CID}.json  — lightweight trade metadata per config
+    docs/data/trade_ohlc.json         — per-buy and sell-day OHLC rows (MTF filtered)
+    docs/data/sim_meta.json           — metadata: generated_at, last_date, configs list
     """
-    results  = {}
-    ohlc_out = {}   # key → {buys: [...], sell: {...}}
+    # ── Load MTF symbol filter ─────────────────────────────────────────────────
+    mtf_path = 'docs/data/mtf_symbols.json'
+    mtf_set  = set()
+    if os.path.exists(mtf_path):
+        with open(mtf_path, encoding='utf-8') as f:
+            mtf_list = json.load(f)
+        mtf_set = set(s for s in mtf_list if s != 'Symbol / Scrip Name')
+        print(f"  MTF filter loaded: {len(mtf_set):,} symbols")
+    else:
+        print(f"  ⚠  MTF symbols not found at {mtf_path} — no MTF filtering applied")
+
+    ohlc_out     = {}   # key → {buys: [...], sell: {...}}
+    config_list  = []
+    meta = {
+        'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
+        'last_date':    str(global_last_date.date()),
+    }
+
+    os.makedirs('docs/data', exist_ok=True)
 
     for cid, columns, rows in consolidated_data:
         col_map = {c: i for i, c in enumerate(columns)}
@@ -642,6 +660,10 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
         config_rows = []
         for row in rows:
             sym = str(g(row, 'StockName', ''))
+
+            # ── MTF filter — skip non-MTF symbols ─────────────────────────────
+            if mtf_set and sym not in mtf_set:
+                continue
 
             # Current LTP from price dict
             current_ltp = None
@@ -695,12 +717,11 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
             }
             config_rows.append(r)
 
-            # ── Per-buy OHLC → trade_ohlc.json ────────────────────────────────
-            # Only bother for executed trades (open or closed)
+            # ── Per-buy OHLC → trade_ohlc.json (MTF filtered) ─────────────────
             if order == 'Executed' and sig_date:
                 ohlc_key = f"{sym}_{sig_date}_{cid}"
                 if ohlc_key not in ohlc_out:
-                    buys = []
+                    buys  = []
                     max_b = 4  # B0..B3
                     for b in range(max_b):
                         bd = fmt_date_str(g(row, f'B{b}_BoughtDate'))
@@ -727,29 +748,31 @@ def export_sim_json(consolidated_data, price_dict, global_last_date):
                         }
                     ohlc_out[ohlc_key] = {'buys': buys, 'sell': sell}
 
-        results[cid] = config_rows
+        # ── Write per-config JSON ─────────────────────────────────────────────
+        per_cfg = {
+            'meta':    {**meta, 'config': cid},
+            'signals': config_rows,
+        }
+        cfg_path = f'docs/data/sim_results_{cid}.json'
+        with open(cfg_path, 'w') as f:
+            json.dump(per_cfg, f, default=str)
+        cfg_kb = os.path.getsize(cfg_path) / 1024
+        print(f"✅ Exported {cfg_path}  ({cfg_kb:,.0f} KB, {len(config_rows):,} signals)")
+        config_list.append(cid)
 
-    os.makedirs('docs/data', exist_ok=True)
+    # ── sim_meta.json ──────────────────────────────────────────────────────────
+    sim_meta = {**meta, 'configs': config_list}
+    with open('docs/data/sim_meta.json', 'w') as f:
+        json.dump(sim_meta, f)
+    print(f"✅ Exported docs/data/sim_meta.json  (configs: {config_list})")
 
-    # ── File 1: sim_results.json (lightweight) ─────────────────────────────────
-    sim_out = {
-        'meta': {
-            'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
-            'last_date':    str(global_last_date.date()),
-        },
-        'results': results,
-    }
-    with open('docs/data/sim_results.json', 'w') as f:
-        json.dump(sim_out, f, default=str)
-    sim_kb = os.path.getsize('docs/data/sim_results.json') / 1024
-    print(f"✅ Exported docs/data/sim_results.json  ({sim_kb:,.0f} KB)")
-
-    # ── File 2: trade_ohlc.json (buy/sell OHLC only) ───────────────────────────
+    # ── trade_ohlc.json (MTF filtered, combined) ───────────────────────────────
     with open('docs/data/trade_ohlc.json', 'w') as f:
         json.dump(ohlc_out, f, default=str)
     ohlc_kb = os.path.getsize('docs/data/trade_ohlc.json') / 1024
-    print(f"✅ Exported docs/data/trade_ohlc.json   ({ohlc_kb:,.0f} KB)")
-    print(f"   Total data: {sim_kb + ohlc_kb:,.0f} KB  |  OHLC keys: {len(ohlc_out):,}")
+    print(f"✅ Exported docs/data/trade_ohlc.json   ({ohlc_kb:,.0f} KB, {len(ohlc_out):,} keys)")
+    total_kb = sum(os.path.getsize(f'docs/data/sim_results_{c}.json') for c in config_list) / 1024
+    print(f"   Total sim data: {total_kb:,.0f} KB across {len(config_list)} config files")
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -875,18 +898,16 @@ def main():
         print("   Run the Bootstrap workflow first, then Daily Signals.")
         # Write empty sim_results.json so the dashboard push step never fails
         os.makedirs('docs/data', exist_ok=True)
-        empty_out = {
-            'meta': {
-                'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
-                'last_date':    str(global_last_date.date()),
-            },
-            'results': {},
+        empty_meta = {
+            'generated_at': datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST'),
+            'last_date':    str(global_last_date.date()),
+            'configs':      [],
         }
-        with open('docs/data/sim_results.json', 'w') as f:
-            json.dump(empty_out, f)
+        with open('docs/data/sim_meta.json', 'w') as f:
+            json.dump(empty_meta, f)
         with open('docs/data/trade_ohlc.json', 'w') as f:
             json.dump({}, f)
-        print("   ✅ Wrote empty docs/data/sim_results.json + trade_ohlc.json")
+        print("   ✅ Wrote empty docs/data/sim_meta.json + trade_ohlc.json")
 
     print(f"\n{'='*60}")
     print(f"Simulation complete — {datetime.now(tz=IST).strftime('%d-%b-%Y %H:%M IST')}")

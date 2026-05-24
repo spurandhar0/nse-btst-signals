@@ -46,10 +46,24 @@ def load_signals():
     if not os.path.exists(SIGS_CSV):
         print(f"  ⚠  signals_latest.csv not found at {SIGS_CSV} — SIGNALS_RAW will be []")
         return rows
+
+    # Load MTF filter
+    mtf_path = os.path.join(BASE, 'docs', 'data', 'mtf_symbols.json')
+    mtf_set  = set()
+    if os.path.exists(mtf_path):
+        with open(mtf_path, encoding='utf-8') as f:
+            mtf_list = json.load(f)
+        mtf_set = set(s for s in mtf_list if s != 'Symbol / Scrip Name')
+
     with open(SIGS_CSV, newline='', encoding='utf-8') as f:
         for r in csv.DictReader(f):
+            if mtf_set and r.get('SYMBOL', '') not in mtf_set:
+                continue
             rows.append(dict(r))
-    print(f"  ✅ Signals loaded: {len(rows)} rows")
+    if mtf_set:
+        print(f"  ✅ Signals loaded: {len(rows)} rows (MTF filtered)")
+    else:
+        print(f"  ✅ Signals loaded: {len(rows)} rows")
     return rows
 
 
@@ -96,16 +110,27 @@ def load_configs():
 
 
 def load_sim_last_date():
-    """Read the last data date from sim_results.json for the banner."""
-    sim_path = os.path.join(BASE, 'docs', 'data', 'sim_results.json')
-    if not os.path.exists(sim_path):
-        return ''
-    try:
-        with open(sim_path, encoding='utf-8') as f:
-            d = json.load(f)
-        return d.get('meta', {}).get('last_date', '')
-    except Exception:
-        return ''
+    """Read the last data date from sim_meta.json (or first per-config file) for the banner."""
+    import glob
+    meta_path = os.path.join(BASE, 'docs', 'data', 'sim_meta.json')
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, encoding='utf-8') as f:
+                d = json.load(f)
+            return d.get('last_date', '')
+        except Exception:
+            pass
+    # Fallback: try first available sim_results_C*.json
+    pattern = os.path.join(BASE, 'docs', 'data', 'sim_results_C*.json')
+    files = sorted(glob.glob(pattern))
+    if files:
+        try:
+            with open(files[0], encoding='utf-8') as f:
+                d = json.load(f)
+            return d.get('meta', {}).get('last_date', '')
+        except Exception:
+            pass
+    return ''
 
 
 # ── injection ─────────────────────────────────────────────────────────────────
