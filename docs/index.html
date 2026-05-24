@@ -920,9 +920,18 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div id="avgtrigger-badges" class="tab-badges"></div>
     <div class="table-area">
       <table><thead><tr>
-        <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
-        <th>Avg Buy ₹</th><th>Current LTP ₹</th><th>Drop%</th>
-        <th>Next Buy Price</th><th>Distance</th>
+        <th style="width:36px">#</th>
+        <th style="width:48px">CFG</th>
+        <th>Symbol</th>
+        <th style="width:76px">Sig.Date</th>
+        <th style="width:82px">Avg Buy</th>
+        <th style="width:82px">LTP</th>
+        <th style="width:88px">Next Buy</th>
+        <th style="width:72px">Distance</th>
+        <th style="width:62px">Next Buy#</th>
+        <th style="width:82px">P&amp;L (&#8377;)</th>
+        <th style="width:62px">P&amp;L%</th>
+        <th style="width:48px">Days</th>
       </tr></thead><tbody id="avgtrigger-body"></tbody></table>
     </div>
     <div class="pager"><span class="info" id="avgtrigger-info"></span><div style="flex:1"></div>
@@ -1912,70 +1921,90 @@ function renderSignals(rows){
 
 
 function renderAvgTrigger(){
-  let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
-  if(avgTrigCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===avgTrigCfg);
-  if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  let rows = ALL_ROWS.filter(r => r.ORDER === 'Executed' && r.STATUS === 'Open');
+  if(avgTrigCfg !== 'ALL') rows = rows.filter(r => r.CONFIG === avgTrigCfg);
+  if(dateRangeActive) rows = rows.filter(r => inDateRange(r.SIGNAL_DATE));
 
-  const cfgMap={};
-  CONFIGS_DEF.forEach(c=>{
-    const id=c.id||c.ID;
-    cfgMap[id]={drop:parseFloat(c.buy_drop||c.BUY_DROP||0.05), maxBuys:parseInt(c.max_buys||c.MAX_BUYS||4)};
+  const cfgMap = {};
+  CONFIGS_DEF.forEach(c => {
+    const id = c.id || c.ID;
+    cfgMap[id] = {
+      drop: parseFloat(c.buy_drop || c.BUY_DROP || 0.05),
+      maxBuys: parseInt(c.max_buys || c.MAX_BUYS || 4)
+    };
   });
 
-  // Filter: within 2% of next avg buy trigger (measured from avg buy price)
-  // next buy = avgBuy * (1 - drop)
-  // show if LTP <= avgBuy * (1 - drop + 0.02)  [i.e. within 2% above trigger]
-  // also only show if BUY_COUNT < max_buys (more buys still possible)
-  rows=rows.filter(r=>{
-    const ltp=parseFloat(r.CURRENT_LTP)||0;
-    const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-    const cfg=cfgMap[r.CONFIG]||{drop:0.05,maxBuys:4};
-    const buyCount=parseInt(r.BUY_COUNT||1);
-    if(avg<=0||ltp<=0) return false;
-    if(buyCount>=cfg.maxBuys) return false;
-    return ltp<=avg*(1-cfg.drop+0.02);
+  // Next buy price = AVG_BUY_PRICE * (1 - drop)
+  // Distance = (nextBuy - LTP) / LTP * 100
+  //   -2% => LTP is 2% above next buy (approaching) — show
+  //    0% => LTP exactly at trigger                 — show
+  //   +ve => LTP already below trigger              — show
+  // Filter: distance >= -2 AND buy_count < max_buys
+  rows = rows.filter(r => {
+    const ltp = parseFloat(r.CURRENT_LTP) || 0;
+    const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
+    const cfg = cfgMap[r.CONFIG] || {drop:0.05, maxBuys:4};
+    const buyCount = parseInt(r.BUY_COUNT || 0);
+    if(avg <= 0 || ltp <= 0) return false;
+    if(buyCount >= cfg.maxBuys) return false;
+    const nextBuy = avg * (1 - cfg.drop);
+    const dist = (nextBuy - ltp) / ltp * 100;
+    return dist >= -2;
   });
 
   renderBadges('avgtrigger-badges', rows, 'open');
 
-  rows.sort((a,b)=>{
-    const getD=r=>{
-      const ltp=parseFloat(r.CURRENT_LTP)||0;
-      const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-      const drop=(cfgMap[r.CONFIG]||{drop:0.05}).drop;
-      const nextBuy=avg*(1-drop);
-      return avg>0?(ltp-nextBuy)/avg*100:999;
+  // Sort: most urgent first (largest positive dist = furthest past trigger, then nearest)
+  rows.sort((a, b) => {
+    const getD = r => {
+      const ltp = parseFloat(r.CURRENT_LTP) || 0;
+      const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
+      const drop = (cfgMap[r.CONFIG] || {drop:0.05}).drop;
+      return avg > 0 && ltp > 0 ? (avg*(1-drop) - ltp) / ltp * 100 : -999;
     };
-    return getD(a)-getD(b);
+    return getD(b) - getD(a);
   });
 
-  const body=document.getElementById('avgtrigger-body');
-  const pgSzEl=document.getElementById('avgtrigger-pgsize');
-  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
-  const page=(state.avgtrigger||{}).page||1;
-  const start=(page-1)*pgSz;
-  const slice=rows.slice(start,start+pgSz);
-  setPager('avgtrigger',page,rows.length,pgSz);
+  const body    = document.getElementById('avgtrigger-body');
+  const pgSzEl  = document.getElementById('avgtrigger-pgsize');
+  const pgSz    = pgSzEl ? parseInt(pgSzEl.value) : 50;
+  const page    = (state.avgtrigger || {}).page || 1;
+  const start   = (page - 1) * pgSz;
+  const slice   = rows.slice(start, start + pgSz);
+  setPager('avgtrigger', page, rows.length, pgSz);
 
-  if(!slice.length){body.innerHTML='<tr><td colspan="9" class="empty">No stocks near averaging trigger</td></tr>';return;}
+  if(!slice.length){
+    body.innerHTML = '<tr><td colspan="12" class="empty">No stocks within 2% of next averaging trigger</td></tr>';
+    return;
+  }
 
-  body.innerHTML=slice.map((r,i)=>{
-    const avg=parseFloat(r.AVG_BUY_PRICE)||0;
-    const ltp=parseFloat(r.CURRENT_LTP)||0;
-    const cfg=cfgMap[r.CONFIG]||{drop:0.05,maxBuys:4};
-    const drop=(parseFloat(r.GAIN_PCT)||0)<0?(parseFloat(r.GAIN_PCT)||0):((ltp-avg)/avg*100);
-    const nextBuy=avg*(1-cfg.drop);
-    const dist=(ltp-nextBuy)/avg*100;
+  body.innerHTML = slice.map((r, i) => {
+    const avg      = parseFloat(r.AVG_BUY_PRICE) || 0;
+    const ltp      = parseFloat(r.CURRENT_LTP) || 0;
+    const cfg      = cfgMap[r.CONFIG] || {drop:0.05, maxBuys:4};
+    const nextBuy  = avg * (1 - cfg.drop);
+    const dist     = avg > 0 && ltp > 0 ? (nextBuy - ltp) / ltp * 100 : 0;
+    const buyCount = parseInt(r.BUY_COUNT || 0);
+    const pnl      = parseFloat(r.PROFIT) || 0;
+    const gainPct  = parseFloat(r.GAIN_PCT) || 0;
+    const days     = parseInt(r.MARKET_DAYS || 0);
+
+    const distCls = dist > 0 ? 'red' : (dist >= -1 ? 'amber' : '');
+    const pnlCls  = pnl >= 0 ? 'green' : 'red';
+
     return `<tr>
-      <td>${start+i+1}</td>
-      <td>${cfgBadge(r.CONFIG)}</td>
-      <td><strong>${r.SYMBOL}</strong></td>
-      <td style="font-size:12px;white-space:nowrap">${fD(r.SIGNAL_DATE)}</td>
-      <td style="text-align:right">&#8377;${fN(avg)}</td>
-      <td class="red" style="text-align:right">&#8377;${fN(ltp)}</td>
-      <td class="red" style="text-align:right">${((ltp-avg)/avg*100).toFixed(2)}%</td>
-      <td style="color:#f59e0b;font-weight:700;text-align:right">&#8377;${fN(nextBuy)}</td>
-      <td class="${dist<=0?'red':'amber'}" style="text-align:right;font-weight:700">${dist.toFixed(2)}%</td>
+      <td style="text-align:center;width:36px">${start+i+1}</td>
+      <td style="text-align:center;width:48px">${cfgBadge(r.CONFIG)}</td>
+      <td style="min-width:80px"><strong>${r.SYMBOL}</strong></td>
+      <td style="font-size:11px;white-space:nowrap;width:76px">${fD(r.SIGNAL_DATE)}</td>
+      <td style="text-align:right;width:82px">&#8377;${fN(avg)}</td>
+      <td style="text-align:right;width:82px">&#8377;${fN(ltp)}</td>
+      <td style="text-align:right;width:88px;color:#f59e0b;font-weight:700">&#8377;${fN(nextBuy)}</td>
+      <td class="${distCls}" style="text-align:right;width:72px;font-weight:700">${dist.toFixed(2)}%</td>
+      <td style="text-align:center;width:62px;font-weight:700">Buy #${buyCount+1}</td>
+      <td class="${pnlCls}" style="text-align:right;width:82px">&#8377;${fN(pnl)}</td>
+      <td class="${pnlCls}" style="text-align:right;width:62px">${gainPct.toFixed(2)}%</td>
+      <td style="text-align:center;width:48px">${days}d</td>
     </tr>`;
   }).join('');
 }
