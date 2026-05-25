@@ -557,7 +557,12 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="cstrip">
     <span class="slbl">Search symbol:</span>
     <input type="text" id="hist-search" placeholder="e.g. RELIANCE" oninput="buildHistory()" style="width:200px">
-    <span class="slbl" style="margin-left:8px">Config:</span>
+    <span class="slbl" style="margin-left:8px">Status:</span>
+    <button class="btn-filter active" id="hist-status-ALL" onclick="statusFilterHist('ALL',this)">All</button>
+    <button class="btn-filter" id="hist-status-Open" onclick="statusFilterHist('Open',this)">Hold</button>
+    <button class="btn-filter" id="hist-status-Closed" onclick="statusFilterHist('Closed',this)">Sold</button>
+    <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
+    <span class="slbl">Config:</span>
     <button class="btn-filter active" onclick="cfgFilter('hist','ALL',this)">All</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C1',this)">C1</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C2',this)">C2</button>
@@ -612,10 +617,6 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('hist','C50',this)">C50</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C51',this)">C51</button>
     <button class="btn-filter" onclick="cfgFilter('hist','C52',this)">C52</button>
-    <span class="slbl" style="margin-left:8px">Status:</span>
-    <button class="btn-filter active" id="hist-status-ALL" onclick="statusFilterHist('ALL',this)">All</button>
-    <button class="btn-filter" id="hist-status-Open" onclick="statusFilterHist('Open',this)">Hold</button>
-    <button class="btn-filter" id="hist-status-Closed" onclick="statusFilterHist('Closed',this)">Sold</button>
   </div>
   <div id="hist-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px 0"></div>
   <div id="hist-container"></div>
@@ -714,7 +715,15 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="cstrip">
     <span class="slbl">Search:</span>
     <input type="text" id="trades-search" placeholder="Search symbol..." oninput="renderTab('trades')" style="width:200px">
-    <span class="slbl" style="margin-left:8px">Config:</span>
+    <span class="slbl" style="margin-left:8px">Status:</span>
+    <button class="btn-filter active" id="trades-status-ALL" onclick="statusFilter('ALL',this)">All</button>
+    <button class="btn-filter" id="trades-status-Open" onclick="statusFilter('Open',this)">Open</button>
+    <button class="btn-filter" id="trades-status-Closed" onclick="statusFilter('Closed',this)">Closed</button>
+    <div style="flex:1"></div>
+    <button class="btn-green btn-sm" onclick="exportTab('trades')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('trades')">&#8595; CSV</button>
+    <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
+    <span class="slbl">Config:</span>
     <button class="btn-filter active" onclick="cfgFilter('trades','ALL',this)">All</button>
     <button class="btn-filter" onclick="cfgFilter('trades','C1',this)">C1</button>
     <button class="btn-filter" onclick="cfgFilter('trades','C2',this)">C2</button>
@@ -769,13 +778,6 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('trades','C50',this)">C50</button>
     <button class="btn-filter" onclick="cfgFilter('trades','C51',this)">C51</button>
     <button class="btn-filter" onclick="cfgFilter('trades','C52',this)">C52</button>
-    <span class="slbl" style="margin-left:8px">Status:</span>
-    <button class="btn-filter active" id="trades-status-ALL" onclick="statusFilter('ALL',this)">All</button>
-    <button class="btn-filter" id="trades-status-Open" onclick="statusFilter('Open',this)">Open</button>
-    <button class="btn-filter" id="trades-status-Closed" onclick="statusFilter('Closed',this)">Closed</button>
-    <div style="flex:1"></div>
-    <button class="btn-green btn-sm" onclick="exportTab('trades')">&#8595; Excel</button>
-    <button class="btn-teal btn-sm" onclick="exportCSVTab('trades')">&#8595; CSV</button>
   </div>
   <div class="card" style="padding:0 0 8px">
     <div class="table-area">
@@ -809,6 +811,16 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 <div id="tab-signals" class="hidden">
   <div class="tab-badges" id="sig-total-badges" style="margin-bottom:12px;"></div>
   <div class="cstrip">
+    <span class="slbl">Status:</span>
+    <select id="sig-status-filter" onchange="renderTab('signals')" style="min-width:130px;padding:5px 8px;font-size:13px;">
+      <option value="ALL">All</option>
+      <option value="Fresh Call">Fresh Call</option>
+      <option value="Open Call">Open Call</option>
+    </select>
+    <div style="flex:1"></div>
+    <button class="btn-green btn-sm" onclick="exportTab('signals')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('signals')">&#8595; CSV</button>
+    <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
     <span class="slbl">Config:</span>
     <button class="btn-filter active" onclick="sigCfgFilter('ALL',this)">All</button>
     <button class="btn-filter" onclick="sigCfgFilter('C1',this)">C1</button>
@@ -864,21 +876,12 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="sigCfgFilter('C50',this)">C50</button>
     <button class="btn-filter" onclick="sigCfgFilter('C51',this)">C51</button>
     <button class="btn-filter" onclick="sigCfgFilter('C52',this)">C52</button>
-    <span class="slbl" style="margin-left:8px">Status:</span>
-    <select id="sig-status-filter" onchange="renderTab('signals')" style="min-width:130px;padding:5px 8px;font-size:13px;">
-      <option value="ALL">All</option>
-      <option value="Fresh Call">Fresh Call</option>
-      <option value="Open Call">Open Call</option>
-    </select>
-    <div style="flex:1"></div>
-    <button class="btn-green btn-sm" onclick="exportTab('signals')">&#8595; Excel</button>
-    <button class="btn-teal btn-sm" onclick="exportCSVTab('signals')">&#8595; CSV</button>
   </div>
   <div class="card" style="padding:0 0 8px">
     <div class="table-area">
       <table><thead><tr>
         <th onclick="srt('signals',0)">#</th>
-        <th onclick="srt('signals',1)">DATE</th>
+        <th onclick="srt('signals',1)" style="white-space:nowrap;min-width:88px">DATE</th>
         <th onclick="srt('signals',2)">CFG</th>
         <th onclick="srt('signals',10)">STOCK</th>
         <th onclick="srt('signals',3)">1D %</th>
@@ -1338,6 +1341,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <button class="btn-sm btn-green" onclick="exportTabCSV('avgtrigger')">Export CSV</button>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <span class="slbl">Search:</span>
+      <input type="text" id="selltrig-search" placeholder="Symbol..." oninput="renderSellTrigger()" style="width:180px;padding:5px 8px;font-size:13px;">
+    </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <span class="slbl">CONFIG:</span>
       <button class="btn-filter active" onclick="avgTrigCfgFilter('ALL',this)">All</button>
@@ -1601,6 +1608,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128200; Market Data</h3>
       <span style="font-size:12px;color:var(--text3);">All open positions with latest price & P&amp;L</span>
+      <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
       <span class="slbl">Config:</span>
       <button class="btn-filter active" onclick="mdCfgFilter('ALL',this)">All</button>
       <button class="btn-filter" onclick="mdCfgFilter('C1',this)">C1</button>
@@ -1685,6 +1693,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128202; Performance Analytics</h3>
       <span style="font-size:12px;color:var(--text3);">Deep dive into closed and open trade statistics</span>
+      <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
       <span class="slbl">Config:</span>
       <button class="btn-filter active" onclick="perfCfgFilter('ALL',this)">All</button>
       <button class="btn-filter" onclick="perfCfgFilter('C1',this)">C1</button>
@@ -2946,6 +2955,8 @@ function renderSellTrigger(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
   if(sellTrigCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===sellTrigCfg);
   if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+  const _stq=(document.getElementById('selltrig-search')||{}).value||'';
+  if(_stq) rows=rows.filter(r=>(r.SYMBOL||'').toLowerCase().includes(_stq.toLowerCase()));
   rows=rows.filter(r=>{
     const ltp=parseFloat(r.CURRENT_LTP)||0;
     const tgt=parseFloat(r.TARGET_PRICE)||0;
