@@ -116,6 +116,25 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 .sdm-close{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px;}
 .sdm-close:hover{background:rgba(255,255,255,.15);}
 .sdm-body{padding:16px;overflow-y:auto;flex:1;}
+
+/* ── Market Data Batch Card ──────────────────────────── */
+.batch-card{background:var(--surface);border:1px solid var(--surface3);border-radius:12px;padding:14px 18px;margin-bottom:14px;}
+.batch-card-hdr{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--navy);}
+.batch-card-hdr .bc-stat span{color:var(--text3);font-weight:400;margin-right:3px;}
+.batch-rows{display:flex;gap:10px;flex-wrap:wrap;}
+.brow{flex:1;min-width:170px;border-radius:8px;padding:10px 14px;}
+.brow.g{background:#dcfce7;border:1px solid #86efac;}
+.brow.l{background:#ffe4e6;border:1px solid #fca5a5;}
+.brow.f{background:#f1f5f9;border:1px solid #cbd5e1;}
+.brow.n{background:#dbeafe;border:1px solid #93c5fd;}
+.brow.nn{background:#ffe4e6;border:1px solid #fca5a5;}
+.brow .bl{font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.brow .bv{font-size:17px;font-weight:800;margin:3px 0 2px;}
+.brow.g .bv,.brow.n .bv{color:#059669;}
+.brow.l .bv,.brow.nn .bv{color:#dc2626;}
+.brow.f .bv{color:#64748b;}
+.brow .bs{font-size:12px;color:#475569;}
+
 </style>
 </head>
 <body>
@@ -214,6 +233,32 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="ovCfgFilter('C24',this)">C24</button>
       <button class="btn-filter" onclick="ovCfgFilter('C25',this)">C25</button>
       <button class="btn-filter" onclick="ovCfgFilter('C26',this)">C26</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C27',this)">C27</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C28',this)">C28</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C29',this)">C29</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C30',this)">C30</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C31',this)">C31</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C32',this)">C32</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C33',this)">C33</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C34',this)">C34</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C35',this)">C35</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C36',this)">C36</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C37',this)">C37</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C38',this)">C38</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C39',this)">C39</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C40',this)">C40</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C41',this)">C41</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C42',this)">C42</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C43',this)">C43</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C44',this)">C44</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C45',this)">C45</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C46',this)">C46</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C47',this)">C47</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C48',this)">C48</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C49',this)">C49</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C50',this)">C50</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C51',this)">C51</button>
+      <button class="btn-filter" onclick="ovCfgFilter('C52',this)">C52</button>
     </div>
 <div id="ov-stats" class="stat-grid"></div>
   <div class="card" style="padding:0 0 8px">
@@ -262,7 +307,34 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('open','C24',this)">C24</button>
     <button class="btn-filter" onclick="cfgFilter('open','C25',this)">C25</button>
     <button class="btn-filter" onclick="cfgFilter('open','C26',this)">C26</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C27',this)">C27</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C28',this)">C28</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C29',this)">C29</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C30',this)">C30</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C31',this)">C31</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C32',this)">C32</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C33',this)">C33</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C34',this)">C34</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C35',this)">C35</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C36',this)">C36</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C37',this)">C37</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C38',this)">C38</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C39',this)">C39</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C40',this)">C40</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C41',this)">C41</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C42',this)">C42</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C43',this)">C43</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C44',this)">C44</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C45',this)">C45</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C46',this)">C46</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C47',this)">C47</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C48',this)">C48</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C49',this)">C49</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C50',this)">C50</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C51',this)">C51</button>
+    <button class="btn-filter" onclick="cfgFilter('open','C52',this)">C52</button>
     <div style="flex:1"></div>
+    <input type="text" id="open-search" placeholder="🔍 Search symbol..." oninput="renderTab('open')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
     <button class="btn-green btn-sm" onclick="exportTab('open')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('open')">&#8595; CSV</button>
   </div>
@@ -325,12 +397,39 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('closed','C24',this)">C24</button>
     <button class="btn-filter" onclick="cfgFilter('closed','C25',this)">C25</button>
     <button class="btn-filter" onclick="cfgFilter('closed','C26',this)">C26</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C27',this)">C27</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C28',this)">C28</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C29',this)">C29</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C30',this)">C30</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C31',this)">C31</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C32',this)">C32</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C33',this)">C33</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C34',this)">C34</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C35',this)">C35</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C36',this)">C36</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C37',this)">C37</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C38',this)">C38</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C39',this)">C39</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C40',this)">C40</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C41',this)">C41</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C42',this)">C42</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C43',this)">C43</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C44',this)">C44</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C45',this)">C45</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C46',this)">C46</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C47',this)">C47</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C48',this)">C48</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C49',this)">C49</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C50',this)">C50</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C51',this)">C51</button>
+    <button class="btn-filter" onclick="cfgFilter('closed','C52',this)">C52</button>
     <span class="slbl" style="margin-left:8px">Result:</span>
     <button class="btn-filter active" id="closed-res-ALL" onclick="resFilter('closed','ALL',this)">All</button>
     <button class="btn-filter" id="closed-res-P" onclick="resFilter('closed','P',this)">Profit</button>
     <button class="btn-filter" id="closed-res-L" onclick="resFilter('closed','L',this)">Loss</button>
     <button class="btn-filter" id="closed-res-FE" onclick="resFilter('closed','FE',this)">FE Only</button>
     <div style="flex:1"></div>
+    <input type="text" id="closed-search" placeholder="🔍 Search symbol..." oninput="renderTab('closed')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
     <button class="btn-green btn-sm" onclick="exportTab('closed')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('closed')">&#8595; CSV</button>
   </div>
@@ -392,7 +491,34 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('fe','C24',this)">C24</button>
     <button class="btn-filter" onclick="cfgFilter('fe','C25',this)">C25</button>
     <button class="btn-filter" onclick="cfgFilter('fe','C26',this)">C26</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C27',this)">C27</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C28',this)">C28</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C29',this)">C29</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C30',this)">C30</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C31',this)">C31</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C32',this)">C32</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C33',this)">C33</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C34',this)">C34</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C35',this)">C35</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C36',this)">C36</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C37',this)">C37</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C38',this)">C38</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C39',this)">C39</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C40',this)">C40</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C41',this)">C41</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C42',this)">C42</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C43',this)">C43</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C44',this)">C44</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C45',this)">C45</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C46',this)">C46</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C47',this)">C47</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C48',this)">C48</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C49',this)">C49</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C50',this)">C50</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C51',this)">C51</button>
+    <button class="btn-filter" onclick="cfgFilter('fe','C52',this)">C52</button>
     <div style="flex:1"></div>
+    <input type="text" id="fe-search" placeholder="🔍 Search symbol..." oninput="renderTab('fe')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
     <button class="btn-green btn-sm" onclick="exportTab('fe')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('fe')">&#8595; CSV</button>
   </div>
@@ -981,6 +1107,32 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="sellTrigCfgFilter('C24',this)">C24</button>
       <button class="btn-filter" onclick="sellTrigCfgFilter('C25',this)">C25</button>
       <button class="btn-filter" onclick="sellTrigCfgFilter('C26',this)">C26</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C27',this)">C27</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C28',this)">C28</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C29',this)">C29</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C30',this)">C30</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C31',this)">C31</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C32',this)">C32</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C33',this)">C33</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C34',this)">C34</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C35',this)">C35</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C36',this)">C36</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C37',this)">C37</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C38',this)">C38</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C39',this)">C39</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C40',this)">C40</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C41',this)">C41</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C42',this)">C42</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C43',this)">C43</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C44',this)">C44</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C45',this)">C45</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C46',this)">C46</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C47',this)">C47</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C48',this)">C48</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C49',this)">C49</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C50',this)">C50</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C51',this)">C51</button>
+      <button class="btn-filter" onclick="sellTrigCfgFilter('C52',this)">C52</button>
     </div>
     <div id="selltrigger-badges" class="tab-badges"></div>
     <div class="table-area">
@@ -1098,6 +1250,32 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="mdCfgFilter('C24',this)">C24</button>
       <button class="btn-filter" onclick="mdCfgFilter('C25',this)">C25</button>
       <button class="btn-filter" onclick="mdCfgFilter('C26',this)">C26</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C27',this)">C27</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C28',this)">C28</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C29',this)">C29</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C30',this)">C30</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C31',this)">C31</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C32',this)">C32</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C33',this)">C33</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C34',this)">C34</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C35',this)">C35</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C36',this)">C36</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C37',this)">C37</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C38',this)">C38</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C39',this)">C39</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C40',this)">C40</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C41',this)">C41</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C42',this)">C42</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C43',this)">C43</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C44',this)">C44</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C45',this)">C45</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C46',this)">C46</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C47',this)">C47</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C48',this)">C48</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C49',this)">C49</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C50',this)">C50</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C51',this)">C51</button>
+      <button class="btn-filter" onclick="mdCfgFilter('C52',this)">C52</button>
       <div style="display:flex;gap:6px;margin-left:auto;">
         <button class="btn-filter active" id="md-all" onclick="mdSubTab('all',this)">All</button>
         <button class="btn-filter" id="md-gain" onclick="mdSubTab('gainers',this)">&#9650; Gainers</button>
@@ -1106,6 +1284,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       </div>
     </div>
     <div id="marketdata-badges" class="tab-badges"></div>
+    <div id="md-batch-card" class="batch-card"></div>
     <div class="table-area">
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
@@ -1628,6 +1807,8 @@ function getFiltered(tab){
     rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
     if(state.open.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.open.cfg);
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _os=(document.getElementById('open-search')||{}).value||'';
+    if(_os) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_os.toUpperCase()));
   }
   else if(tab==='closed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
@@ -1636,6 +1817,8 @@ function getFiltered(tab){
     if(state.closed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
     if(state.closed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _cs=(document.getElementById('closed-search')||{}).value||'';
+    if(_cs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_cs.toUpperCase()));
   }
   else if(tab==='fe'){
     const cfgDurMap={};
@@ -1643,6 +1826,8 @@ function getFiltered(tab){
     rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
     if(state.fe.cfg!=='ALL') rows=rows.filter(r=>r.CONFIG===state.fe.cfg);
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _fs=(document.getElementById('fe-search')||{}).value||'';
+    if(_fs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_fs.toUpperCase()));
     rows=rows.map(r=>{
       const maxD=cfgDurMap[r.CONFIG]||90;
       const held=parseInt(r.MARKET_DAYS)||0;
@@ -2519,6 +2704,55 @@ function renderAvgHistory(){
 }
 
 
+function renderBatchCard(rows) {
+  const el = document.getElementById('md-batch-card');
+  if (!el) return;
+  if (!rows.length) { el.style.display='none'; return; }
+  el.style.display = '';
+
+  const totalInv = rows.reduce((s,r)=>s+(parseFloat(r.TOTAL_INVESTMENT)||0), 0);
+  const gainers  = rows.filter(r=>(parseFloat(r.CHG_1D)||0)>0);
+  const losers   = rows.filter(r=>(parseFloat(r.CHG_1D)||0)<0);
+  const flats    = rows.filter(r=>(parseFloat(r.CHG_1D)||0)===0 || r.CHG_1D==null||r.CHG_1D===''||r.CHG_1D===undefined);
+  
+  const gPnl = gainers.reduce((s,r)=>{const c=parseFloat(r.CHG_1D)||0; const ltp=parseFloat(r.CURRENT_LTP)||0; const qty=parseInt(r.TOTAL_QTY)||0; return s+((ltp-(ltp/(1+c/100)))*qty);}, 0);
+  const lPnl = losers.reduce((s,r)=>{const c=parseFloat(r.CHG_1D)||0; const ltp=parseFloat(r.CURRENT_LTP)||0; const qty=parseInt(r.TOTAL_QTY)||0; return s+((ltp-(ltp/(1+c/100)))*qty);}, 0);
+  const netPnl = gPnl + lPnl;
+
+  const fmt = v => (v>=0?'+':'') + '₹' + fN(Math.abs(v));
+  const pct  = v => totalInv>0 ? ((v>=0?'+':'')+f2(v/totalInv*100)+'% of investment') : '0%';
+
+  el.innerHTML = `
+    <div class="batch-card-hdr">
+      <span class="bc-stat"><span>Holding:</span>${rows.length}</span>
+      <span class="bc-stat" style="color:#059669"><span>▲ Gainers:</span>${gainers.length}</span>
+      <span class="bc-stat" style="color:#dc2626"><span>▼ Losers:</span>${losers.length}</span>
+      <span class="bc-stat" style="color:#64748b"><span>— Flat:</span>${flats.length}</span>
+    </div>
+    <div class="batch-rows">
+      <div class="brow g">
+        <div class="bl">▲ Gainers Today (${gainers.length} stocks)</div>
+        <div class="bv">${gPnl>=0?'+':''}₹${fN(Math.abs(gPnl))}</div>
+        <div class="bs">${totalInv>0?((gPnl>=0?'+':'')+f2(gPnl/totalInv*100)+'% of investment'):''}</div>
+      </div>
+      <div class="brow l">
+        <div class="bl">▼ Losers Today (${losers.length} stocks)</div>
+        <div class="bv">${lPnl<=0?'':'+'}₹${fN(Math.abs(lPnl))}</div>
+        <div class="bs">${totalInv>0?((lPnl>=0?'+':'')+f2(lPnl/totalInv*100)+'% of investment'):''}</div>
+      </div>
+      <div class="brow f">
+        <div class="bl">— Flat Today (${flats.length} stocks)</div>
+        <div class="bv">+₹0.00</div>
+        <div class="bs">+0.00% of investment</div>
+      </div>
+      <div class="brow ${netPnl>=0?'n':'nn'}">
+        <div class="bl">Net Recovery (${rows.length} stocks)</div>
+        <div class="bv">${netPnl>=0?'+':''}₹${fN(netPnl)}</div>
+        <div class="bs">${totalInv>0?((netPnl>=0?'+':'')+f2(netPnl/totalInv*100)+'% of ₹'+fN(totalInv)+' invested'):''}</div>
+      </div>
+    </div>`;
+}
+
 function renderMarketData(){
   let rows=ALL_ROWS.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
   if(mdCfg!=='ALL') rows=rows.filter(r=>r.CONFIG===mdCfg);
@@ -2527,6 +2761,7 @@ function renderMarketData(){
   else if(mdSubFilter==='losers') rows=rows.filter(r=>(parseFloat(r.GAIN_PCT)||0)<0);
   rows.sort((a,b)=>(parseFloat(b.GAIN_PCT)||0)-(parseFloat(a.GAIN_PCT)||0));
   renderBadges('marketdata-badges', rows, 'open');
+  renderBatchCard(rows);
   const body=document.getElementById('marketdata-body');
   const pgSzEl=document.getElementById('marketdata-pgsize');
   const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
@@ -3029,7 +3264,7 @@ async function renderPortfolio() {
 
   // Only sync from GitHub if local portfolio is empty (avoids race condition with add)
   const local = getPortfolio();
-  if (!local.length) {
+  if (!local.length && !_portfolioModified) {
     const synced = await syncPortfolioFromGitHub();
     if (synced && synced.length) savePortfolio(synced);
   }
@@ -3113,11 +3348,13 @@ function addToPortfolio(data) {
   }
 }
 
+let _portfolioModified = false;
 async function deletePortfolioItem(idx) {
   const arr = getPortfolio();
   const sym = arr[idx] ? arr[idx].symbol : '?';
   if (!confirm('Delete ' + sym + ' from Portfolio?')) return;
   arr.splice(idx, 1);
+  _portfolioModified = true;
   savePortfolio(arr);
   await _pushPortfolioToGitHub(arr);
   renderPortfolio();
@@ -3152,6 +3389,7 @@ async function portfolioManualAdd() {
     target: avg * 1.05,
     status: ltp >= avg * 1.05 ? 'Yes' : 'No'
   });
+  _portfolioModified = true;
   savePortfolio(arr);
   await _pushPortfolioToGitHub(arr);
   closePortfolioAddModal();
