@@ -426,7 +426,8 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('closed','C50',this)">C50</button>
     <button class="btn-filter" onclick="cfgFilter('closed','C51',this)">C51</button>
     <button class="btn-filter" onclick="cfgFilter('closed','C52',this)">C52</button>
-    <span class="slbl" style="margin-left:8px">Result:</span>
+    <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
+    <span class="slbl">Result:</span>
     <button class="btn-filter active" id="closed-res-ALL" onclick="resFilter('closed','ALL',this)">All</button>
     <button class="btn-filter" id="closed-res-P" onclick="resFilter('closed','P',this)">Profit</button>
     <button class="btn-filter" id="closed-res-L" onclick="resFilter('closed','L',this)">Loss</button>
@@ -686,8 +687,14 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <button class="btn-filter" onclick="cfgFilter('ledger','C50',this)">C50</button>
     <button class="btn-filter" onclick="cfgFilter('ledger','C51',this)">C51</button>
     <button class="btn-filter" onclick="cfgFilter('ledger','C52',this)">C52</button>
+    <div style="flex-basis:100%;height:0;margin:0;padding:0"></div>
+    <label style="font-size:12px;color:var(--text2);">Exit From:</label>
+    <input type="date" id="ledger-from" onchange="renderLedger()" style="padding:3px 6px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;">
+    <label style="font-size:12px;color:var(--text2);">To:</label>
+    <input type="date" id="ledger-to" onchange="renderLedger()" style="padding:3px 6px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;">
     <div style="flex:1"></div>
     <button class="btn-green btn-sm" onclick="exportTab('ledger')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('ledger')">&#8595; CSV</button>
   </div>
   <div class="card" style="padding:0 0 8px">
     <div class="table-area">
@@ -1341,10 +1348,6 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <button class="btn-sm btn-green" onclick="exportTabCSV('avgtrigger')">Export CSV</button>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span class="slbl">Search:</span>
-      <input type="text" id="selltrig-search" placeholder="Symbol..." oninput="renderSellTrigger()" style="width:180px;padding:5px 8px;font-size:13px;">
-    </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <span class="slbl">CONFIG:</span>
       <button class="btn-filter active" onclick="avgTrigCfgFilter('ALL',this)">All</button>
@@ -1432,10 +1435,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#8682; Sell Trigger</h3>
       <span style="font-size:12px;color:var(--text3);">Open positions within 3% of target price — sell candidates</span>
-      <div style="margin-left:auto;display:flex;gap:6px;">
-        <button class="btn-sm btn-green" onclick="exportTabCSV('selltrigger')">Export CSV</button>
       </div>
-    </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <span class="slbl">CONFIG:</span>
       <button class="btn-filter active" onclick="sellTrigCfgFilter('ALL',this)">All</button>
@@ -1493,7 +1493,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="sellTrigCfgFilter('C51',this)">C51</button>
       <button class="btn-filter" onclick="sellTrigCfgFilter('C52',this)">C52</button>
     </div>
-    <div id="selltrigger-badges" class="tab-badges"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">  <div id="selltrigger-badges" class="tab-badges" style="flex:1;min-width:0;"></div>  <input id="selltrig-search" type="text" placeholder="🔍 Search symbol..." oninput="renderSellTrigger()" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">  <button class="btn-sm btn-green" onclick="exportTabCSV('selltrigger')">Export CSV</button></div>
     <div class="table-area">
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
@@ -1514,10 +1514,6 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#9400; Avg History</h3>
       <span style="font-size:12px;color:var(--text3);">Stocks with averaging (BUY_COUNT &gt; 1) — grouped by date &amp; stock</span>
-      <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
-         <span class="slbl">Search:</span>
-         <input type="text" id="avghist-search" placeholder="Search symbol..." oninput="renderAvgHistory()" style="width:140px;padding:5px 8px;font-size:13px;">
-      </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <span class="slbl">Config:</span>
@@ -1575,11 +1571,12 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="avgHistCfgFilter('C50',this)">C50</button>
       <button class="btn-filter" onclick="avgHistCfgFilter('C51',this)">C51</button>
       <button class="btn-filter" onclick="avgHistCfgFilter('C52',this)">C52</button>
-      <div style="margin-left:auto;display:flex;gap:6px;">
-        <button class="btn-sm btn-green" onclick="exportTabCSV('avghistory')">Export CSV</button>
-      </div>
     </div>
-    <div id="avghistory-badges" class="tab-badges"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+      <div id="avghistory-badges" class="tab-badges" style="flex:1;min-width:0;"></div>
+      <input type="text" id="avghist-search" placeholder="🔍 Search symbol..." oninput="renderAvgHistory()" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
+      <button class="btn-sm btn-green" onclick="exportTabCSV('avghistory')">Export CSV</button>
+    </div>
     <div class="table-area">
       <table><thead><tr>
         <th style="width:36px">#</th>
@@ -1664,15 +1661,15 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter" onclick="mdCfgFilter('C50',this)">C50</button>
       <button class="btn-filter" onclick="mdCfgFilter('C51',this)">C51</button>
       <button class="btn-filter" onclick="mdCfgFilter('C52',this)">C52</button>
-      <div style="display:flex;gap:6px;margin-left:auto;">
-        <button class="btn-filter active" id="md-all" onclick="mdSubTab('all',this)">All</button>
-        <button class="btn-filter" id="md-gain" onclick="mdSubTab('gainers',this)">&#9650; Gainers</button>
-        <button class="btn-filter" id="md-loss" onclick="mdSubTab('losers',this)">&#9660; Losers</button>
-        <button class="btn-sm btn-green" onclick="exportTabCSV('marketdata')">Export CSV</button>
-      </div>
     </div>
     <div id="marketdata-badges" class="tab-badges"></div>
-    <div id="md-batch-card" class="batch-card"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+      <div id="md-batch-card" class="batch-card" style="flex:1;min-width:0;"></div>
+      <button class="btn-filter active" id="md-all" onclick="mdSubTab('all',this)">All</button>
+      <button class="btn-filter" id="md-gain" onclick="mdSubTab('gainers',this)">&#9650; Gainers</button>
+      <button class="btn-filter" id="md-loss" onclick="mdSubTab('losers',this)">&#9660; Losers</button>
+      <button class="btn-sm btn-green" onclick="exportTabCSV('marketdata')">Export CSV</button>
+    </div>
     <div class="table-area">
       <table><thead><tr>
         <th>#</th><th>CFG</th><th>Symbol</th><th>Signal Date</th>
@@ -2268,7 +2265,11 @@ function getFiltered(tab){
       map[d].pnl+=p;
       if(p>=0)map[d].profit++;else map[d].loss++;
     });
+    const _lf=(document.getElementById('ledger-from')||{}).value||'';
+    const _lt=(document.getElementById('ledger-to')||{}).value||'';
     rows = Object.values(map).sort((a,b)=>a.date<b.date?1:-1);
+    if(_lf) rows=rows.filter(r=>r.date>=_lf);
+    if(_lt) rows=rows.filter(r=>r.date<=_lt);
     // Add cumulative
     let cum=0;
     const sorted=[...rows].sort((a,b)=>a.date<b.date?-1:1);
@@ -2470,6 +2471,7 @@ function rowHTML(tab,r,n){
 }
 
 function renderLedger(rows){
+  if(rows===undefined){renderTab('ledger');return;}
   const body=document.getElementById('ledger-body');
   if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No closed trades yet.</td></tr>';
     document.getElementById('ledger-info').textContent='';return;}
