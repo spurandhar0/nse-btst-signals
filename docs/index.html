@@ -167,7 +167,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 </div>
 
 <div id="liveBanner">
-  &#10003; Last simulation: <strong id="bannerDate">25-May-2026 20:25 IST</strong> &nbsp;|&nbsp; Data date: <strong>2026-05-25</strong>
+  &#10003; Last simulation: <strong id="bannerDate">25-May-2026 20:25 IST</strong> &nbsp;|&nbsp; Data date: <strong id="bannerDataDate">2026-05-25</strong>
 </div>
 
 <div class="container">
@@ -2001,6 +2001,18 @@ let _dataReady = false;
 
     _dataReady = true;
     if (banner) banner.innerHTML = origBanner;
+
+    // Dynamically update Data date from sim_meta.json (bhavcopy date)
+    try {
+      const metaRes = await fetch('data/sim_meta.json');
+      if (metaRes.ok) {
+        const simMeta = await metaRes.json();
+        const ddEl = document.getElementById('bannerDataDate');
+        if (ddEl && simMeta.last_date) ddEl.textContent = simMeta.last_date;
+        const bdEl = document.getElementById('bannerDate');
+        if (bdEl && simMeta.generated_at) bdEl.textContent = simMeta.generated_at;
+      }
+    } catch(e) { /* sim_meta fetch failed — keep static baked-in values */ }
 
     // Rebuild open-position helpers
     openSymbols.clear();
