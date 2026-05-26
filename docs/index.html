@@ -3499,7 +3499,7 @@ function buildOverview(){
 // ─── MTF OUTPUT ──────────────────────────────────────────────────────────────
 let MTF_SYMS = null;
 
-async async function _loadMTFSymbols() {
+async function _loadMTFSymbols() {
   if (MTF_SYMS !== null) return MTF_SYMS;
   try {
     const r = await fetch('data/mtf_symbols.json');
