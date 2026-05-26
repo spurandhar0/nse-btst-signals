@@ -1827,19 +1827,32 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#127775; MTF Output</h3>
       <span style="font-size:12px;color:var(--text3);">Open positions: MTF eligible &middot; LTP below avg buy &middot; not in Force Exit &middot; not in active Portfolio</span>
-      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <label style="font-size:12px;font-weight:600;color:var(--text2);">Investment &#8377;</label>
         <input type="number" id="mtf-inv-input" value="5000" min="100" step="500"
-               style="width:100px;padding:5px 8px;font-size:13px;border:1px solid var(--border);border-radius:6px;"
+               style="width:90px;padding:5px 8px;font-size:13px;border:1px solid var(--border);border-radius:6px;"
                onchange="mtfInvChange()">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);">Target%</label>
+        <input type="number" id="mtf-tgt-input" value="5" min="1" max="100" step="0.5"
+               style="width:65px;padding:5px 8px;font-size:13px;border:1px solid var(--border);border-radius:6px;"
+               onchange="mtfTgtChange()">
         <button class="btn-sm btn-green" onclick="exportMTFCSV()">&#8595; CSV</button>
       </div>
     </div>
     <div class="table-area">
       <table><thead><tr>
-        <th>#</th><th>Symbol</th><th>Signal Date</th><th>Signal Price &#8377;</th>
-        <th>Duration</th><th>Avg Buy &#8377;</th><th>Current LTP &#8377;</th><th>Drop%</th>
-        <th>Qty</th><th>Investment &#8377;</th><th>Target (5%) &#8377;</th><th>Action</th>
+        <th onclick="mtfSort('idx')" style="cursor:pointer" id="mth-idx">#</th>
+        <th onclick="mtfSort('symbol')" style="cursor:pointer" id="mth-symbol">Symbol</th>
+        <th onclick="mtfSort('sigdate')" style="cursor:pointer" id="mth-sigdate">Signal Date</th>
+        <th onclick="mtfSort('sigprice')" style="cursor:pointer" id="mth-sigprice">Signal Price &#8377;</th>
+        <th onclick="mtfSort('dur')" style="cursor:pointer" id="mth-dur">Duration</th>
+        <th onclick="mtfSort('avg')" style="cursor:pointer" id="mth-avg">Avg Buy &#8377;</th>
+        <th onclick="mtfSort('ltp')" style="cursor:pointer" id="mth-ltp">Current LTP &#8377;</th>
+        <th onclick="mtfSort('drop')" style="cursor:pointer" id="mth-drop">Drop% &#9660;</th>
+        <th onclick="mtfSort('qty')" style="cursor:pointer" id="mth-qty">Qty</th>
+        <th onclick="mtfSort('inv')" style="cursor:pointer" id="mth-inv">Investment &#8377;</th>
+        <th onclick="mtfSort('target')" style="cursor:pointer" id="mth-target">Target &#8377;</th>
+        <th>Action</th>
       </tr></thead><tbody id="mtf-body"><tr><td colspan="12" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
     </div>
     <div class="pager"><span class="info" id="mtf-info"></span><div style="flex:1"></div>
@@ -1852,7 +1865,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 
 <div id="tab-portfolio" class="hidden">
   <div class="card">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
       <h3 style="margin:0;color:var(--navy);font-size:16px;font-weight:800;">&#128197; Portfolio</h3>
       <span style="font-size:12px;color:var(--text3);">Your holdings &mdash; synced via GitHub &middot; LTP from sim data &middot; &#127902; = target met</span>
       <div style="margin-left:auto;display:flex;gap:6px;">
@@ -1861,11 +1874,30 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <button class="btn-sm" style="background:#64748b;color:#fff;" onclick="showPATModal()">&#9881; Settings</button>
       </div>
     </div>
+    <!-- Portfolio Stats Cards -->
+    <div id="port-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px;"></div>
+    <!-- Search + Filter row -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <input type="text" id="port-search" placeholder="&#128269; Search symbol…"
+             style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;min-width:160px;"
+             oninput="portSearchChange()">
+      <button id="port-f-all" class="btn-filter active" onclick="portFilter('ALL',this)">All</button>
+      <button id="port-f-open" class="btn-filter" onclick="portFilter('Open',this)">Open (No Target)</button>
+      <button id="port-f-closed" class="btn-filter" onclick="portFilter('Closed',this)">Closed (Target Hit)</button>
+    </div>
     <div class="table-area">
       <table><thead><tr>
-        <th>#</th><th>Symbol</th><th>Added Date</th><th>Avg Buy &#8377;</th>
-        <th>Qty</th><th>Investment &#8377;</th><th>Current LTP &#8377;</th><th>Drop%</th>
-        <th>Target &#8377;</th><th>Status</th><th>Action</th>
+        <th>#</th>
+        <th onclick="portSort('symbol')" style="cursor:pointer" id="pth-symbol">Symbol</th>
+        <th onclick="portSort('date')" style="cursor:pointer" id="pth-date">Added Date</th>
+        <th onclick="portSort('avg')" style="cursor:pointer" id="pth-avg">Avg Buy &#8377;</th>
+        <th onclick="portSort('qty')" style="cursor:pointer" id="pth-qty">Qty</th>
+        <th onclick="portSort('inv')" style="cursor:pointer" id="pth-inv">Investment &#8377;</th>
+        <th onclick="portSort('ltp')" style="cursor:pointer" id="pth-ltp">Current LTP &#8377;</th>
+        <th onclick="portSort('drop')" style="cursor:pointer" id="pth-drop">Drop%</th>
+        <th onclick="portSort('target')" style="cursor:pointer" id="pth-target">Target &#8377;</th>
+        <th onclick="portSort('status')" style="cursor:pointer" id="pth-status">Status</th>
+        <th>Action</th>
       </tr></thead><tbody id="portfolio-body"><tr><td colspan="11" class="empty">Click the tab to load&hellip;</td></tr></tbody></table>
     </div>
     <div class="pager"><span class="info" id="portfolio-info"></span><div style="flex:1"></div>
@@ -2077,8 +2109,8 @@ const state = {
   marketdata:  {cfg:'ALL', page:1},
   avgtrigger:  {page:1},
   selltrigger: {page:1},
-  mtf:         {page:1},
-  portfolio:   {page:1},
+  mtf:         {page:1, sort:'drop', asc:true},
+  portfolio:   {page:1, sort:'symbol', asc:true, status:'ALL', search:''},
   perf:        {cfg:'ALL'},
   ledger:      {cfg:'ALL', page:1, sort:0, asc:false},
   trades:      {cfg:'ALL', status:'ALL', page:1, sort:0, asc:false},
@@ -3521,7 +3553,6 @@ async function renderMTFOutput() {
     body.innerHTML = '<tr><td colspan="12" class="empty">⚠ Failed to load MTF symbols (data/mtf_symbols.json missing)</td></tr>';
     return;
   }
-  // Filter 2: MTF list (header already stripped)
   const mtfSet = new Set(syms.map(s => s.trim().toUpperCase()));
 
   // Filter 3: FE tab symbols — open positions using >= 60% of max duration
@@ -3533,51 +3564,73 @@ async function renderMTFOutput() {
     if ((parseInt(r.MARKET_DAYS)||0) >= maxD * 0.6) feSyms.add((r.SYMBOL||'').toUpperCase());
   });
 
-  // Portfolio: only apply if portfolio has entries (empty portfolio = skip filter)
+  // Portfolio filter
   const portArr = getPortfolio ? (getPortfolio() || []) : [];
   const portHasData = portArr.length > 0;
   const portExclude = new Set();
-  if (portHasData) {
-    portArr.forEach(p => {
-      if ((p.status||'') === 'No') portExclude.add((p.symbol||'').toUpperCase());
-    });
-  }
+  if (portHasData) portArr.forEach(p => { if ((p.status||'')==='No') portExclude.add((p.symbol||'').toUpperCase()); });
 
-  // Aggregate open positions: FILTER FIRST, then deduplicate
-  // Step 1: Apply all filters to every open row individually
+  // Target%
+  const tgtPct = (parseFloat(localStorage.getItem('btst_mtf_target') || '5') || 5) / 100;
+  const inp = document.getElementById('mtf-tgt-input');
+  if (inp && !inp._userChanged) inp.value = (tgtPct * 100).toFixed(1);
+
+  // Investment
+  const inv = parseInt(localStorage.getItem('btst_mtf_inv') || '5000') || 5000;
+  const invInp = document.getElementById('mtf-inv-input');
+  if (invInp) invInp.value = inv;
+
+  // Build pass map: Filter first, then deduplicate
   const passMap = {};
+  const today = new Date();
   ALL_ROWS.filter(r => r.STATUS==='Open').forEach(r => {
     const sym = (r.SYMBOL||'').toUpperCase();
     const ltp = parseFloat(r.CURRENT_LTP) || 0;
     const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
-    // Filter 1: LTP < Avg Buy (open position underwater)
     if (avg === 0 || ltp >= avg) return;
-    // Filter 2: Must be in MTF list
     if (!mtfSet.has(sym)) return;
-    // Filter 3: Exclude symbols in FE tab
     if (feSyms.has(sym)) return;
-    // Filter 4: Hide LTP < ₹100
     if (ltp < 100) return;
-    // Portfolio: skip if portfolio empty; otherwise exclude marked symbols
     if (portHasData && portExclude.has(sym)) return;
-    // Step 2: Deduplicate — keep row with most negative drop (largest gap below avg)
-    const drop = ltp - avg; // most negative = most underwater
+    const drop = ltp - avg;
+    const sigDate = r.SIGNAL_DATE || '';
+    const sigPrice = parseFloat(r.SIGNAL_CLOSE || r.B0_Close || 0) || avg;
+    const sigDt = sigDate ? new Date(sigDate) : null;
+    const durDays = sigDt ? Math.max(0, Math.round((today - sigDt) / 86400000)) : 0;
     if (!passMap[sym] || drop < passMap[sym].drop) {
-      passMap[sym] = { r, avg, drop };
+      passMap[sym] = { r, avg, drop, sigDate, sigPrice, durDays };
     }
   });
 
-  const inv = parseInt(localStorage.getItem('btst_mtf_inv') || '5000') || 5000;
-  const inp = document.getElementById('mtf-inv-input');
-  if (inp) inp.value = inv;
-
   let filtered = Object.values(passMap);
 
-  // Sort: most dropped first (item.drop is ltp-avg, most negative = most underwater)
+  // Sort
+  const st = state.mtf || {};
+  const sortCol = st.sort || 'drop';
+  const asc = st.asc !== undefined ? st.asc : true;
   filtered.sort(function(a, b) {
-    const pctA = a.avg > 0 ? a.drop / a.avg : 0;
-    const pctB = b.avg > 0 ? b.drop / b.avg : 0;
-    return pctA - pctB; // most negative first
+    let va, vb;
+    if (sortCol === 'symbol')   { va = a.r.SYMBOL||'';  vb = b.r.SYMBOL||''; return asc ? va.localeCompare(vb) : vb.localeCompare(va); }
+    if (sortCol === 'sigdate')  { va = a.sigDate;        vb = b.sigDate; }
+    if (sortCol === 'sigprice') { va = a.sigPrice;       vb = b.sigPrice; }
+    if (sortCol === 'dur')      { va = a.durDays;        vb = b.durDays; }
+    if (sortCol === 'avg')      { va = a.avg;            vb = b.avg; }
+    if (sortCol === 'ltp')      { va = parseFloat(a.r.CURRENT_LTP)||0; vb = parseFloat(b.r.CURRENT_LTP)||0; }
+    if (sortCol === 'drop')     { va = a.avg>0 ? a.drop/a.avg : 0; vb = b.avg>0 ? b.drop/b.avg : 0; }
+    if (sortCol === 'qty')      { va = Math.floor(inv/(parseFloat(a.r.CURRENT_LTP)||1)); vb = Math.floor(inv/(parseFloat(b.r.CURRENT_LTP)||1)); }
+    if (sortCol === 'inv')      { va = Math.floor(inv/(parseFloat(a.r.CURRENT_LTP)||1))*(parseFloat(a.r.CURRENT_LTP)||0); vb = Math.floor(inv/(parseFloat(b.r.CURRENT_LTP)||1))*(parseFloat(b.r.CURRENT_LTP)||0); }
+    if (sortCol === 'target')   { va = a.avg*(1+tgtPct); vb = b.avg*(1+tgtPct); }
+    va = va||0; vb = vb||0;
+    return asc ? (va>vb?1:-1) : (va<vb?1:-1);
+  });
+
+  // Update sort arrow indicators
+  document.querySelectorAll('[id^="mth-"]').forEach(th => {
+    const col = th.id.replace('mth-','');
+    const base = {idx:'#', symbol:'Symbol', sigdate:'Signal Date', sigprice:'Signal Price ₹',
+                  dur:'Duration', avg:'Avg Buy ₹', ltp:'Current LTP ₹', drop:'Drop%',
+                  qty:'Qty', inv:'Investment ₹', target:'Target ₹'}[col] || col;
+    th.innerHTML = col === sortCol ? base + (asc ? ' ▲' : ' ▼') : base;
   });
 
   if (!filtered.length) {
@@ -3586,41 +3639,36 @@ async function renderMTFOutput() {
     return;
   }
 
-  const pgSzEl=document.getElementById('mtf-pgsize');
-  const pgSz=pgSzEl?parseInt(pgSzEl.value):50;
-  const page=(state.mtf||{}).page||1;
-  const start=(page-1)*pgSz;
-  const pageFiltered=filtered.slice(start,start+pgSz);
-  setPager('mtf',page,filtered.length,pgSz);
+  const pgSzEl = document.getElementById('mtf-pgsize');
+  const pgSz = pgSzEl ? parseInt(pgSzEl.value) : 50;
+  const page = (state.mtf||{}).page || 1;
+  const startIdx = (page-1)*pgSz;
+  const pageFiltered = filtered.slice(startIdx, startIdx+pgSz);
+  setPager('mtf', page, filtered.length, pgSz);
+  document.getElementById('mtf-info').textContent = filtered.length + ' MTF opportunities (F1: LTP<AvgBuy · F2: MTF list · F3: excl. FE · F4: LTP≥₹100)';
 
-  document.getElementById('mtf-info').textContent=`${filtered.length} MTF opportunities (F1: LTP<AvgBuy · F2: MTF list · F3: excl. FE · F4: LTP≥₹100)`;
-
-  if(!pageFiltered.length){
-    body.innerHTML='<tr><td colspan="12" class="empty">No MTF opportunities right now</td></tr>';
+  if (!pageFiltered.length) {
+    body.innerHTML = '<tr><td colspan="12" class="empty">No MTF opportunities right now</td></tr>';
     return;
   }
 
-  const today = new Date();
   body.innerHTML = pageFiltered.map(function(item, i) {
     const r = item.r, avg = item.avg;
-    const ltp  = parseFloat(r.CURRENT_LTP) || 0;
-    const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
-    const qty  = Math.max(1, Math.floor(inv / (ltp || 1)));
-    const invAmt  = (qty * ltp).toFixed(2);
-    const target  = (avg * 1.05).toFixed(2);
-    const sigDate = r.SIGNAL_DATE || '';
-    const sigPrice = parseFloat(r.SIGNAL_CLOSE || r.B0_Close || 0) || avg;
-    const sigDt = sigDate ? new Date(sigDate) : null;
-    const dur = sigDt ? (Math.max(0, Math.round((today - sigDt) / 86400000)) + 'd') : '—';
+    const ltp    = parseFloat(r.CURRENT_LTP) || 0;
+    const drop   = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
+    const qty    = Math.max(1, Math.floor(inv / (ltp || 1)));
+    const invAmt = (qty * ltp).toFixed(2);
+    const target = (avg * (1 + tgtPct)).toFixed(2);
+    const dur    = item.durDays > 0 ? item.durDays + 'd' : '—';
     const addPayload = JSON.stringify({
-      symbol: r.SYMBOL, signal_date: sigDate,
+      symbol: r.SYMBOL, signal_date: item.sigDate,
       avg_buy: avg, ltp: ltp, target: parseFloat(target)
-    }).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    }).replace(/'/g,"&#39;").replace(/"/g,"&quot;");
     return '<tr>' +
-      '<td>' + (start+i+1) + '</td>' +
+      '<td>' + (startIdx+i+1) + '</td>' +
       '<td><strong>' + r.SYMBOL + '</strong></td>' +
-      '<td>' + fD(sigDate) + '</td>' +
-      '<td>₹' + fN(sigPrice) + '</td>' +
+      '<td>' + fD(item.sigDate) + '</td>' +
+      '<td>₹' + fN(item.sigPrice) + '</td>' +
       '<td>' + dur + '</td>' +
       '<td>₹' + fN(avg) + '</td>' +
       '<td class="red">₹' + fN(ltp) + '</td>' +
@@ -3633,9 +3681,22 @@ async function renderMTFOutput() {
   }).join('');
 }
 
+function mtfSort(col) {
+  if ((state.mtf.sort||'drop') === col) state.mtf.asc = !state.mtf.asc;
+  else { state.mtf.sort = col; state.mtf.asc = col === 'symbol' ? true : false; }
+  state.mtf.page = 1;
+  renderMTFOutput();
+}
+
 function mtfInvChange() {
   const v = parseInt(document.getElementById('mtf-inv-input').value) || 5000;
   localStorage.setItem('btst_mtf_inv', v);
+  renderMTFOutput();
+}
+
+function mtfTgtChange() {
+  const v = parseFloat(document.getElementById('mtf-tgt-input').value) || 5;
+  localStorage.setItem('btst_mtf_target', v);
   renderMTFOutput();
 }
 
@@ -3699,14 +3760,38 @@ async function renderPortfolio() {
   document.getElementById('portfolio-body').innerHTML =
     '<tr><td colspan="11" class="empty">Loading portfolio…</td></tr>';
 
-  // Only sync from GitHub if local portfolio is empty (avoids race condition with add)
   const local = getPortfolio();
   if (!local.length && !_portfolioModified) {
-    const synced = await syncPortfolioFromGitHub();
-    if (synced && synced.length) savePortfolio(synced);
+    const synced = syncPortfolioFromGitHub ? syncPortfolioFromGitHub() : Promise.resolve(null);
+    synced.then(function(d){ if(d && d.length){ savePortfolio(d); _renderPortfolioNow(); } else { _renderPortfolioNow(); } }).catch(_renderPortfolioNow);
+    return;
   }
+  _renderPortfolioNow();
+}
 
-  const arr = getPortfolio();
+function portFilter(val, btn) {
+  state.portfolio.status = val;
+  state.portfolio.page = 1;
+  document.querySelectorAll('[id^="port-f-"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _renderPortfolioNow();
+}
+
+function portSearchChange() {
+  state.portfolio.search = (document.getElementById('port-search')||{}).value || '';
+  state.portfolio.page = 1;
+  _renderPortfolioNow();
+}
+
+function portSort(col) {
+  if ((state.portfolio.sort||'symbol') === col) state.portfolio.asc = !state.portfolio.asc;
+  else { state.portfolio.sort = col; state.portfolio.asc = col === 'symbol' ? true : false; }
+  state.portfolio.page = 1;
+  _renderPortfolioNow();
+}
+
+function _renderPortfolioNow() {
+  let arr = getPortfolio();
 
   // Refresh LTPs from live sim data
   arr.forEach(function(p) {
@@ -3714,36 +3799,100 @@ async function renderPortfolio() {
     const ltp = openMap[sym] || openMap[p.symbol] || 0;
     if (ltp) p.current_ltp = ltp;
     if (p.avg_buy > 0 && p.current_ltp) {
-      p.status = p.current_ltp >= p.avg_buy * 1.05 ? 'Yes' : 'No';
+      p.status = p.current_ltp >= p.target ? 'Yes' : 'No';
     }
   });
   savePortfolio(arr);
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  let totalInv = 0, gainCnt = 0, gainAmt = 0, lossCnt = 0, lossAmt = 0;
+  arr.forEach(function(p) {
+    const avg = p.avg_buy || 0;
+    const ltp = p.current_ltp || 0;
+    const qty = p.qty || 0;
+    const inv = qty * avg;
+    const pnl = qty * (ltp - avg);
+    totalInv += inv;
+    if (ltp >= avg) { gainCnt++; gainAmt += pnl; }
+    else            { lossCnt++; lossAmt += pnl; }
+  });
+  const netPnl = gainAmt + lossAmt;
+  const gainPct = totalInv > 0 ? (gainAmt / totalInv * 100) : 0;
+  const lossPct = totalInv > 0 ? (lossAmt / totalInv * 100) : 0;
+  const netPct  = totalInv > 0 ? (netPnl  / totalInv * 100) : 0;
+
+  const statsEl = document.getElementById('port-stats');
+  if (statsEl) statsEl.innerHTML = [
+    ['Total Holdings', arr.length, '', 'var(--navy)'],
+    ['Total Investment', '₹' + fN(totalInv.toFixed(0)), '', '#1e40af'],
+    ['Gainers', gainCnt + ' · ₹' + fN(gainAmt.toFixed(0)), gainPct.toFixed(2) + '%', '#059669'],
+    ['Losers',  lossCnt + ' · ₹' + fN(Math.abs(lossAmt).toFixed(0)), lossPct.toFixed(2) + '%', '#dc2626'],
+    ['Net P&L', (netPnl>=0?'+':'') + '₹' + fN(netPnl.toFixed(0)), netPct.toFixed(2) + '%', netPnl>=0?'#059669':'#dc2626'],
+  ].map(function(c) {
+    return '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:120px;">' +
+      '<div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">' + c[0] + '</div>' +
+      '<div style="font-size:15px;font-weight:800;color:' + c[3] + ';">' + c[1] + '</div>' +
+      (c[2] ? '<div style="font-size:11px;color:' + c[3] + ';">' + c[2] + '</div>' : '') +
+      '</div>';
+  }).join('');
+
+  // ── Filter + Search ────────────────────────────────────────────────────────
+  const statusF = (state.portfolio||{}).status || 'ALL';
+  const searchQ = ((state.portfolio||{}).search || '').toUpperCase();
+  if (statusF === 'Open')   arr = arr.filter(p => (p.status||'No') !== 'Yes');
+  if (statusF === 'Closed') arr = arr.filter(p => (p.status||'No') === 'Yes');
+  if (searchQ) arr = arr.filter(p => (p.symbol||'').toUpperCase().includes(searchQ));
+
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const sortCol = (state.portfolio||{}).sort || 'symbol';
+  const asc     = (state.portfolio||{}).asc !== false;
+  arr.sort(function(a, b) {
+    let va, vb;
+    if (sortCol === 'symbol') { return asc ? (a.symbol||'').localeCompare(b.symbol||'') : (b.symbol||'').localeCompare(a.symbol||''); }
+    if (sortCol === 'date')   { va = a.added_date||''; vb = b.added_date||''; }
+    if (sortCol === 'avg')    { va = a.avg_buy||0;  vb = b.avg_buy||0; }
+    if (sortCol === 'qty')    { va = a.qty||0;      vb = b.qty||0; }
+    if (sortCol === 'inv')    { va = (a.qty||0)*(a.avg_buy||0); vb = (b.qty||0)*(b.avg_buy||0); }
+    if (sortCol === 'ltp')    { va = a.current_ltp||0; vb = b.current_ltp||0; }
+    if (sortCol === 'drop')   { const aa=a.avg_buy||0,ba=b.avg_buy||0; va=aa>0?((a.current_ltp||0)-aa)/aa:0; vb=ba>0?((b.current_ltp||0)-ba)/ba:0; }
+    if (sortCol === 'target') { va = a.target||0; vb = b.target||0; }
+    if (sortCol === 'status') { va = (a.status||'No')==='Yes'?1:0; vb = (b.status||'No')==='Yes'?1:0; }
+    va = va||0; vb = vb||0;
+    return asc ? (va>vb?1:-1) : (va<vb?1:-1);
+  });
+
+  // Update sort arrows
+  document.querySelectorAll('[id^="pth-"]').forEach(th => {
+    const col = th.id.replace('pth-','');
+    const base = {symbol:'Symbol',date:'Added Date',avg:'Avg Buy ₹',qty:'Qty',inv:'Investment ₹',ltp:'Current LTP ₹',drop:'Drop%',target:'Target ₹',status:'Status'}[col]||col;
+    th.innerHTML = col === sortCol ? base + (asc ? ' ▲' : ' ▼') : base;
+  });
 
   const body = document.getElementById('portfolio-body');
   const pgSzEl = document.getElementById('portfolio-pgsize');
   const pgSz = pgSzEl ? parseInt(pgSzEl.value) : 50;
   const page = (state.portfolio||{}).page || 1;
-  const start = (page - 1) * pgSz;
-  const pageArr = arr.slice(start, start + pgSz);
+  const startIdx = (page - 1) * pgSz;
+  const pageArr = arr.slice(startIdx, startIdx + pgSz);
   setPager('portfolio', page, arr.length, pgSz);
   document.getElementById('portfolio-info').textContent = arr.length + ' holdings';
 
   if (!arr.length) {
-    body.innerHTML = '<tr><td colspan="11" class="empty">No holdings yet — add from MTF Output tab or use + Add</td></tr>';
+    body.innerHTML = '<tr><td colspan="11" class="empty">No holdings' + (searchQ||statusF!=='ALL'?' matching filter':' yet — add from MTF Output tab or use + Add') + '</td></tr>';
     return;
   }
 
   body.innerHTML = pageArr.map(function(p, i) {
-    const ltp  = p.current_ltp || 0;
-    const avg  = p.avg_buy || 0;
-    const tgt  = p.target || avg * 1.05;
-    const drop = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
+    const ltp    = p.current_ltp || 0;
+    const avg    = p.avg_buy || 0;
+    const tgt    = p.target || avg * 1.05;
+    const drop   = avg > 0 ? ((ltp - avg) / avg * 100) : 0;
     const invAmt = ((p.qty || 0) * avg).toFixed(2);
     const isGreen = p.status === 'Yes';
     const icon = isGreen ? '✅' : '❌';
     const cls  = isGreen ? 'green' : 'red';
     return '<tr>' +
-      '<td>' + (start+i+1) + '</td>' +
+      '<td>' + (startIdx+i+1) + '</td>' +
       '<td><strong>' + (p.symbol||'') + '</strong></td>' +
       '<td>' + fD(p.added_date) + '</td>' +
       '<td>₹' + fN(avg) + '</td>' +
@@ -3754,7 +3903,7 @@ async function renderPortfolio() {
       '<td class="green">₹' + fN(tgt) + '</td>' +
       '<td class="' + cls + '" style="font-weight:700">' + icon + ' ' + (p.status||'—') + '</td>' +
       '<td><button class="btn-sm" style="background:#ef4444;color:#fff;padding:3px 8px;" ' +
-        'onclick="deletePortfolioItem(' + (start+i) + ')">&#128465;</button></td>' +
+        'onclick="deletePortfolioItem(' + (startIdx+i) + ')">&#128465;</button></td>' +
       '</tr>';
   }).join('');
 }
