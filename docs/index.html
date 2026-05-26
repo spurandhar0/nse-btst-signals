@@ -3543,41 +3543,41 @@ async function renderMTFOutput() {
     });
   }
 
-  // Aggregate open positions: symbol -> row with lowest avg_buy_price (deduplicate)
-  const symMap = {};
-  ALL_ROWS.filter(r => r.ORDER==='Executed' && r.STATUS==='Open').forEach(r => {
+  // Aggregate open positions: FILTER FIRST, then deduplicate
+  // Step 1: Apply all filters to every open row individually
+  const passMap = {};
+  ALL_ROWS.filter(r => r.STATUS==='Open').forEach(r => {
     const sym = (r.SYMBOL||'').toUpperCase();
+    const ltp = parseFloat(r.CURRENT_LTP) || 0;
     const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
-    if (!symMap[sym] || avg < symMap[sym].avg) symMap[sym] = { r, avg };
+    // Filter 1: LTP < Avg Buy (open position underwater)
+    if (avg === 0 || ltp >= avg) return;
+    // Filter 2: Must be in MTF list
+    if (!mtfSet.has(sym)) return;
+    // Filter 3: Exclude symbols in FE tab
+    if (feSyms.has(sym)) return;
+    // Filter 4: Hide LTP < ₹100
+    if (ltp < 100) return;
+    // Portfolio: skip if portfolio empty; otherwise exclude marked symbols
+    if (portHasData && portExclude.has(sym)) return;
+    // Step 2: Deduplicate — keep row with most negative drop (largest gap below avg)
+    const drop = ltp - avg; // most negative = most underwater
+    if (!passMap[sym] || drop < passMap[sym].drop) {
+      passMap[sym] = { r, avg, drop };
+    }
   });
 
   const inv = parseInt(localStorage.getItem('btst_mtf_inv') || '5000') || 5000;
   const inp = document.getElementById('mtf-inv-input');
   if (inp) inp.value = inv;
 
-  // Apply all 4 filters
-  let filtered = Object.values(symMap).filter(function(item) {
-    const sym = (item.r.SYMBOL||'').toUpperCase();
-    const ltp = parseFloat(item.r.CURRENT_LTP) || 0;
-    const avg = item.avg;
-    // Filter 1: LTP < Avg Buy (open position underwater)
-    if (avg === 0 || ltp >= avg) return false;
-    // Filter 2: Must be in MTF list
-    if (!mtfSet.has(sym)) return false;
-    // Filter 3: Exclude symbols in FE tab
-    if (feSyms.has(sym)) return false;
-    // Filter 4: Hide LTP < ₹100
-    if (ltp < 100) return false;
-    // Portfolio: skip if portfolio empty; otherwise exclude marked symbols
-    if (portHasData && portExclude.has(sym)) return false;
-    return true;
-  });
+  let filtered = Object.values(passMap);
 
-  // Sort: most dropped first (biggest drop% at top)
+  // Sort: most dropped first (item.drop is ltp-avg, most negative = most underwater)
   filtered.sort(function(a, b) {
-    const dropA = a.avg > 0 ? (parseFloat(a.r.CURRENT_LTP||0) - a.avg) / a.avg : 0;
-    const dropB = b.avg > 0 ? (parseFloat(b.r.CURRENT_LTP||0) - b.avg) / b.avg : 0;
-    return dropA - dropB; // most negative first
+    const pctA = a.avg > 0 ? a.drop / a.avg : 0;
+    const pctB = b.avg > 0 ? b.drop / b.avg : 0;
+    return pctA - pctB; // most negative first
   });
 
   if (!filtered.length) {
