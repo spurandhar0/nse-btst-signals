@@ -4,6 +4,9 @@ Script 1: Consolidate NSE Bhavcopy CSVs
 Reads all CSV files from bhav_data/**/*.csv
 APPENDS new dates to existing db/consolidated.parquet (preserves history).
 
+Rolling window: keeps last MAX_MONTHS of data to prevent file size bloat.
+Floor: never trim below SIMULATION_START (2025-01-01) — all signal history preserved.
+
 If no CSV files are found but consolidated.parquet already exists,
 skips consolidation (allows re-runs after cleanup step removes raw CSVs).
 """
@@ -15,6 +18,11 @@ from datetime import datetime
 BHAV_DIR    = "bhav_data"
 OUTPUT_DIR  = "db"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "consolidated.parquet")
+
+# Rolling window: keep last N months to prevent parquet exceeding 100MB GitHub limit
+# Floor: never trim below SIMULATION_START so all signal history stays intact
+MAX_MONTHS       = 30
+SIMULATION_START = pd.Timestamp("2025-01-01")
 
 REQUIRED_COLS = [
     "SYMBOL", "SERIES", "DATE1", "PREV_CLOSE", "OPEN_PRICE",
@@ -148,11 +156,23 @@ def main():
     after = len(combined)
     print(f"Deduplication: {before:,} → {after:,} rows (+{after - (before - len(new_data)):,} new rows added)")
 
+    # ── ROLLING WINDOW: trim old data to keep file size bounded ──
+    # Keep last MAX_MONTHS months, but never trim below SIMULATION_START
+    cutoff = max(pd.Timestamp.now() - pd.DateOffset(months=MAX_MONTHS), SIMULATION_START)
+    before_trim = len(combined)
+    combined = combined[combined["DATE1"] >= cutoff]
+    after_trim = len(combined)
+    if before_trim != after_trim:
+        print(f"Rolling trim (keep {MAX_MONTHS}m, floor {SIMULATION_START.date()}): {before_trim:,} → {after_trim:,} rows removed {before_trim - after_trim:,} old rows")
+    else:
+        print(f"Rolling trim: nothing to remove (all data within {MAX_MONTHS}m window)")
+
     combined.sort_values(["SYMBOL", "DATE1"], inplace=True)
     combined.reset_index(drop=True, inplace=True)
     combined.to_parquet(OUTPUT_FILE, index=False)
 
-    print(f"✅ Consolidated: {after:,} rows | {combined['SYMBOL'].nunique():,} symbols")
+    size_mb = os.path.getsize(OUTPUT_FILE) / (1024 * 1024)
+    print(f"✅ Consolidated: {after_trim:,} rows | {combined['SYMBOL'].nunique():,} symbols | file size: {size_mb:.1f} MB")
     print(f"✅ Saved: {OUTPUT_FILE}")
 
 
