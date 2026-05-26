@@ -2,7 +2,7 @@
 Script 1: Consolidate NSE Bhavcopy CSVs
 ========================================
 Reads all CSV files from bhav_data/**/*.csv
-Merges into a single Parquet file: db/consolidated.parquet
+APPENDS new dates to existing db/consolidated.parquet (preserves history).
 
 If no CSV files are found but consolidated.parquet already exists,
 skips consolidation (allows re-runs after cleanup step removes raw CSVs).
@@ -75,7 +75,7 @@ def load_csv(filepath):
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
         return df
     except Exception as e:
-        print(f"  \u26a0\ufe0f  Skipped {filepath}: {e}")
+        print(f"  ⚠️  Skipped {filepath}: {e}")
         return None
 
 
@@ -87,11 +87,11 @@ def main():
 
     if not csv_files:
         if os.path.exists(OUTPUT_FILE):
-            print("\u26a0\ufe0f  No CSV files found, but consolidated.parquet already exists — skipping consolidation.")
-            print("\u2705 Using existing consolidated.parquet")
+            print("⚠️  No CSV files found, but consolidated.parquet already exists — skipping consolidation.")
+            print("✅ Using existing consolidated.parquet")
             return
         else:
-            print("\u274c No CSV files found and no consolidated.parquet exists. Cannot continue.")
+            print("❌ No CSV files found and no consolidated.parquet exists. Cannot continue.")
             raise SystemExit(1)
 
     csv_files = sorted(csv_files, key=extract_file_date)
@@ -110,34 +110,50 @@ def main():
 
     parseable = [extract_file_date(f) for f in csv_files if extract_file_date(f) != datetime.min]
     if parseable:
-        print(f"Date range: {min(parseable).strftime('%d-%b-%Y')} \u2192 {max(parseable).strftime('%d-%b-%Y')}")
+        print(f"Date range in new CSVs: {min(parseable).strftime('%d-%b-%Y')} → {max(parseable).strftime('%d-%b-%Y')}")
 
+    # Load new CSV data
     frames = []
     for i, f in enumerate(csv_files, 1):
         d = extract_file_date(f)
         label = d.strftime("%d-%b-%Y") if d != datetime.min else "?"
-        if i % 50 == 0 or i == len(csv_files):
-            print(f"  [{i:3d}/{len(csv_files)}] {label}")
+        print(f"  [{i:3d}/{len(csv_files)}] {label}")
         df = load_csv(f)
         if df is not None and len(df) > 0:
             frames.append(df)
 
     if not frames:
-        print("\u274c No valid data loaded.")
+        print("❌ No valid data loaded from new CSVs.")
+        if os.path.exists(OUTPUT_FILE):
+            print("⚠️  Keeping existing consolidated.parquet unchanged.")
+            return
         raise SystemExit(1)
 
-    combined = pd.concat(frames, ignore_index=True)
+    new_data = pd.concat(frames, ignore_index=True)
+    print(f"New data rows: {len(new_data):,}")
+
+    # ── APPEND to existing consolidated.parquet (CRITICAL: preserve history) ──
+    if os.path.exists(OUTPUT_FILE):
+        print(f"Loading existing consolidated.parquet for merge...")
+        existing = pd.read_parquet(OUTPUT_FILE)
+        print(f"Existing rows: {len(existing):,}")
+        combined = pd.concat([existing, new_data], ignore_index=True)
+        print(f"Combined rows before dedup: {len(combined):,}")
+    else:
+        print("No existing consolidated.parquet — creating fresh.")
+        combined = new_data
+
     before = len(combined)
     combined.drop_duplicates(subset=["SYMBOL", "DATE1"], keep="last", inplace=True)
     after = len(combined)
-    print(f"Deduplication: {before:,} \u2192 {after:,} rows")
+    print(f"Deduplication: {before:,} → {after:,} rows (+{after - (before - len(new_data)):,} new rows added)")
 
     combined.sort_values(["SYMBOL", "DATE1"], inplace=True)
     combined.reset_index(drop=True, inplace=True)
     combined.to_parquet(OUTPUT_FILE, index=False)
 
-    print(f"\u2705 Consolidated: {after:,} rows | {combined['SYMBOL'].nunique():,} symbols")
-    print(f"\u2705 Saved: {OUTPUT_FILE}")
+    print(f"✅ Consolidated: {after:,} rows | {combined['SYMBOL'].nunique():,} symbols")
+    print(f"✅ Saved: {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
