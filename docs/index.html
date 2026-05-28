@@ -3580,7 +3580,7 @@ async function renderMTFOutput() {
   const portArr = getPortfolio ? (getPortfolio() || []) : [];
   const portHasData = portArr.length > 0;
   const portExclude = new Set();
-  if (portHasData) portArr.forEach(p => { if ((p.status||'')==='No') portExclude.add((p.symbol||'').toUpperCase()); });
+  if (portHasData) portArr.forEach(p => { portExclude.add((p.symbol||'').toUpperCase()); });
 
   // Target%
   const tgtPct = (parseFloat(localStorage.getItem('btst_mtf_target') || '5') || 5) / 100;
@@ -3944,6 +3944,7 @@ function addToPortfolio(data) {
   if(document.getElementById('tab-portfolio')&&!document.getElementById('tab-portfolio').classList.contains('hidden')){
     renderPortfolio();
   }
+  renderMTFOutput();
 }
 
 let _portfolioModified = false;
