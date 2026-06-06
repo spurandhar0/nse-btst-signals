@@ -2608,6 +2608,26 @@ function setPager(tab,cur,total,pgSz){
 }
 
 // ─── GET FILTERED DATA ────────────────────────────────────────────────────────
+
+// ─── DEDUPLICATE BY SYMBOL ──────────────────────────────────────────────────
+// mode='min': keep cheapest AVG_BUY_PRICE per symbol (Open Positions / F&O Open)
+// mode='max': keep highest  AVG_BUY_PRICE per symbol (Closed Positions / F&O Closed)
+function dedupeBySymbol(rows, mode) {
+  const map = {};
+  for (const r of rows) {
+    const sym = (r.SYMBOL || '').toUpperCase();
+    const avg = parseFloat(r.AVG_BUY_PRICE) || 0;
+    if (!map[sym]) {
+      map[sym] = r;
+    } else {
+      const ex = parseFloat(map[sym].AVG_BUY_PRICE) || 0;
+      if (mode === 'min' && avg < ex) map[sym] = r;
+      if (mode === 'max' && avg > ex) map[sym] = r;
+    }
+  }
+  return Object.values(map);
+}
+
 function getFiltered(tab){
   let rows = ALL_ROWS;
 
@@ -2617,6 +2637,7 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _os=(document.getElementById('open-search')||{}).value||'';
     if(_os) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_os.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'min'); // unique symbols — cheapest entry across all configs
   }
   else if(tab==='closed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
@@ -2627,6 +2648,7 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _cs=(document.getElementById('closed-search')||{}).value||'';
     if(_cs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_cs.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'max'); // unique symbols — highest avg buy price per symbol
   }
   else if(tab==='fe'){
     const cfgDurMap={};
@@ -2698,6 +2720,7 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _fs=(document.getElementById('fno-search')||{}).value||'';
     if(_fs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_fs.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'min'); // unique F&O symbols — cheapest entry across all configs
   }
   else if(tab==='fnoclosed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
@@ -2708,6 +2731,7 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _fcs=(document.getElementById('fnoclosed-search')||{}).value||'';
     if(_fcs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_fcs.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'max'); // unique F&O symbols — highest avg buy price per symbol
   }
 
   // Sort
