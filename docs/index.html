@@ -734,8 +734,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 <div id="tab-uniopen" class="hidden">
   <div class="tab-badges" id="uniopen-badges"></div>
   <div class="cstrip">
-    <span class="slbl">&#9670; Unique Open Positions — one row per symbol (cheapest avg buy price across all configs)</span>
+    <span class="slbl">&#9670; Unique Open Positions — one row per symbol</span>
     <div style="flex:1"></div>
+    <button class="btn-filter active" id="uniopen-mode-min" onclick="setUniMode('uniopen','min',this)">&#9670; Min Avg</button>
+    <button class="btn-filter" id="uniopen-mode-max" onclick="setUniMode('uniopen','max',this)">&#9670; Max Avg</button>
     <input type="text" id="uniopen-search" placeholder="🔍 Search symbol..." oninput="renderTab('uniopen')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
     <button class="btn-green btn-sm" onclick="exportTab('uniopen')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('uniopen')">&#8595; CSV</button>
@@ -771,8 +773,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 <div id="tab-uniclosed" class="hidden">
   <div class="tab-badges" id="uniclosed-badges"></div>
   <div class="cstrip">
-    <span class="slbl">&#9670; Unique Closed Positions — one row per symbol (highest avg buy price)</span>
+    <span class="slbl">&#9670; Unique Closed Positions — one row per symbol</span>
     <div style="flex:1"></div>
+    <button class="btn-filter" id="uniclosed-mode-min" onclick="setUniMode('uniclosed','min',this)">&#9670; Min Avg</button>
+    <button class="btn-filter active" id="uniclosed-mode-max" onclick="setUniMode('uniclosed','max',this)">&#9670; Max Avg</button>
     <button class="btn-filter active" id="uni-closed-ALL" onclick="uniClosedFilter('ALL',this)">All</button>
     <button class="btn-filter" id="uni-closed-P" onclick="uniClosedFilter('P',this)">Profit</button>
     <button class="btn-filter" id="uni-closed-L" onclick="uniClosedFilter('L',this)">Loss</button>
@@ -811,8 +815,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 <div id="tab-unifno" class="hidden">
   <div class="tab-badges" id="unifno-badges"></div>
   <div class="cstrip">
-    <span class="slbl">&#9670; Unique F&amp;O Open — one row per F&amp;O symbol (cheapest avg buy price)</span>
+    <span class="slbl">&#9670; Unique F&amp;O Open — one row per F&amp;O symbol</span>
     <div style="flex:1"></div>
+    <button class="btn-filter active" id="unifno-mode-min" onclick="setUniMode('unifno','min',this)">&#9670; Min Avg</button>
+    <button class="btn-filter" id="unifno-mode-max" onclick="setUniMode('unifno','max',this)">&#9670; Max Avg</button>
     <input type="text" id="unifno-search" placeholder="🔍 Search symbol..." oninput="renderTab('unifno')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
     <button class="btn-green btn-sm" onclick="exportTab('unifno')">&#8595; Excel</button>
     <button class="btn-teal btn-sm" onclick="exportCSVTab('unifno')">&#8595; CSV</button>
@@ -848,8 +854,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
 <div id="tab-unifnoclosed" class="hidden">
   <div class="tab-badges" id="unifnoclosed-badges"></div>
   <div class="cstrip">
-    <span class="slbl">&#9670; Unique F&amp;O Closed — one row per F&amp;O symbol (highest avg buy price)</span>
+    <span class="slbl">&#9670; Unique F&amp;O Closed — one row per F&amp;O symbol</span>
     <div style="flex:1"></div>
+    <button class="btn-filter" id="unifnoclosed-mode-min" onclick="setUniMode('unifnoclosed','min',this)">&#9670; Min Avg</button>
+    <button class="btn-filter active" id="unifnoclosed-mode-max" onclick="setUniMode('unifnoclosed','max',this)">&#9670; Max Avg</button>
     <button class="btn-filter active" id="uni-fnoclosed-ALL" onclick="uniFnoClosedFilter('ALL',this)">All</button>
     <button class="btn-filter" id="uni-fnoclosed-P" onclick="uniFnoClosedFilter('P',this)">Profit</button>
     <button class="btn-filter" id="uni-fnoclosed-L" onclick="uniFnoClosedFilter('L',this)">Loss</button>
@@ -1845,6 +1853,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
         <input type="number" id="mtf-tgt-input" value="5" min="1" max="100" step="0.5"
                style="width:65px;padding:5px 8px;font-size:13px;border:1px solid var(--border);border-radius:6px;"
                onchange="mtfTgtChange()">
+        <button class="btn-sm btn-teal" onclick="exportMTFExcel()">&#8595; Excel</button>
         <button class="btn-sm btn-green" onclick="exportMTFCSV()">&#8595; CSV</button>
       </div>
     </div>
@@ -2268,10 +2277,10 @@ const state = {
   signals:     {cfg:'ALL', page:1, sort:0, asc:false},
   fno:         {cfg:'ALL', page:1, sort:0, asc:false},
   fnoclosed:   {cfg:'ALL', res:'ALL', page:1, sort:0, asc:false},
-  uniopen:     {page:1, sort:0, asc:false},
-  uniclosed:   {res:'ALL', page:1, sort:0, asc:false},
-  unifno:      {page:1, sort:0, asc:false},
-  unifnoclosed:{res:'ALL', page:1, sort:0, asc:false},
+  uniopen:     {page:1, sort:0, asc:false, dedup:'min'},
+  uniclosed:   {res:'ALL', page:1, sort:0, asc:false, dedup:'max'},
+  unifno:      {page:1, sort:0, asc:false, dedup:'min'},
+  unifnoclosed:{res:'ALL', page:1, sort:0, asc:false, dedup:'max'},
   configs:    {page:1, pgSz:25, filter:'ALL'},
 };
 
@@ -2558,14 +2567,14 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _uos=(document.getElementById('uniopen-search')||{}).value||'';
     if(_uos) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_uos.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'min');
+    rows = dedupeBySymbol(rows, state.uniopen.dedup||'min');
   }
   else if(tab==='uniclosed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _ucs=(document.getElementById('uniclosed-search')||{}).value||'';
     if(_ucs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ucs.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'max');
+    rows = dedupeBySymbol(rows, state.uniclosed.dedup||'max');
     if(state.uniclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
     if(state.uniclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
     if(state.uniclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
@@ -2575,14 +2584,14 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _ufs=(document.getElementById('unifno-search')||{}).value||'';
     if(_ufs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ufs.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'min');
+    rows = dedupeBySymbol(rows, state.unifno.dedup||'min');
   }
   else if(tab==='unifnoclosed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _ufcs=(document.getElementById('unifnoclosed-search')||{}).value||'';
     if(_ufcs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ufcs.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'max');
+    rows = dedupeBySymbol(rows, state.unifnoclosed.dedup||'max');
     if(state.unifnoclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
     if(state.unifnoclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
     if(state.unifnoclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
@@ -3982,6 +3991,36 @@ function mtfTgtChange() {
   renderMTFOutput();
 }
 
+
+// ════ UNI TAB MODE SELECTOR ════
+function setUniMode(tab, mode, btn){
+  state[tab].dedup = mode;
+  state[tab].page  = 1;
+  // Toggle active state on min/max buttons
+  var minBtn = document.getElementById(tab+'-mode-min');
+  var maxBtn = document.getElementById(tab+'-mode-max');
+  if(minBtn) minBtn.classList.toggle('active', mode==='min');
+  if(maxBtn) maxBtn.classList.toggle('active', mode==='max');
+  renderTab(tab);
+}
+
+// ════ MTF EXCEL EXPORT ════
+function exportMTFExcel(){
+  var rows=[];
+  var hdrs=['#','Symbol','Signal Date','Signal Price ₹','Avg Buy ₹','Current LTP ₹','Drop%','Qty','Investment ₹','Target ₹','Stoploss ₹','Buys Done','Days Held'];
+  document.getElementById('mtf-body').querySelectorAll('tr').forEach(function(tr){
+    var cells=[...tr.querySelectorAll('td')].map(function(td){return td.innerText.trim();});
+    if(cells.length>0) rows.push(cells.slice(0,13));
+  });
+  if(!rows.length){toast('No data to export','info');return;}
+  try{
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet([hdrs].concat(rows));
+    XLSX.utils.book_append_sheet(wb,ws,'MTF Output');
+    XLSX.writeFile(wb,'NSE_BTST_MTF_Output_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    toast('Excel downloaded!','success');
+  }catch(e){toast('Export failed: '+e.message,'info');}
+}
 function exportMTFCSV() {
   const rows = [...document.getElementById('mtf-body').querySelectorAll('tr')].map(tr =>
     [...tr.querySelectorAll('td')].slice(0, 11).map(td => '"' + td.innerText.replace(/"/g, '""') + '"').join(',')
@@ -4304,7 +4343,7 @@ function buildCfgSelGrid(){
   if(grid.children.length>0) return; // already built
   var ids=(CONFIGS_DEF||[]).map(function(c){return c.id||c.ID;}).filter(Boolean);
   grid.innerHTML=ids.map(function(id){
-    return '<button class="cfg-sel-btn" data-id="'+id+'" onclick="cfgSelToggle(''+id+'')" style="padding:7px 14px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;min-width:52px;">'+id+'</button>';
+    return '<button class="cfg-sel-btn" data-id="'+id+'" onclick="cfgSelToggle(\''+id+'\') " style="padding:7px 14px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;min-width:52px;">'+id+'</button>';
   }).join('');
 }
 function cfgSelToggle(id){
