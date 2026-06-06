@@ -2876,9 +2876,7 @@ function rowHTML(tab,r,n){
     const _ltp=parseFloat(r.CURRENT_LTP)||0;
     const _b2=+(_sc*0.9).toFixed(2);
     const _b3=+((_sc+_b2)/2*0.9).toFixed(2);
-    const _hitCnt=(_ltp>0&&_sc>0)?(_ltp<=_b3?3:_ltp<=_b2?2:_ltp<=_sc?1:0):0;
-    const _rowBg=_hitCnt>=3?'background:rgba(5,150,105,0.50)':_hitCnt===2?'background:rgba(5,150,105,0.32)':_hitCnt===1?'background:rgba(5,150,105,0.18)':'';
-    return `<tr${_rowBg?` style="${_rowBg}`+`"`:''}>
+    return `<tr>
       <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong>${foTag(r.SYMBOL)}</td>
       <td>${fD(r.SIGNAL_DATE)}</td>
       <td>&#8377;${fN(r.AVG_BUY_PRICE)}</td><td>&#8377;${fN(r.CURRENT_LTP)}</td>
@@ -2889,7 +2887,7 @@ function rowHTML(tab,r,n){
       <td ${pnlColor(r.GAIN_PCT)}>${gp>=0?'+':''}${f2(r.GAIN_PCT)}%</td>
     </tr>`;
   }
-  if(tab==='closed'){
+  if(tab==='closed'||tab==='fnoclosed'){
     return `<tr>
       <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong>${foTag(r.SYMBOL)}</td>
       <td>${fD(r.SIGNAL_DATE)}</td><td>${fD(r.EXIT_DATE)}</td>
