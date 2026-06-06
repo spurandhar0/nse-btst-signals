@@ -273,7 +273,7 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="tab" onclick="showTab('ledger',this)">&#9781; Daily Ledger</div>
   <div class="tab" onclick="showTab('trades',this)">&#8635; Trade History</div>
   <div class="tab" onclick="showTab('signals',this)">&#9654; Today's Signals</div>
-  <div class="tab" onclick="openCfgParamsModal()">&#9881; Configs</div>
+  <div class="tab" onclick="showTab('configs',this)">&#9881; Configs</div>
   <div class="tab" onclick="showTab('avgtrigger',this)">&#8681; Avg Trigger</div>
   <div class="tab" onclick="showTab('selltrigger',this)">&#8682; Sell Trigger</div>
   <div class="tab" onclick="showTab('avghistory',this)">&#9400; Avg History</div>
@@ -1278,437 +1278,60 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   </div>
 </div>
 
-<div id="cfg-params-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;overflow:auto;">
-  <div style="background:var(--card);border-radius:14px;padding:24px 28px;max-width:1000px;width:96%;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.5);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h3 style="color:var(--navy);margin:0;font-size:18px;">&#9881; Parameter Configurations</h3>
-      <button onclick="closeCfgParamsModal()" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:700;cursor:pointer;">&#x2715; Close</button>
+<div id="cfg-select-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:var(--card);border-radius:14px;padding:28px 32px;max-width:660px;width:96%;box-shadow:0 8px 40px rgba(0,0,0,.5);position:relative;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
+      <div>
+        <h3 style="margin:0;font-size:17px;color:var(--navy);font-weight:700;">&#9881; Select Configurations</h3>
+        <div id="cfg-sel-count" style="font-size:13px;color:var(--text3);margin-top:3px;"></div>
+      </div>
+      <button onclick="closeCfgSelectModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:4px 8px;">&#x2715;</button>
     </div>
-    <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
-      <button class="btn-filter active" id="cfgtab-ALL" onclick="cfgTabFilter('ALL',this)">All</button>
-      <button class="btn-filter" id="cfgtab-C1" onclick="cfgTabFilter('C1',this)">C1</button><button class="btn-filter" id="cfgtab-C2" onclick="cfgTabFilter('C2',this)">C2</button><button class="btn-filter" id="cfgtab-C3" onclick="cfgTabFilter('C3',this)">C3</button><button class="btn-filter" id="cfgtab-C4" onclick="cfgTabFilter('C4',this)">C4</button><button class="btn-filter" id="cfgtab-C5" onclick="cfgTabFilter('C5',this)">C5</button><button class="btn-filter" id="cfgtab-C6" onclick="cfgTabFilter('C6',this)">C6</button><button class="btn-filter" id="cfgtab-C7" onclick="cfgTabFilter('C7',this)">C7</button><button class="btn-filter" id="cfgtab-C8" onclick="cfgTabFilter('C8',this)">C8</button><button class="btn-filter" id="cfgtab-C9" onclick="cfgTabFilter('C9',this)">C9</button><button class="btn-filter" id="cfgtab-C10" onclick="cfgTabFilter('C10',this)">C10</button><button class="btn-filter" id="cfgtab-C11" onclick="cfgTabFilter('C11',this)">C11</button><button class="btn-filter" id="cfgtab-C12" onclick="cfgTabFilter('C12',this)">C12</button><button class="btn-filter" id="cfgtab-C13" onclick="cfgTabFilter('C13',this)">C13</button><button class="btn-filter" id="cfgtab-C14" onclick="cfgTabFilter('C14',this)">C14</button><button class="btn-filter" id="cfgtab-C15" onclick="cfgTabFilter('C15',this)">C15</button><button class="btn-filter" id="cfgtab-C16" onclick="cfgTabFilter('C16',this)">C16</button><button class="btn-filter" id="cfgtab-C17" onclick="cfgTabFilter('C17',this)">C17</button><button class="btn-filter" id="cfgtab-C18" onclick="cfgTabFilter('C18',this)">C18</button><button class="btn-filter" id="cfgtab-C19" onclick="cfgTabFilter('C19',this)">C19</button><button class="btn-filter" id="cfgtab-C20" onclick="cfgTabFilter('C20',this)">C20</button><button class="btn-filter" id="cfgtab-C21" onclick="cfgTabFilter('C21',this)">C21</button><button class="btn-filter" id="cfgtab-C22" onclick="cfgTabFilter('C22',this)">C22</button><button class="btn-filter" id="cfgtab-C23" onclick="cfgTabFilter('C23',this)">C23</button><button class="btn-filter" id="cfgtab-C24" onclick="cfgTabFilter('C24',this)">C24</button><button class="btn-filter" id="cfgtab-C25" onclick="cfgTabFilter('C25',this)">C25</button><button class="btn-filter" id="cfgtab-C26" onclick="cfgTabFilter('C26',this)">C26</button><div style="flex-basis:100%;height:0;margin:0;padding:0"></div><button class="btn-filter" id="cfgtab-C27" onclick="cfgTabFilter('C27',this)">C27</button><button class="btn-filter" id="cfgtab-C28" onclick="cfgTabFilter('C28',this)">C28</button><button class="btn-filter" id="cfgtab-C29" onclick="cfgTabFilter('C29',this)">C29</button><button class="btn-filter" id="cfgtab-C30" onclick="cfgTabFilter('C30',this)">C30</button><button class="btn-filter" id="cfgtab-C31" onclick="cfgTabFilter('C31',this)">C31</button><button class="btn-filter" id="cfgtab-C32" onclick="cfgTabFilter('C32',this)">C32</button><button class="btn-filter" id="cfgtab-C33" onclick="cfgTabFilter('C33',this)">C33</button><button class="btn-filter" id="cfgtab-C34" onclick="cfgTabFilter('C34',this)">C34</button><button class="btn-filter" id="cfgtab-C35" onclick="cfgTabFilter('C35',this)">C35</button><button class="btn-filter" id="cfgtab-C36" onclick="cfgTabFilter('C36',this)">C36</button><button class="btn-filter" id="cfgtab-C37" onclick="cfgTabFilter('C37',this)">C37</button><button class="btn-filter" id="cfgtab-C38" onclick="cfgTabFilter('C38',this)">C38</button><button class="btn-filter" id="cfgtab-C39" onclick="cfgTabFilter('C39',this)">C39</button><button class="btn-filter" id="cfgtab-C40" onclick="cfgTabFilter('C40',this)">C40</button><button class="btn-filter" id="cfgtab-C41" onclick="cfgTabFilter('C41',this)">C41</button><button class="btn-filter" id="cfgtab-C42" onclick="cfgTabFilter('C42',this)">C42</button><button class="btn-filter" id="cfgtab-C43" onclick="cfgTabFilter('C43',this)">C43</button><button class="btn-filter" id="cfgtab-C44" onclick="cfgTabFilter('C44',this)">C44</button><button class="btn-filter" id="cfgtab-C45" onclick="cfgTabFilter('C45',this)">C45</button><button class="btn-filter" id="cfgtab-C46" onclick="cfgTabFilter('C46',this)">C46</button><button class="btn-filter" id="cfgtab-C47" onclick="cfgTabFilter('C47',this)">C47</button><button class="btn-filter" id="cfgtab-C48" onclick="cfgTabFilter('C48',this)">C48</button><button class="btn-filter" id="cfgtab-C49" onclick="cfgTabFilter('C49',this)">C49</button><button class="btn-filter" id="cfgtab-C50" onclick="cfgTabFilter('C50',this)">C50</button><button class="btn-filter" id="cfgtab-C51" onclick="cfgTabFilter('C51',this)">C51</button><button class="btn-filter" id="cfgtab-C52" onclick="cfgTabFilter('C52',this)">C52</button>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button onclick="cfgSelAll()" style="padding:6px 18px;border-radius:8px;border:2px solid var(--navy);background:var(--navy);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Select All</button>
+      <button onclick="cfgSelClear()" style="padding:6px 18px;border-radius:8px;border:2px solid #ef4444;background:transparent;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;">Clear All</button>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
-      <label style="font-size:13px;color:var(--text2)">Rows per page:
-        <select id="configs-pgsize" onchange="renderConfigsPage()" style="margin-left:4px;padding:2px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);font-size:13px;">
-          <option value="10">10</option>
-          <option value="25" selected>25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-          <option value="999999">All</option>
-        </select>
-      </label>
-      <button class="btn-filter" id="configs-prev" onclick="configsChangePage(-1)" disabled>&#8592; Prev</button>
-      <span id="configs-page-info" style="font-size:13px;color:var(--text2);min-width:140px;text-align:center;">Page 1</span>
-      <button class="btn-filter" id="configs-next" onclick="configsChangePage(1)">Next &#8594;</button>
+    <div id="cfg-sel-grid" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px;max-height:240px;overflow-y:auto;"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);padding-top:16px;">
+      <button onclick="closeCfgSelectModal()" style="padding:8px 22px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+      <button onclick="applyCfgSelect()" style="padding:8px 22px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Apply &amp; Save</button>
     </div>
-    <div class="table-area">
-      <table class="ov-table"><thead><tr>
-        <th>CONFIG</th><th>DAYS BACK</th><th>PCT MIN</th><th>PCT MAX</th>
-        <th>ATH MIN</th><th>ATH MAX</th><th>MAX BUYS</th><th>BUY DROP</th>
-        <th>TARGET</th><th>STOP LOSS</th><th>MAX DURATION</th>
-      </tr></thead>
-      <tbody><tr>
-          <td><span class="cfg-badge">C1</span></td>
-          <td>5</td><td>-0.1</td>
-          <td>-0.03</td><td>-0.6</td>
-          <td>-0.3</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C2</span></td>
-          <td>5</td><td>-0.1</td>
-          <td>-0.02</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C3</span></td>
-          <td>5</td><td>-0.1</td>
-          <td>-0.02</td><td>-0.55</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C4</span></td>
-          <td>5</td><td>-0.09</td>
-          <td>-0.03</td><td>-0.6</td>
-          <td>-0.3</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C5</span></td>
-          <td>5</td><td>-0.09</td>
-          <td>-0.02</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C6</span></td>
-          <td>5</td><td>-0.09</td>
-          <td>-0.02</td><td>-0.55</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C7</span></td>
-          <td>5</td><td>-0.09</td>
-          <td>-0.02</td><td>-0.5</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C8</span></td>
-          <td>5</td><td>-0.08</td>
-          <td>-0.03</td><td>-0.6</td>
-          <td>-0.3</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C9</span></td>
-          <td>5</td><td>-0.06</td>
-          <td>-0.04</td><td>-0.4</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C10</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C11</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C12</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C13</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C14</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.5</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C15</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.45</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C16</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.45</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C17</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C18</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C19</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C20</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.45</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C21</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.45</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C22</span></td>
-          <td>5</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C23</span></td>
-          <td>5</td><td>-0.08</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C24</span></td>
-          <td>5</td><td>-0.1</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C25</span></td>
-          <td>5</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C26</span></td>
-          <td>5</td><td>-0.08</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.3</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr><tr>
-          <td><span class="cfg-badge">C27</span></td>
-          <td>5</td><td>-0.06</td>
-          <td>-0.04</td><td>-0.4</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C28</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C29</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C30</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.35</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C31</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C32</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C33</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.4</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C34</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C35</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C36</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C37</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C38</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C39</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.35</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C40</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C41</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C42</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.4</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C43</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.05</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C44</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C45</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.6</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C46</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.45</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C47</span></td>
-          <td>10</td><td>-0.09</td>
-          <td>-0.04</td><td>-0.4</td>
-          <td>-0.35</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C48</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>2</td>
-          <td>0.15</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C49</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>3</td>
-          <td>0.15</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C50</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.6</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.15</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C51</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.4</td><td>3</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-<tr>
-          <td><span class="cfg-badge">C52</span></td>
-          <td>10</td><td>-0.1</td>
-          <td>-0.05</td><td>-0.55</td>
-          <td>-0.4</td><td>4</td>
-          <td>0.1</td><td>0.1</td>
-          <td>0.25</td><td>40</td>
-        </tr>
-      </tbody></table>
-    </div>
-    <div style="margin-top:20px;padding:16px;background:#f8faff;border-radius:10px;border:1.5px solid #c7d7fe;font-size:13px;color:var(--text2);line-height:1.8">
-      <strong>DAYS BACK:</strong> Look-back window for N-day low &nbsp;&bull;&nbsp;
-      <strong>PCT MIN/MAX:</strong> % change from N-day low range &nbsp;&bull;&nbsp;
-      <strong>ATH MIN/MAX:</strong> % from All-Time-High range<br>
-      <strong>MAX BUYS:</strong> Max averaging positions &nbsp;&bull;&nbsp;
-      <strong>BUY DROP:</strong> Drop % to trigger next buy &nbsp;&bull;&nbsp;
-      <strong>TARGET/SL:</strong> Exit thresholds &nbsp;&bull;&nbsp;
-      <strong>MAX DURATION:</strong> Max holding days
-    </div>
+  </div>
+</div>
+
+<div id="tab-configs" class="hidden">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px 0;">
+    <button id="cfg-select-open-btn" onclick="buildCfgSelGrid();openCfgSelectModal();" style="padding:8px 18px;border-radius:8px;border:2px solid var(--navy);background:var(--navy);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">&#9881; Configurations (loading...)</button>
+    <label style="font-size:13px;color:var(--text2);">Rows per page:
+      <select id="configs-pgsize" onchange="renderConfigsPage()" style="margin-left:4px;padding:2px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);font-size:13px;">
+        <option value="10">10</option>
+        <option value="25" selected>25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="999999">All</option>
+      </select>
+    </label>
+    <button class="btn-filter" id="configs-prev" onclick="configsChangePage(-1)" disabled>&#8592; Prev</button>
+    <span id="configs-page-info" style="font-size:13px;color:var(--text2);min-width:160px;text-align:center;">Page 1</span>
+    <button class="btn-filter" id="configs-next" onclick="configsChangePage(1)">Next &#8594;</button>
+  </div>
+  <div class="table-area">
+    <table id="cfg-params-table" class="ov-table"><thead><tr>
+      <th>CONFIG</th><th>DAYS BACK</th><th>PCT MIN</th><th>PCT MAX</th>
+      <th>ATH MIN</th><th>ATH MAX</th><th>MAX BUYS</th><th>BUY DROP</th>
+      <th>TARGET</th><th>STOP LOSS</th><th>MAX DURATION</th>
+    </tr></thead>
+    <tbody id="cfg-params-body"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:20px;padding:16px;background:#f8faff;border-radius:10px;border:1.5px solid #c7d7fe;font-size:13px;color:var(--text2);line-height:1.8">
+    <strong>DAYS BACK:</strong> Look-back window for N-day low &nbsp;&bull;&nbsp;
+    <strong>PCT MIN/MAX:</strong> % change from N-day low range &nbsp;&bull;&nbsp;
+    <strong>ATH MIN/MAX:</strong> % from All-Time-High range<br>
+    <strong>MAX BUYS:</strong> Max averaging positions &nbsp;&bull;&nbsp;
+    <strong>BUY DROP:</strong> Drop % to trigger next buy &nbsp;&bull;&nbsp;
+    <strong>TARGET/SL:</strong> Exit thresholds &nbsp;&bull;&nbsp;
+    <strong>MAX DURATION:</strong> Max holding days
   </div>
 </div>
 
@@ -2715,6 +2338,7 @@ function showTab(name,el){
   else if(name==='portfolio')   renderPortfolio();
   else if(name==='fno')         renderTab('fno');
   else if(name==='fnoclosed')   renderTab('fnoclosed');
+  else if(name==='configs')    { document.getElementById('cfg-params-table').querySelector('tbody').innerHTML=buildCfgParamsRows(); renderConfigsPage(); updateCfgSelectBtn(); }
   else if(name==='uniopen')     renderTab('uniopen');
   else if(name==='uniclosed')   renderTab('uniclosed');
   else if(name==='unifno')      renderTab('unifno');
@@ -2938,13 +2562,13 @@ function getFiltered(tab){
   }
   else if(tab==='uniclosed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
-    if(state.uniclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
-    if(state.uniclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
-    if(state.uniclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _ucs=(document.getElementById('uniclosed-search')||{}).value||'';
     if(_ucs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ucs.toUpperCase()));
     rows = dedupeBySymbol(rows, 'max');
+    if(state.uniclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
+    if(state.uniclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
+    if(state.uniclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
   }
   else if(tab==='unifno'){
     rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
@@ -2955,13 +2579,13 @@ function getFiltered(tab){
   }
   else if(tab==='unifnoclosed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
-    if(state.unifnoclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
-    if(state.unifnoclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
-    if(state.unifnoclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _ufcs=(document.getElementById('unifnoclosed-search')||{}).value||'';
     if(_ufcs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ufcs.toUpperCase()));
     rows = dedupeBySymbol(rows, 'max');
+    if(state.unifnoclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
+    if(state.unifnoclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
+    if(state.unifnoclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
   }
 
   // Sort
@@ -4644,68 +4268,138 @@ async function portfolioManualAdd() {
 
 
 
-// ── renderConfigs ── delegates to renderConfigsPage
-function openCfgParamsModal(){
-  var m=document.getElementById('cfg-params-modal');
-  if(!m) return;
+
+// ─── CONFIGS TAB SELECT POPUP ──────────────────────────────────────────────────
+var _cfgSelTemp = new Set(); // temporary selection while modal is open
+var _cfgTabActive = 'ALL';  // current applied filter for configs tab
+
+function openCfgSelectModal(){
+  buildCfgSelGrid();
+  _cfgSelTemp = new Set();
+  var allBtns=Array.from(document.querySelectorAll('.cfg-sel-btn'));
+  if(_cfgTabActive==='ALL'||_cfgTabActive==='') allBtns.forEach(function(b){_cfgSelTemp.add(b.dataset.id);});
+  else _cfgTabActive.split(',').forEach(function(id){_cfgSelTemp.add(id.trim());});
+  updateCfgSelGrid();
+  var m=document.getElementById('cfg-select-modal');
   m.style.display='flex';
-  renderConfigs(); renderConfigsPage();
 }
-function closeCfgParamsModal(){
-  var m=document.getElementById('cfg-params-modal');
-  if(m) m.style.display='none';
+function closeCfgSelectModal(){
+  document.getElementById('cfg-select-modal').style.display='none';
 }
-
-function renderConfigs(){
-  if(!window.state) window.state={};
-  if(!window.state.configs) window.state.configs={page:1,pgSz:25,filter:'ALL'};
-  const active=(document.querySelector('[id^="cfgtab-"].active')||{}).id||'cfgtab-ALL';
-  window.state.configs.filter=active.replace('cfgtab-','');
-}
-
-function cfgTabFilter(val, btn) {
-  document.querySelectorAll('[id^="cfgtab-"]').forEach(function(b){ b.classList.remove('active'); });
-  if (btn) btn.classList.add('active');
-  if (!window.state) window.state = {};
-  if (!window.state.configs) window.state.configs = {page:1, pgSz:25, filter:'ALL'};
-  window.state.configs.filter = val;
-  window.state.configs.page = 1;
-  renderConfigsPage();
-}
-
-function renderConfigsPage() {
-  if (!window.state) window.state = {};
-  if (!window.state.configs) window.state.configs = {page:1, pgSz:25, filter:'ALL'};
-  var s = window.state.configs;
-  var allRows = Array.from(document.querySelectorAll('#cfg-params-modal table tbody tr'));
-  var filtered = allRows.filter(function(row) {
-    if (s.filter === 'ALL') return true;
-    var badge = row.querySelector('.cfg-badge');
-    return badge && badge.textContent.trim() === s.filter;
+function updateCfgSelGrid(){
+  var allBtns=Array.from(document.querySelectorAll('.cfg-sel-btn'));
+  allBtns.forEach(function(b){
+    var sel=_cfgSelTemp.has(b.dataset.id);
+    b.style.background=sel?'var(--navy)':'transparent';
+    b.style.color=sel?'#fff':'var(--text2)';
+    b.style.borderColor=sel?'var(--navy)':'var(--border)';
   });
-  var pgSzEl = document.getElementById('configs-pgsize');
-  var pgSz = pgSzEl ? parseInt(pgSzEl.value) : (s.pgSz || 25);
-  s.pgSz = pgSz;
-  var total = filtered.length;
-  var totalPages = Math.max(1, Math.ceil(total / pgSz));
-  if (s.page > totalPages) s.page = totalPages;
-  var start = (s.page - 1) * pgSz;
-  var end = start + pgSz;
-  allRows.forEach(function(row) { row.style.display = 'none'; });
-  filtered.slice(start, end).forEach(function(row) { row.style.display = ''; });
-  var pi = document.getElementById('configs-page-info');
-  if (pi) pi.textContent = 'Page ' + s.page + ' of ' + totalPages + ' (' + total + ' total)';
-  var pb = document.getElementById('configs-prev');
-  if (pb) pb.disabled = s.page <= 1;
-  var nb = document.getElementById('configs-next');
-  if (nb) nb.disabled = s.page >= totalPages;
+  var count=_cfgSelTemp.size;
+  var total=allBtns.length;
+  document.getElementById('cfg-sel-count').textContent=count+' of '+total+' selected';
 }
-
-function configsChangePage(dir) {
-  if (!window.state || !window.state.configs) return;
-  window.state.configs.page += dir;
+function buildCfgSelGrid(){
+  var grid=document.getElementById('cfg-sel-grid');
+  if(!grid) return;
+  if(grid.children.length>0) return; // already built
+  var ids=(CONFIGS_DEF||[]).map(function(c){return c.id||c.ID;}).filter(Boolean);
+  grid.innerHTML=ids.map(function(id){
+    return '<button class="cfg-sel-btn" data-id="'+id+'" onclick="cfgSelToggle(''+id+'')" style="padding:7px 14px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;min-width:52px;">'+id+'</button>';
+  }).join('');
+}
+function cfgSelToggle(id){
+  if(_cfgSelTemp.has(id)) _cfgSelTemp.delete(id);
+  else _cfgSelTemp.add(id);
+  updateCfgSelGrid();
+}
+function cfgSelAll(){
+  var allBtns=Array.from(document.querySelectorAll('.cfg-sel-btn'));
+  allBtns.forEach(function(b){_cfgSelTemp.add(b.dataset.id);});
+  updateCfgSelGrid();
+}
+function cfgSelClear(){
+  _cfgSelTemp.clear();
+  updateCfgSelGrid();
+}
+function applyCfgSelect(){
+  var allBtns=Array.from(document.querySelectorAll('.cfg-sel-btn'));
+  var allIds=allBtns.map(function(b){return b.dataset.id;});
+  if(_cfgSelTemp.size===0||_cfgSelTemp.size===allIds.length){
+    _cfgTabActive='ALL';
+  } else if(_cfgSelTemp.size===1){
+    _cfgTabActive=Array.from(_cfgSelTemp)[0];
+  } else {
+    _cfgTabActive=Array.from(_cfgSelTemp).join(',');
+  }
+  updateCfgSelectBtn();
+  closeCfgSelectModal();
   renderConfigsPage();
 }
+function updateCfgSelectBtn(){
+  var btn=document.getElementById('cfg-select-open-btn');
+  if(!btn) return;
+  var total=(CONFIGS_DEF||[]).length;
+  var label;
+  if(_cfgTabActive==='ALL'||_cfgTabActive==='') label='&#9881; Configurations (All '+total+' selected)';
+  else if(_cfgTabActive.includes(',')){ var cnt=_cfgTabActive.split(',').length; label='&#9881; Configurations ('+cnt+' of '+total+' selected)'; }
+  else label='&#9881; Configurations ('+_cfgTabActive+' only)';
+  btn.innerHTML=label;
+}
+function buildCfgParamsRows(){
+  if(!CONFIGS_DEF||!CONFIGS_DEF.length) return '<tr><td colspan="11" class="empty">No configs loaded.</td></tr>';
+  return CONFIGS_DEF.map(function(c){
+    var id=c.id||c.ID||'';
+    return '<tr><td><span class="cfg-badge">'+id+'</span></td>'
+      +'<td>'+(c.days_back||c.DAYS_BACK||'')+'</td>'
+      +'<td>'+(c.pct_min||c.PCT_MIN||'')+'</td>'
+      +'<td>'+(c.pct_max||c.PCT_MAX||'')+'</td>'
+      +'<td>'+(c.ath_min||c.ATH_MIN||c.ath_drop_min||'')+'</td>'
+      +'<td>'+(c.ath_max||c.ATH_MAX||c.ath_drop_max||'')+'</td>'
+      +'<td>'+(c.max_buys||c.MAX_BUYS||'')+'</td>'
+      +'<td>'+(c.buy_drop||c.BUY_DROP||'')+'</td>'
+      +'<td>'+(c.target||c.TARGET||'')+'</td>'
+      +'<td>'+(c.stop_loss||c.STOP_LOSS||c.sl||'')+'</td>'
+      +'<td>'+(c.max_duration||c.MAX_DURATION||'')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+function renderConfigsPage(){
+  // Build rows if empty
+  var tbody=document.getElementById('cfg-params-body');
+  if(tbody&&!tbody.children.length) tbody.innerHTML=buildCfgParamsRows();
+  var pgSzEl=document.getElementById('configs-pgsize');
+  var pgSz=pgSzEl?parseInt(pgSzEl.value):25;
+  var allRows=Array.from(document.querySelectorAll('#cfg-params-table tbody tr'));
+  var filtered=allRows.filter(function(tr){
+    if(_cfgTabActive==='ALL'||_cfgTabActive==='') return true;
+    if(_cfgTabActive.includes(',')){
+      var ids=_cfgTabActive.split(',');
+      var cfg=tr.children[0]?tr.children[0].textContent.trim():'';
+      return ids.includes(cfg);
+    }
+    var cfg=tr.children[0]?tr.children[0].textContent.trim():'';
+    return cfg===_cfgTabActive;
+  });
+  var page=window._cfgPage||1;
+  var total=filtered.length;
+  var pages=Math.max(1,Math.ceil(total/pgSz));
+  if(page>pages) page=1;
+  window._cfgPage=page;
+  var start=(page-1)*pgSz;
+  allRows.forEach(function(tr){tr.style.display='none';});
+  filtered.slice(start,start+pgSz).forEach(function(tr){tr.style.display='';});
+  var info=document.getElementById('configs-page-info');
+  if(info) info.textContent='Page '+page+' of '+pages+' ('+total+' total)';
+  var prev=document.getElementById('configs-prev');
+  var next=document.getElementById('configs-next');
+  if(prev) prev.disabled=page<=1;
+  if(next) next.disabled=page>=pages;
+}
+function configsChangePage(delta){
+  window._cfgPage=(window._cfgPage||1)+delta;
+  renderConfigsPage();
+}
+
 function showPATModal() {
   document.getElementById('pat-modal').classList.remove('hidden');
   document.getElementById('pat-input').value = localStorage.getItem('btst_gh_pat') || '';
