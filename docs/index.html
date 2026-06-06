@@ -1285,6 +1285,20 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
       <button class="btn-filter active" id="cfgtab-ALL" onclick="cfgTabFilter('ALL',this)">All</button>
       <button class="btn-filter" id="cfgtab-C1" onclick="cfgTabFilter('C1',this)">C1</button><button class="btn-filter" id="cfgtab-C2" onclick="cfgTabFilter('C2',this)">C2</button><button class="btn-filter" id="cfgtab-C3" onclick="cfgTabFilter('C3',this)">C3</button><button class="btn-filter" id="cfgtab-C4" onclick="cfgTabFilter('C4',this)">C4</button><button class="btn-filter" id="cfgtab-C5" onclick="cfgTabFilter('C5',this)">C5</button><button class="btn-filter" id="cfgtab-C6" onclick="cfgTabFilter('C6',this)">C6</button><button class="btn-filter" id="cfgtab-C7" onclick="cfgTabFilter('C7',this)">C7</button><button class="btn-filter" id="cfgtab-C8" onclick="cfgTabFilter('C8',this)">C8</button><button class="btn-filter" id="cfgtab-C9" onclick="cfgTabFilter('C9',this)">C9</button><button class="btn-filter" id="cfgtab-C10" onclick="cfgTabFilter('C10',this)">C10</button><button class="btn-filter" id="cfgtab-C11" onclick="cfgTabFilter('C11',this)">C11</button><button class="btn-filter" id="cfgtab-C12" onclick="cfgTabFilter('C12',this)">C12</button><button class="btn-filter" id="cfgtab-C13" onclick="cfgTabFilter('C13',this)">C13</button><button class="btn-filter" id="cfgtab-C14" onclick="cfgTabFilter('C14',this)">C14</button><button class="btn-filter" id="cfgtab-C15" onclick="cfgTabFilter('C15',this)">C15</button><button class="btn-filter" id="cfgtab-C16" onclick="cfgTabFilter('C16',this)">C16</button><button class="btn-filter" id="cfgtab-C17" onclick="cfgTabFilter('C17',this)">C17</button><button class="btn-filter" id="cfgtab-C18" onclick="cfgTabFilter('C18',this)">C18</button><button class="btn-filter" id="cfgtab-C19" onclick="cfgTabFilter('C19',this)">C19</button><button class="btn-filter" id="cfgtab-C20" onclick="cfgTabFilter('C20',this)">C20</button><button class="btn-filter" id="cfgtab-C21" onclick="cfgTabFilter('C21',this)">C21</button><button class="btn-filter" id="cfgtab-C22" onclick="cfgTabFilter('C22',this)">C22</button><button class="btn-filter" id="cfgtab-C23" onclick="cfgTabFilter('C23',this)">C23</button><button class="btn-filter" id="cfgtab-C24" onclick="cfgTabFilter('C24',this)">C24</button><button class="btn-filter" id="cfgtab-C25" onclick="cfgTabFilter('C25',this)">C25</button><button class="btn-filter" id="cfgtab-C26" onclick="cfgTabFilter('C26',this)">C26</button><div style="flex-basis:100%;height:0;margin:0;padding:0"></div><button class="btn-filter" id="cfgtab-C27" onclick="cfgTabFilter('C27',this)">C27</button><button class="btn-filter" id="cfgtab-C28" onclick="cfgTabFilter('C28',this)">C28</button><button class="btn-filter" id="cfgtab-C29" onclick="cfgTabFilter('C29',this)">C29</button><button class="btn-filter" id="cfgtab-C30" onclick="cfgTabFilter('C30',this)">C30</button><button class="btn-filter" id="cfgtab-C31" onclick="cfgTabFilter('C31',this)">C31</button><button class="btn-filter" id="cfgtab-C32" onclick="cfgTabFilter('C32',this)">C32</button><button class="btn-filter" id="cfgtab-C33" onclick="cfgTabFilter('C33',this)">C33</button><button class="btn-filter" id="cfgtab-C34" onclick="cfgTabFilter('C34',this)">C34</button><button class="btn-filter" id="cfgtab-C35" onclick="cfgTabFilter('C35',this)">C35</button><button class="btn-filter" id="cfgtab-C36" onclick="cfgTabFilter('C36',this)">C36</button><button class="btn-filter" id="cfgtab-C37" onclick="cfgTabFilter('C37',this)">C37</button><button class="btn-filter" id="cfgtab-C38" onclick="cfgTabFilter('C38',this)">C38</button><button class="btn-filter" id="cfgtab-C39" onclick="cfgTabFilter('C39',this)">C39</button><button class="btn-filter" id="cfgtab-C40" onclick="cfgTabFilter('C40',this)">C40</button><button class="btn-filter" id="cfgtab-C41" onclick="cfgTabFilter('C41',this)">C41</button><button class="btn-filter" id="cfgtab-C42" onclick="cfgTabFilter('C42',this)">C42</button><button class="btn-filter" id="cfgtab-C43" onclick="cfgTabFilter('C43',this)">C43</button><button class="btn-filter" id="cfgtab-C44" onclick="cfgTabFilter('C44',this)">C44</button><button class="btn-filter" id="cfgtab-C45" onclick="cfgTabFilter('C45',this)">C45</button><button class="btn-filter" id="cfgtab-C46" onclick="cfgTabFilter('C46',this)">C46</button><button class="btn-filter" id="cfgtab-C47" onclick="cfgTabFilter('C47',this)">C47</button><button class="btn-filter" id="cfgtab-C48" onclick="cfgTabFilter('C48',this)">C48</button><button class="btn-filter" id="cfgtab-C49" onclick="cfgTabFilter('C49',this)">C49</button><button class="btn-filter" id="cfgtab-C50" onclick="cfgTabFilter('C50',this)">C50</button><button class="btn-filter" id="cfgtab-C51" onclick="cfgTabFilter('C51',this)">C51</button><button class="btn-filter" id="cfgtab-C52" onclick="cfgTabFilter('C52',this)">C52</button>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+      <label style="font-size:13px;color:var(--text2)">Rows per page:
+        <select id="configs-pgsize" onchange="renderConfigsPage()" style="margin-left:4px;padding:2px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);font-size:13px;">
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="999999">All</option>
+        </select>
+      </label>
+      <button class="btn-filter" id="configs-prev" onclick="configsChangePage(-1)" disabled>&#8592; Prev</button>
+      <span id="configs-page-info" style="font-size:13px;color:var(--text2);min-width:140px;text-align:center;">Page 1</span>
+      <button class="btn-filter" id="configs-next" onclick="configsChangePage(1)">Next &#8594;</button>
+    </div>
     <div class="table-area">
       <table class="ov-table"><thead><tr>
         <th>CONFIG</th><th>DAYS BACK</th><th>PCT MIN</th><th>PCT MAX</th>
@@ -2632,6 +2646,7 @@ const state = {
   uniclosed:   {res:'ALL', page:1, sort:0, asc:false},
   unifno:      {page:1, sort:0, asc:false},
   unifnoclosed:{res:'ALL', page:1, sort:0, asc:false},
+  configs:    {page:1, pgSz:25, filter:'ALL'},
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -2697,7 +2712,7 @@ function showTab(name,el){
   else if(name==='portfolio')   renderPortfolio();
   else if(name==='fno')         renderTab('fno');
   else if(name==='fnoclosed')   renderTab('fnoclosed');
-  else if(name==='configs')     renderConfigs();
+  else if(name==='configs')     { renderConfigs(); renderConfigsPage(); }
 }
 
 // ─── FILTER HELPERS ──────────────────────────────────────────────────────────
@@ -3063,7 +3078,7 @@ function renderTab(tab){
 }
 
 function rowHTML(tab,r,n){
-  if(tab==='open'||tab==='fno'){
+  if(tab==='open'||tab==='fno'||tab==='uniopen'||tab==='unifno'){
     const pl=parseFloat(r.PROFIT)||0;
     const gp=parseFloat(r.GAIN_PCT)||0;
     const bc=parseInt(r.BUY_COUNT||1);
@@ -3085,7 +3100,7 @@ function rowHTML(tab,r,n){
       <td ${pnlColor(r.GAIN_PCT)}>${gp>=0?'+':''}${f2(r.GAIN_PCT)}%</td>
     </tr>`;
   }
-  if(tab==='closed'||tab==='fnoclosed'){
+  if(tab==='closed'||tab==='fnoclosed'||tab==='uniclosed'||tab==='unifnoclosed'){
     return `<tr>
       <td>${n}</td><td>${cfgBadge(r.CONFIG)}</td><td><strong>${r.SYMBOL}</strong>${foTag(r.SYMBOL)}</td>
       <td>${fD(r.SIGNAL_DATE)}</td><td>${fD(r.EXIT_DATE)}</td>
@@ -4623,26 +4638,56 @@ async function portfolioManualAdd() {
 
 
 
-// ── renderConfigs ── filter rows by config button
+// ── renderConfigs ── delegates to renderConfigsPage
 function renderConfigs(){
+  if(!window.state) window.state={};
+  if(!window.state.configs) window.state.configs={page:1,pgSz:25,filter:'ALL'};
   const active=(document.querySelector('[id^="cfgtab-"].active')||{}).id||'cfgtab-ALL';
-  const val=active.replace('cfgtab-','');
-  const rows=document.querySelectorAll('#tab-configs tbody tr');
-  rows.forEach(r=>{
-    const cfg=(r.querySelector('.cfg-badge')||{}).textContent||'';
-    r.style.display=(val==='ALL'||cfg===val)?'':'none';
-  });
+  window.state.configs.filter=active.replace('cfgtab-','');
 }
 
 function cfgTabFilter(val, btn) {
   document.querySelectorAll('[id^="cfgtab-"]').forEach(function(b){ b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  var rows = document.querySelectorAll('#tab-configs table tbody tr');
-  rows.forEach(function(row) {
-    if (val === 'ALL') { row.style.display = ''; return; }
+  if (!window.state) window.state = {};
+  if (!window.state.configs) window.state.configs = {page:1, pgSz:25, filter:'ALL'};
+  window.state.configs.filter = val;
+  window.state.configs.page = 1;
+  renderConfigsPage();
+}
+
+function renderConfigsPage() {
+  if (!window.state) window.state = {};
+  if (!window.state.configs) window.state.configs = {page:1, pgSz:25, filter:'ALL'};
+  var s = window.state.configs;
+  var allRows = Array.from(document.querySelectorAll('#tab-configs table tbody tr'));
+  var filtered = allRows.filter(function(row) {
+    if (s.filter === 'ALL') return true;
     var badge = row.querySelector('.cfg-badge');
-    row.style.display = (badge && badge.textContent.trim() === val) ? '' : 'none';
+    return badge && badge.textContent.trim() === s.filter;
   });
+  var pgSzEl = document.getElementById('configs-pgsize');
+  var pgSz = pgSzEl ? parseInt(pgSzEl.value) : (s.pgSz || 25);
+  s.pgSz = pgSz;
+  var total = filtered.length;
+  var totalPages = Math.max(1, Math.ceil(total / pgSz));
+  if (s.page > totalPages) s.page = totalPages;
+  var start = (s.page - 1) * pgSz;
+  var end = start + pgSz;
+  allRows.forEach(function(row) { row.style.display = 'none'; });
+  filtered.slice(start, end).forEach(function(row) { row.style.display = ''; });
+  var pi = document.getElementById('configs-page-info');
+  if (pi) pi.textContent = 'Page ' + s.page + ' of ' + totalPages + ' (' + total + ' total)';
+  var pb = document.getElementById('configs-prev');
+  if (pb) pb.disabled = s.page <= 1;
+  var nb = document.getElementById('configs-next');
+  if (nb) nb.disabled = s.page >= totalPages;
+}
+
+function configsChangePage(dir) {
+  if (!window.state || !window.state.configs) return;
+  window.state.configs.page += dir;
+  renderConfigsPage();
 }
 function showPATModal() {
   document.getElementById('pat-modal').classList.remove('hidden');
