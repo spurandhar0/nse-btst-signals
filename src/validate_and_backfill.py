@@ -181,12 +181,14 @@ def load_bhav_csv(d: date) -> pd.DataFrame | None:
 def get_known_symbols() -> set[str]:
     """
     Return the set of symbols that our strategy tracks.
-    Sources (in priority order):
+    Sources:
       1. db/symbols.txt  — explicitly curated list
       2. Union of all sim_results_C*.json symbols
-      3. bhav_data/ files — any symbol that ever appeared
+      3. docs/data/mtf_symbols.json — MTF watchlist (NEW)
+      4. Parquet DB if exists
     """
     syms = set()
+    import json
 
     # 1. Curated list
     sym_file = DB_ROOT / "symbols.txt"
@@ -194,7 +196,6 @@ def get_known_symbols() -> set[str]:
         syms.update(l.strip().upper() for l in sym_file.read_text().splitlines() if l.strip())
 
     # 2. sim_results JSON files
-    import json
     for jf in Path("docs/data").glob("sim_results_C*.json"):
         try:
             data = json.loads(jf.read_text())
@@ -206,7 +207,23 @@ def get_known_symbols() -> set[str]:
         except Exception:
             pass
 
-    # 3. Parquet DB if exists
+    # 3. MTF symbols watchlist — docs/data/mtf_symbols.json
+    mtf_file = Path("docs/data/mtf_symbols.json")
+    if mtf_file.exists():
+        try:
+            mtf_list = json.loads(mtf_file.read_text())
+            added = 0
+            for entry in mtf_list:
+                s = str(entry).strip().upper()
+                # Skip header row and empty entries
+                if s and s not in ("SYMBOL / SCRIP NAME", "SYMBOL", "SCRIP NAME"):
+                    syms.add(s)
+                    added += 1
+            log.info(f"MTF symbols loaded: {added} from {mtf_file}")
+        except Exception as e:
+            log.warning(f"Could not load MTF symbols: {e}")
+
+    # 4. Parquet DB if exists
     pq = DB_ROOT / "eq_filtered.parquet"
     if pq.exists():
         try:
@@ -216,7 +233,7 @@ def get_known_symbols() -> set[str]:
         except Exception:
             pass
 
-    log.info(f"Known symbols: {len(syms)}")
+    log.info(f"Total known symbols: {len(syms)}")
     return syms
 
 
