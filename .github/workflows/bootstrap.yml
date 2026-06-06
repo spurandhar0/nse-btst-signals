@@ -51,13 +51,23 @@ jobs:
         env:
           SIGNAL_START_DATE: '2025-01-01'
 
-      - name: Step 5 – Run simulation (all 52 configs)
+      - name: Step 5 – Run simulation (all configs)
         run: python src/05_run_simulation.py
 
-      - name: Step 6 – Build dashboard HTML
+      - name: Step 6 – Prune data older than 2 years (rolling window)
+        run: python src/prune_old_data.py
+
+      - name: Step 7 – Build dashboard HTML
         run: python src/05_build_dashboard.py
 
-      - name: Step 7 – Push to public dashboard repo
+      - name: Check disk usage before push
+        run: |
+          echo "=== Disk usage ==="
+          du -sh db/ docs/data/ bhav_data/ output/ 2>/dev/null || true
+          echo "=== docs/data file count ==="
+          ls docs/data/ | wc -l
+
+      - name: Step 8 – Push to public dashboard repo
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
@@ -68,9 +78,17 @@ jobs:
           for f in $GITHUB_WORKSPACE/docs/data/sim_results_C*.json; do
             [ -f "$f" ] && cp "$f" pub-dashboard/docs/data/ || true
           done
+          # Remove stale config files from public repo
+          for pub_file in pub-dashboard/docs/data/sim_results_C*.json; do
+            [ -f "$pub_file" ] || continue
+            base=$(basename "$pub_file")
+            [ -f "$GITHUB_WORKSPACE/docs/data/$base" ] || rm -f "$pub_file"
+          done
           [ -f "$GITHUB_WORKSPACE/docs/data/sim_meta.json" ] && cp $GITHUB_WORKSPACE/docs/data/sim_meta.json pub-dashboard/docs/data/ || true
           [ -f "$GITHUB_WORKSPACE/docs/data/trade_ohlc.json" ] && cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/ || true
           [ -f "$GITHUB_WORKSPACE/docs/data/mtf_symbols.json" ] && cp $GITHUB_WORKSPACE/docs/data/mtf_symbols.json pub-dashboard/docs/data/ || true
+          # Never push legacy sim_results.json
+          rm -f pub-dashboard/docs/data/sim_results.json
           cd pub-dashboard
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -78,13 +96,14 @@ jobs:
           git diff --staged --quiet && echo "Nothing to push" || git commit -m "Bootstrap update: $(date +'%Y-%m-%d')"
           git push origin main
 
-      - name: Step 8 – Commit private repo data
+      - name: Step 9 – Commit private repo data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin
           git rebase origin/main || (git rebase --abort && git merge -X theirs origin/main) || true
-          git add bhav_data/ db/ docs/data/ || true
+          git rm --cached docs/data/sim_results.json 2>/dev/null || true
+          git add bhav_data/ db/ docs/data/ src/ || true
           find output/ -maxdepth 3 \( -name "*.csv" -o -name "*.json" -o -name ".gitignore" \) | xargs git add 2>/dev/null || true
-          git diff --staged --quiet && echo "Nothing to commit" || git commit -m "Bootstrap: $(date +'%Y-%m-%d') -- $(ls bhav_data/*.parquet 2>/dev/null | wc -l) files"
+          git diff --staged --quiet && echo "Nothing to commit" || git commit -m "Bootstrap + 2yr prune: $(date +'%Y-%m-%d') -- $(ls bhav_data/*.parquet 2>/dev/null | wc -l) files"
           git push origin HEAD:main

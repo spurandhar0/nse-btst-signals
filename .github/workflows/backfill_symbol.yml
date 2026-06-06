@@ -17,7 +17,7 @@ permissions:
 jobs:
   backfill:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120      # increased: simulation on 500 configs needs headroom
 
     steps:
       - name: Checkout
@@ -54,6 +54,9 @@ jobs:
       - name: Run simulation
         run: python src/05_run_simulation.py
 
+      - name: Prune data older than 2 years (rolling window)
+        run: python src/prune_old_data.py
+
       - name: Build dashboard
         run: python src/05_build_dashboard.py
 
@@ -69,6 +72,9 @@ jobs:
             [ -f "$f" ] && cp "$f" pub-dashboard/docs/data/ || true
           done
           [ -f "$GITHUB_WORKSPACE/docs/data/sim_meta.json" ] && cp $GITHUB_WORKSPACE/docs/data/sim_meta.json pub-dashboard/docs/data/ || true
+          [ -f "$GITHUB_WORKSPACE/docs/data/trade_ohlc.json" ] && cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/ || true
+          # Never push legacy sim_results.json
+          rm -f pub-dashboard/docs/data/sim_results.json
           cd pub-dashboard
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -82,6 +88,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin
           git rebase origin/main || (git rebase --abort && git merge -X theirs origin/main) || true
-          git add db/ docs/data/ src/backfill_symbol.py || true
+          git rm --cached docs/data/sim_results.json 2>/dev/null || true
+          git add db/ docs/data/ src/ || true
           git diff --staged --quiet && echo "Nothing to commit" || git commit -m "Backfill: ${{ github.event.inputs.symbols }} from ${{ github.event.inputs.start_date }}"
           git push origin HEAD:main

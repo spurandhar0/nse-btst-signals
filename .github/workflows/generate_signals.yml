@@ -18,7 +18,7 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360     # increased: 500 configs × full historical backfill needs up to 6h
 
     steps:
       - name: Checkout
@@ -57,11 +57,21 @@ jobs:
         env:
           SIGNAL_START_DATE: ${{ github.event.inputs.signal_start_date || '2025-01-01' }}
 
-      - name: Step 5 – Run simulation & generate per-config Excel files
+      - name: Step 5 – Run simulation & generate per-config JSON files
         run: python src/05_run_simulation.py
 
-      - name: Step 6 – Build dashboard HTML
+      - name: Step 6 – Prune data older than 2 years (rolling window)
+        run: python src/prune_old_data.py
+
+      - name: Step 7 – Build dashboard HTML
         run: python src/05_build_dashboard.py
+
+      - name: Check disk usage before push
+        run: |
+          echo "=== Disk usage ==="
+          du -sh db/ docs/data/ bhav_data/ 2>/dev/null || true
+          echo "=== docs/data file count ==="
+          ls docs/data/ | wc -l
 
       - name: Push dashboard to public repo
         env:
@@ -71,28 +81,33 @@ jobs:
           git clone https://x-access-token:${GH_PAT}@github.com/spurandhar0/nse-btst-signals-dashboard.git pub-dashboard
           mkdir -p pub-dashboard/docs/data
 
-          # index.html — always required
           cp $GITHUB_WORKSPACE/docs/index.html pub-dashboard/docs/index.html
 
-          # sim_results per-config JSON files (MTF filtered, one per config)
           for cfg_file in $GITHUB_WORKSPACE/docs/data/sim_results_C*.json; do
             [ -f "$cfg_file" ] && cp "$cfg_file" pub-dashboard/docs/data/ || true
           done
 
-          # sim_meta.json — metadata (generated_at, last_date, config list)
+          # Remove stale config files from public repo
+          for pub_file in pub-dashboard/docs/data/sim_results_C*.json; do
+            [ -f "$pub_file" ] || continue
+            base=$(basename "$pub_file")
+            [ -f "$GITHUB_WORKSPACE/docs/data/$base" ] || rm -f "$pub_file"
+          done
+
           [ -f "$GITHUB_WORKSPACE/docs/data/sim_meta.json" ] \
             && cp $GITHUB_WORKSPACE/docs/data/sim_meta.json pub-dashboard/docs/data/sim_meta.json \
-            || echo "⚠  sim_meta.json not found — skipping"
+            || echo "sim_meta.json not found — skipping"
 
-          # trade_ohlc.json — safe copy
           [ -f "$GITHUB_WORKSPACE/docs/data/trade_ohlc.json" ] \
             && cp $GITHUB_WORKSPACE/docs/data/trade_ohlc.json pub-dashboard/docs/data/trade_ohlc.json \
-            || echo "⚠  trade_ohlc.json not found — skipping"
+            || echo "trade_ohlc.json not found — skipping"
 
-          # nifty_index.json — optional
           [ -f "$GITHUB_WORKSPACE/docs/data/nifty_index.json" ] \
             && cp $GITHUB_WORKSPACE/docs/data/nifty_index.json pub-dashboard/docs/data/nifty_index.json \
             || true
+
+          # Never push legacy sim_results.json
+          rm -f pub-dashboard/docs/data/sim_results.json
 
           cd pub-dashboard
           git config user.name "github-actions[bot]"
@@ -105,11 +120,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Pull remote changes FIRST (before staging) to avoid rebase conflicts
           git fetch origin
           git rebase origin/main || (git rebase --abort && git merge -X theirs origin/main) || true
-          # Stage only needed files — never XLSX (kept out by output/.gitignore)
-          git add db/ docs/ || true
+          git rm --cached docs/data/sim_results.json 2>/dev/null || true
+          git add db/ docs/ src/ || true
           find output/ -maxdepth 3 \( -name "*.csv" -o -name "*.json" -o -name ".gitignore" \) | xargs git add 2>/dev/null || true
-          git diff --staged --quiet && echo "Nothing to commit" || git commit -m "Backfill signals + simulation + dashboard: $(date +'%Y-%m-%d')"
+          git diff --staged --quiet && echo "Nothing to commit" || git commit -m "Backfill signals + simulation + 2yr prune: $(date +'%Y-%m-%d')"
           git push origin HEAD:main
