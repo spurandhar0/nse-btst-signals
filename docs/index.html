@@ -2567,7 +2567,7 @@ function cfgBadge(cfg){
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 function showTab(name,el){
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.classList.add('hidden'));
-  document.getElementById('tab-'+name).classList.remove('hidden');
+  const _tp=document.getElementById('tab-'+name);if(_tp)_tp.classList.remove('hidden');else{console.warn('tab-'+name+' panel missing');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   if(name==='overview') buildOverview();
@@ -2587,6 +2587,7 @@ function showTab(name,el){
   else if(name==='portfolio')   renderPortfolio();
   else if(name==='fno')         renderTab('fno');
   else if(name==='fnoclosed')   renderTab('fnoclosed');
+  else if(name==='configs')     renderConfigs();
 }
 
 // ─── FILTER HELPERS ──────────────────────────────────────────────────────────
@@ -4421,6 +4422,18 @@ async function portfolioManualAdd() {
   renderPortfolio();
 }
 
+
+
+// ── renderConfigs ── filter rows by config button
+function renderConfigs(){
+  const active=(document.querySelector('[id^="cfgtab-"].active')||{}).id||'cfgtab-ALL';
+  const val=active.replace('cfgtab-','');
+  const rows=document.querySelectorAll('#tab-configs tbody tr');
+  rows.forEach(r=>{
+    const cfg=(r.querySelector('.cfg-badge')||{}).textContent||'';
+    r.style.display=(val==='ALL'||cfg===val)?'':'none';
+  });
+}
 
 function cfgTabFilter(val, btn) {
   document.querySelectorAll('[id^="cfgtab-"]').forEach(function(b){ b.classList.remove('active'); });
