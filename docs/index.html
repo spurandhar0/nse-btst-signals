@@ -264,6 +264,10 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
   <div class="tab" onclick="showTab('fno',this)">&#128197; F&amp;O Open</div>
   <div class="tab" onclick="showTab('fnoclosed',this)">&#10003; F&amp;O Closed</div>
   <div class="tab" onclick="showTab('closed',this)">&#10003; Closed Positions</div>
+  <div class="tab" onclick="showTab('uniopen',this)">&#9670; Uni Open</div>
+  <div class="tab" onclick="showTab('uniclosed',this)">&#9670; Uni Closed</div>
+  <div class="tab" onclick="showTab('unifno',this)">&#9670; Uni F&amp;O Open</div>
+  <div class="tab" onclick="showTab('unifnoclosed',this)">&#9670; Uni F&amp;O Closed</div>
   <div class="tab" onclick="showTab('fe',this)">&#9888; Force Exit</div>
   <div class="tab" onclick="showTab('history',this)">&#9776; Stock History</div>
   <div class="tab" onclick="showTab('ledger',this)">&#9781; Daily Ledger</div>
@@ -727,6 +731,160 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;paddi
     </div>
   </div>
 </div>
+<div id="tab-uniopen" class="hidden">
+  <div class="tab-badges" id="uniopen-badges"></div>
+  <div class="cstrip">
+    <span class="slbl">&#9670; Unique Open Positions — one row per symbol (cheapest avg buy price across all configs)</span>
+    <div style="flex:1"></div>
+    <input type="text" id="uniopen-search" placeholder="🔍 Search symbol..." oninput="renderTab('uniopen')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
+    <button class="btn-green btn-sm" onclick="exportTab('uniopen')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('uniopen')">&#8595; CSV</button>
+  </div>
+  <div class="card" style="padding:0 0 8px">
+    <div class="table-area">
+      <table><thead><tr>
+        <th onclick="srt('uniopen',0)">#</th>
+        <th onclick="srt('uniopen',1)">CFG</th>
+        <th onclick="srt('uniopen',2)">SYMBOL</th>
+        <th onclick="srt('uniopen',3)">BUY DATE</th>
+        <th onclick="srt('uniopen',4)">AVG BUY &#8377;</th>
+        <th onclick="srt('uniopen',5)">CURRENT LTP &#8377;</th>
+        <th onclick="srt('uniopen',6)">TARGET &#8377;</th>
+        <th onclick="srt('uniopen',7)">STOP &#8377;</th>
+        <th onclick="srt('uniopen',8)">BUYS</th>
+        <th onclick="srt('uniopen',9)">QTY</th>
+        <th onclick="srt('uniopen',10)">INVESTED &#8377;</th>
+        <th onclick="srt('uniopen',11)">MARKET DAYS</th>
+        <th onclick="srt('uniopen',12)">UNREAL P&amp;L &#8377;</th>
+        <th onclick="srt('uniopen',13)">GAIN %</th>
+      </tr></thead>
+      <tbody id="uniopen-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="uniopen-info"></span><div style="flex:1"></div>
+      <button class="btn-sm btn-outline" onclick="pg('uniopen',-1)">&#8249; Prev</button>
+      <button class="btn-sm btn-outline" onclick="pg('uniopen',1)">Next &#8250;</button>
+      <select id="uniopen-pgsize" onchange="renderTab('uniopen')"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="9999">All</option></select>
+    </div>
+  </div>
+</div>
+
+<div id="tab-uniclosed" class="hidden">
+  <div class="tab-badges" id="uniclosed-badges"></div>
+  <div class="cstrip">
+    <span class="slbl">&#9670; Unique Closed Positions — one row per symbol (highest avg buy price)</span>
+    <div style="flex:1"></div>
+    <button class="btn-filter active" id="uni-closed-ALL" onclick="uniClosedFilter('ALL',this)">All</button>
+    <button class="btn-filter" id="uni-closed-P" onclick="uniClosedFilter('P',this)">Profit</button>
+    <button class="btn-filter" id="uni-closed-L" onclick="uniClosedFilter('L',this)">Loss</button>
+    <button class="btn-filter" id="uni-closed-FE" onclick="uniClosedFilter('FE',this)">FE</button>
+    <input type="text" id="uniclosed-search" placeholder="🔍 Search symbol..." oninput="renderTab('uniclosed')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
+    <button class="btn-green btn-sm" onclick="exportTab('uniclosed')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('uniclosed')">&#8595; CSV</button>
+  </div>
+  <div class="card" style="padding:0 0 8px">
+    <div class="table-area">
+      <table><thead><tr>
+        <th onclick="srt('uniclosed',0)">#</th>
+        <th onclick="srt('uniclosed',1)">CFG</th>
+        <th onclick="srt('uniclosed',2)">SYMBOL</th>
+        <th onclick="srt('uniclosed',3)">BUY DATE</th>
+        <th onclick="srt('uniclosed',4)">EXIT DATE</th>
+        <th onclick="srt('uniclosed',5)">AVG BUY &#8377;</th>
+        <th onclick="srt('uniclosed',6)">EXIT &#8377;</th>
+        <th onclick="srt('uniclosed',7)">QTY</th>
+        <th onclick="srt('uniclosed',8)">INVESTED &#8377;</th>
+        <th onclick="srt('uniclosed',9)">P&amp;L &#8377;</th>
+        <th onclick="srt('uniclosed',10)">GAIN %</th>
+        <th onclick="srt('uniclosed',11)">DAYS</th>
+        <th onclick="srt('uniclosed',12)">RESULT</th>
+      </tr></thead>
+      <tbody id="uniclosed-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="uniclosed-info"></span><div style="flex:1"></div>
+      <button class="btn-sm btn-outline" onclick="pg('uniclosed',-1)">&#8249; Prev</button>
+      <button class="btn-sm btn-outline" onclick="pg('uniclosed',1)">Next &#8250;</button>
+      <select id="uniclosed-pgsize" onchange="renderTab('uniclosed')"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="9999">All</option></select>
+    </div>
+  </div>
+</div>
+
+<div id="tab-unifno" class="hidden">
+  <div class="tab-badges" id="unifno-badges"></div>
+  <div class="cstrip">
+    <span class="slbl">&#9670; Unique F&amp;O Open — one row per F&amp;O symbol (cheapest avg buy price)</span>
+    <div style="flex:1"></div>
+    <input type="text" id="unifno-search" placeholder="🔍 Search symbol..." oninput="renderTab('unifno')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
+    <button class="btn-green btn-sm" onclick="exportTab('unifno')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('unifno')">&#8595; CSV</button>
+  </div>
+  <div class="card" style="padding:0 0 8px">
+    <div class="table-area">
+      <table><thead><tr>
+        <th onclick="srt('unifno',0)">#</th>
+        <th onclick="srt('unifno',1)">CFG</th>
+        <th onclick="srt('unifno',2)">SYMBOL</th>
+        <th onclick="srt('unifno',3)">BUY DATE</th>
+        <th onclick="srt('unifno',4)">AVG BUY &#8377;</th>
+        <th onclick="srt('unifno',5)">CURRENT LTP &#8377;</th>
+        <th onclick="srt('unifno',6)">TARGET &#8377;</th>
+        <th onclick="srt('unifno',7)">STOP &#8377;</th>
+        <th onclick="srt('unifno',8)">BUYS</th>
+        <th onclick="srt('unifno',9)">QTY</th>
+        <th onclick="srt('unifno',10)">INVESTED &#8377;</th>
+        <th onclick="srt('unifno',11)">MARKET DAYS</th>
+        <th onclick="srt('unifno',12)">UNREAL P&amp;L &#8377;</th>
+        <th onclick="srt('unifno',13)">GAIN %</th>
+      </tr></thead>
+      <tbody id="unifno-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="unifno-info"></span><div style="flex:1"></div>
+      <button class="btn-sm btn-outline" onclick="pg('unifno',-1)">&#8249; Prev</button>
+      <button class="btn-sm btn-outline" onclick="pg('unifno',1)">Next &#8250;</button>
+      <select id="unifno-pgsize" onchange="renderTab('unifno')"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="9999">All</option></select>
+    </div>
+  </div>
+</div>
+
+<div id="tab-unifnoclosed" class="hidden">
+  <div class="tab-badges" id="unifnoclosed-badges"></div>
+  <div class="cstrip">
+    <span class="slbl">&#9670; Unique F&amp;O Closed — one row per F&amp;O symbol (highest avg buy price)</span>
+    <div style="flex:1"></div>
+    <button class="btn-filter active" id="uni-fnoclosed-ALL" onclick="uniFnoClosedFilter('ALL',this)">All</button>
+    <button class="btn-filter" id="uni-fnoclosed-P" onclick="uniFnoClosedFilter('P',this)">Profit</button>
+    <button class="btn-filter" id="uni-fnoclosed-L" onclick="uniFnoClosedFilter('L',this)">Loss</button>
+    <button class="btn-filter" id="uni-fnoclosed-FE" onclick="uniFnoClosedFilter('FE',this)">FE</button>
+    <input type="text" id="unifnoclosed-search" placeholder="🔍 Search symbol..." oninput="renderTab('unifnoclosed')" style="padding:4px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:12px;width:160px;outline:none;">
+    <button class="btn-green btn-sm" onclick="exportTab('unifnoclosed')">&#8595; Excel</button>
+    <button class="btn-teal btn-sm" onclick="exportCSVTab('unifnoclosed')">&#8595; CSV</button>
+  </div>
+  <div class="card" style="padding:0 0 8px">
+    <div class="table-area">
+      <table><thead><tr>
+        <th onclick="srt('unifnoclosed',0)">#</th>
+        <th onclick="srt('unifnoclosed',1)">CFG</th>
+        <th onclick="srt('unifnoclosed',2)">SYMBOL</th>
+        <th onclick="srt('unifnoclosed',3)">BUY DATE</th>
+        <th onclick="srt('unifnoclosed',4)">EXIT DATE</th>
+        <th onclick="srt('unifnoclosed',5)">AVG BUY &#8377;</th>
+        <th onclick="srt('unifnoclosed',6)">EXIT &#8377;</th>
+        <th onclick="srt('unifnoclosed',7)">QTY</th>
+        <th onclick="srt('unifnoclosed',8)">INVESTED &#8377;</th>
+        <th onclick="srt('unifnoclosed',9)">P&amp;L &#8377;</th>
+        <th onclick="srt('unifnoclosed',10)">GAIN %</th>
+        <th onclick="srt('unifnoclosed',11)">DAYS</th>
+        <th onclick="srt('unifnoclosed',12)">RESULT</th>
+      </tr></thead>
+      <tbody id="unifnoclosed-body"></tbody></table>
+    </div>
+    <div class="pager"><span class="info" id="unifnoclosed-info"></span><div style="flex:1"></div>
+      <button class="btn-sm btn-outline" onclick="pg('unifnoclosed',-1)">&#8249; Prev</button>
+      <button class="btn-sm btn-outline" onclick="pg('unifnoclosed',1)">Next &#8250;</button>
+      <select id="unifnoclosed-pgsize" onchange="renderTab('unifnoclosed')"><option value="25">25</option><option value="100">100</option><option value="9999">All</option></select>
+    </div>
+  </div>
+</div>
+
 
 <div id="tab-fe" class="hidden">
   <div class="tab-badges" id="fe-badges"></div>
@@ -2470,6 +2628,10 @@ const state = {
   signals:     {cfg:'ALL', page:1, sort:0, asc:false},
   fno:         {cfg:'ALL', page:1, sort:0, asc:false},
   fnoclosed:   {cfg:'ALL', res:'ALL', page:1, sort:0, asc:false},
+  uniopen:     {page:1, sort:0, asc:false},
+  uniclosed:   {res:'ALL', page:1, sort:0, asc:false},
+  unifno:      {page:1, sort:0, asc:false},
+  unifnoclosed:{res:'ALL', page:1, sort:0, asc:false},
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -2613,6 +2775,21 @@ function setPager(tab,cur,total,pgSz){
 // ─── DEDUPLICATE BY SYMBOL ──────────────────────────────────────────────────
 // mode='min': keep cheapest AVG_BUY_PRICE per symbol (Open Positions / F&O Open)
 // mode='max': keep highest  AVG_BUY_PRICE per symbol (Closed Positions / F&O Closed)
+function uniClosedFilter(res, el) {
+  state.uniclosed.res = res;
+  state.uniclosed.page = 1;
+  document.querySelectorAll('[id^="uni-closed-"]').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderTab('uniclosed');
+}
+function uniFnoClosedFilter(res, el) {
+  state.unifnoclosed.res = res;
+  state.unifnoclosed.page = 1;
+  document.querySelectorAll('[id^="uni-fnoclosed-"]').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderTab('unifnoclosed');
+}
+
 function dedupeBySymbol(rows, mode) {
   const map = {};
   for (const r of rows) {
@@ -2638,7 +2815,6 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _os=(document.getElementById('open-search')||{}).value||'';
     if(_os) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_os.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'min'); // unique symbols — cheapest entry across all configs
   }
   else if(tab==='closed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
@@ -2649,7 +2825,6 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _cs=(document.getElementById('closed-search')||{}).value||'';
     if(_cs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_cs.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'max'); // unique symbols — highest avg buy price per symbol
   }
   else if(tab==='fe'){
     const cfgDurMap={};
@@ -2721,7 +2896,6 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _fs=(document.getElementById('fno-search')||{}).value||'';
     if(_fs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_fs.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'min'); // unique F&O symbols — cheapest entry across all configs
   }
   else if(tab==='fnoclosed'){
     rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
@@ -2732,7 +2906,41 @@ function getFiltered(tab){
     if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
     const _fcs=(document.getElementById('fnoclosed-search')||{}).value||'';
     if(_fcs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_fcs.toUpperCase()));
-    rows = dedupeBySymbol(rows, 'max'); // unique F&O symbols — highest avg buy price per symbol
+  }
+
+  else if(tab==='uniopen'){
+    rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open');
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _uos=(document.getElementById('uniopen-search')||{}).value||'';
+    if(_uos) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_uos.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'min');
+  }
+  else if(tab==='uniclosed'){
+    rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT);
+    if(state.uniclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
+    if(state.uniclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
+    if(state.uniclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _ucs=(document.getElementById('uniclosed-search')||{}).value||'';
+    if(_ucs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ucs.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'max');
+  }
+  else if(tab==='unifno'){
+    rows = rows.filter(r=>r.ORDER==='Executed'&&r.STATUS==='Open'&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _ufs=(document.getElementById('unifno-search')||{}).value||'';
+    if(_ufs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ufs.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'min');
+  }
+  else if(tab==='unifnoclosed'){
+    rows = rows.filter(r=>r.STATUS==='Closed'&&r.RESULT&&FO_SYMBOLS.has((r.SYMBOL||'').toUpperCase()));
+    if(state.unifnoclosed.res==='P') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('profit')&&!r.RESULT.includes('FE'));
+    if(state.unifnoclosed.res==='L') rows=rows.filter(r=>r.RESULT&&r.RESULT.toLowerCase().includes('loss')&&!r.RESULT.includes('FE'));
+    if(state.unifnoclosed.res==='FE') rows=rows.filter(r=>r.RESULT&&r.RESULT.includes('FE'));
+    if(dateRangeActive) rows=rows.filter(r=>inDateRange(r.SIGNAL_DATE));
+    const _ufcs=(document.getElementById('unifnoclosed-search')||{}).value||'';
+    if(_ufcs) rows=rows.filter(r=>(r.SYMBOL||'').toUpperCase().includes(_ufcs.toUpperCase()));
+    rows = dedupeBySymbol(rows, 'max');
   }
 
   // Sort
@@ -2754,13 +2962,25 @@ function getFiltered(tab){
 function getTabSortVals(tab,a,b,col){
   const nv=x=>parseFloat(x)||0;
   const sv=x=>x||'';
-  if(tab==='open'||tab==='fno'){
+  if(tab==='open'||tab==='fno'||tab==='uniopen'||tab==='unifno'){
     const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','BUY_COUNT','TOTAL_QTY','TOTAL_INVESTMENT','MARKET_DAYS','PROFIT','GAIN_PCT'];
     const k=cols[col]||'SYMBOL';
     if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
     return[nv(a[k]),nv(b[k])];
   }
-  if(tab==='closed'||tab==='fnoclosed'){
+  if(tab==='closed'||tab==='fnoclosed'||tab==='uniclosed'||tab==='unifnoclosed'){
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','TOTAL_INVESTMENT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
+    const k=cols[col]||'EXIT_DATE';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='uniopen'||tab==='unifno'){
+    const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','AVG_BUY_PRICE','CURRENT_LTP','TARGET_PRICE','STOP_PRICE','BUY_COUNT','TOTAL_QTY','TOTAL_INVESTMENT','MARKET_DAYS','PROFIT','GAIN_PCT'];
+    const k=cols[col]||'SYMBOL';
+    if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
+    return[nv(a[k]),nv(b[k])];
+  }
+  if(tab==='uniclosed'||tab==='unifnoclosed'){
     const cols=[0,'CONFIG','SYMBOL','SIGNAL_DATE','EXIT_DATE','AVG_BUY_PRICE','EXIT_PRICE','TOTAL_QTY','TOTAL_INVESTMENT','PROFIT','GAIN_PCT','MARKET_DAYS','RESULT'];
     const k=cols[col]||'EXIT_DATE';
     if(typeof a[k]==='string')return[sv(a[k]),sv(b[k])];
@@ -2814,6 +3034,10 @@ function renderTab(tab){
   else if(tab==='fe') renderBadges('fe-badges', rows, 'open');
   else if(tab==='fno') renderBadges('fno-badges', rows, 'open');
   else if(tab==='fnoclosed') renderBadges('fnoclosed-badges', rows, 'closed');
+  else if(tab==='uniopen') renderBadges('uniopen-badges', rows, 'open');
+  else if(tab==='unifno') renderBadges('unifno-badges', rows, 'open');
+  else if(tab==='uniclosed') renderBadges('uniclosed-badges', rows, 'closed');
+  else if(tab==='unifnoclosed') renderBadges('unifnoclosed-badges', rows, 'closed');
   else if(tab==='trades'){
     const tProfit=rows.filter(r=>(parseFloat(r.PROFIT)||0)>0).length;
     const tLoss=rows.filter(r=>(parseFloat(r.PROFIT)||0)<0).length;
