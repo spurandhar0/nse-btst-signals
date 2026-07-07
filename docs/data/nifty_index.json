@@ -1,53 +1,53 @@
 {
-  "updated_at": "03-Jul-2026 06:52 PM IST",
+  "updated_at": "07-Jul-2026 07:08 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 24270.85,
-      "prev_close": 24175.7,
-      "open": 24375.65,
-      "high": 24378.15,
-      "low": 24252.35,
-      "change": 95.15,
-      "change_pct": 0.39,
-      "date": "03-Jul-2026"
+      "close": 24398.7,
+      "prev_close": 24430.35,
+      "open": 24464.45,
+      "high": 24530.9,
+      "low": 24348.95,
+      "change": -31.65,
+      "change_pct": -0.13,
+      "date": "07-Jul-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 57938.5,
-      "prev_close": 58031.65,
-      "open": 58343.25,
-      "high": 58343.25,
-      "low": 57799.05,
-      "change": -93.15,
+      "close": 58200.7,
+      "prev_close": 58291.5,
+      "open": 58567.85,
+      "high": 58581.1,
+      "low": 58110.1,
+      "change": -90.8,
       "change_pct": -0.16,
-      "date": "03-Jul-2026"
+      "date": "07-Jul-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 77763.91,
-      "prev_close": 77502.12,
-      "open": 78152.34,
-      "high": 78157.52,
-      "low": 77710.01,
-      "change": 261.79,
-      "change_pct": 0.34,
-      "date": "03-Jul-2026"
+      "close": 78180.72,
+      "prev_close": 78285.07,
+      "open": 78461.16,
+      "high": 78664.92,
+      "low": 78031.04,
+      "change": -104.35,
+      "change_pct": -0.13,
+      "date": "07-Jul-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 27439.4,
-      "prev_close": 26965.05,
-      "open": 27482.4,
-      "high": 27759.55,
-      "low": 27286.55,
-      "change": 474.35,
-      "change_pct": 1.76,
-      "date": "03-Jul-2026"
+      "close": 27939.15,
+      "prev_close": 27276.45,
+      "open": 27248.3,
+      "high": 28156.2,
+      "low": 27248.3,
+      "change": 662.7,
+      "change_pct": 2.43,
+      "date": "07-Jul-2026"
     }
   ]
 }
