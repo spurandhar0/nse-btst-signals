@@ -1,53 +1,53 @@
 {
-  "updated_at": "21-Jul-2026 06:28 PM IST",
+  "updated_at": "22-Jul-2026 06:33 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 24187.7,
-      "prev_close": 24238.5,
-      "open": 24216.05,
-      "high": 24262.2,
-      "low": 24135.65,
-      "change": -50.8,
-      "change_pct": -0.21,
-      "date": "21-Jul-2026"
+      "close": 23996.25,
+      "prev_close": 24187.7,
+      "open": 24150.45,
+      "high": 24166.3,
+      "low": 23961.4,
+      "change": -191.45,
+      "change_pct": -0.79,
+      "date": "22-Jul-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 57835.35,
-      "prev_close": 57945.0,
-      "open": 57853.75,
-      "high": 58228.65,
-      "low": 57803.85,
-      "change": -109.65,
-      "change_pct": -0.19,
-      "date": "21-Jul-2026"
+      "close": 57126.8,
+      "prev_close": 57835.35,
+      "open": 57768.4,
+      "high": 57824.0,
+      "low": 56970.6,
+      "change": -708.55,
+      "change_pct": -1.23,
+      "date": "22-Jul-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 77470.11,
-      "prev_close": 77708.52,
-      "open": 77649.63,
-      "high": 77753.18,
-      "low": 77337.33,
-      "change": -238.41,
-      "change_pct": -0.31,
-      "date": "21-Jul-2026"
+      "close": 76755.05,
+      "prev_close": 77470.11,
+      "open": 77384.95,
+      "high": 77384.95,
+      "low": 76641.19,
+      "change": -715.06,
+      "change_pct": -0.92,
+      "date": "22-Jul-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 28984.4,
-      "prev_close": 29161.9,
-      "open": 29075.25,
-      "high": 29415.25,
-      "low": 28930.55,
-      "change": -177.5,
-      "change_pct": -0.61,
-      "date": "21-Jul-2026"
+      "close": 28549.85,
+      "prev_close": 28984.4,
+      "open": 28881.95,
+      "high": 28913.35,
+      "low": 28502.95,
+      "change": -434.55,
+      "change_pct": -1.5,
+      "date": "22-Jul-2026"
     }
   ]
 }
