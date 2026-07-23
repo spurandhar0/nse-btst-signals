@@ -1,53 +1,53 @@
 {
-  "updated_at": "22-Jul-2026 06:33 PM IST",
+  "updated_at": "23-Jul-2026 06:36 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 23996.25,
-      "prev_close": 24187.7,
-      "open": 24150.45,
-      "high": 24166.3,
-      "low": 23961.4,
-      "change": -191.45,
-      "change_pct": -0.79,
-      "date": "22-Jul-2026"
+      "close": 23869.6,
+      "prev_close": 23996.25,
+      "open": 23904.8,
+      "high": 23990.75,
+      "low": 23807.2,
+      "change": -126.65,
+      "change_pct": -0.53,
+      "date": "23-Jul-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 57126.8,
-      "prev_close": 57835.35,
-      "open": 57768.4,
-      "high": 57824.0,
-      "low": 56970.6,
-      "change": -708.55,
-      "change_pct": -1.23,
-      "date": "22-Jul-2026"
+      "close": 56592.0,
+      "prev_close": 57126.8,
+      "open": 56796.95,
+      "high": 56930.15,
+      "low": 56374.75,
+      "change": -534.8,
+      "change_pct": -0.94,
+      "date": "23-Jul-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 76755.05,
-      "prev_close": 77470.11,
-      "open": 77384.95,
-      "high": 77384.95,
-      "low": 76641.19,
-      "change": -715.06,
-      "change_pct": -0.92,
-      "date": "22-Jul-2026"
+      "close": 76391.39,
+      "prev_close": 76755.05,
+      "open": 76515.1,
+      "high": 76726.66,
+      "low": 76151.98,
+      "change": -363.66,
+      "change_pct": -0.47,
+      "date": "23-Jul-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 28549.85,
-      "prev_close": 28984.4,
-      "open": 28881.95,
-      "high": 28913.35,
-      "low": 28502.95,
-      "change": -434.55,
-      "change_pct": -1.5,
-      "date": "22-Jul-2026"
+      "close": 28533.55,
+      "prev_close": 28549.85,
+      "open": 28502.9,
+      "high": 28688.95,
+      "low": 28277.75,
+      "change": -16.3,
+      "change_pct": -0.06,
+      "date": "23-Jul-2026"
     }
   ]
 }
