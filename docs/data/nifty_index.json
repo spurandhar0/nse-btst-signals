@@ -1,53 +1,53 @@
 {
-  "updated_at": "31-Jul-2026 06:49 PM IST",
+  "updated_at": "03-Aug-2026 07:31 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 24383.6,
-      "prev_close": 24317.15,
-      "open": 24361.45,
-      "high": 24429.4,
-      "low": 24299.7,
-      "change": 66.45,
-      "change_pct": 0.27,
-      "date": "31-Jul-2026"
+      "close": 24774.3,
+      "prev_close": 24383.6,
+      "open": 24572.7,
+      "high": 24774.3,
+      "low": 24515.15,
+      "change": 390.7,
+      "change_pct": 1.6,
+      "date": "03-Aug-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 57264.85,
-      "prev_close": 57147.5,
-      "open": 57225.9,
-      "high": 57411.25,
-      "low": 57139.6,
-      "change": 117.35,
-      "change_pct": 0.21,
-      "date": "31-Jul-2026"
+      "close": 58247.95,
+      "prev_close": 57264.85,
+      "open": 57569.6,
+      "high": 58247.95,
+      "low": 57465.95,
+      "change": 983.1,
+      "change_pct": 1.72,
+      "date": "03-Aug-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 78094.64,
-      "prev_close": 77928.15,
-      "open": 77998.66,
-      "high": 78272.25,
-      "low": 77809.93,
-      "change": 166.49,
-      "change_pct": 0.21,
-      "date": "31-Jul-2026"
+      "close": 78639.03,
+      "prev_close": 78094.64,
+      "open": 78883.34,
+      "high": 78895.1,
+      "low": 78497.34,
+      "change": 544.39,
+      "change_pct": 0.7,
+      "date": "03-Aug-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 30708.9,
-      "prev_close": 31194.55,
-      "open": 30488.4,
-      "high": 30900.25,
-      "low": 30034.4,
-      "change": -485.65,
-      "change_pct": -1.56,
-      "date": "31-Jul-2026"
+      "close": 31715.25,
+      "prev_close": 30708.95,
+      "open": 30950.95,
+      "high": 31715.25,
+      "low": 30796.55,
+      "change": 1006.3,
+      "change_pct": 3.28,
+      "date": "03-Aug-2026"
     }
   ]
 }
