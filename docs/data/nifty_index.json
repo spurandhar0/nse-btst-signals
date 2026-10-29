@@ -1,53 +1,53 @@
 {
-  "updated_at": "28-Oct-2026 10:51 PM IST",
+  "updated_at": "29-Oct-2026 11:02 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 22698.85,
-      "prev_close": 22749.75,
-      "open": 22678.0,
-      "high": 22778.05,
-      "low": 22497.7,
-      "change": -50.9,
-      "change_pct": -0.22,
-      "date": "28-Oct-2026"
+      "close": 22936.75,
+      "prev_close": 22698.85,
+      "open": 22690.65,
+      "high": 22961.95,
+      "low": 22656.75,
+      "change": 237.9,
+      "change_pct": 1.05,
+      "date": "29-Oct-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 54267.4,
-      "prev_close": 53974.9,
-      "open": 53793.25,
-      "high": 54440.25,
-      "low": 53626.15,
-      "change": 292.5,
-      "change_pct": 0.54,
-      "date": "28-Oct-2026"
+      "close": 54909.65,
+      "prev_close": 54267.4,
+      "open": 54175.6,
+      "high": 54980.15,
+      "low": 54047.9,
+      "change": 642.25,
+      "change_pct": 1.18,
+      "date": "29-Oct-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 73246.03,
-      "prev_close": 73598.67,
-      "open": 73253.44,
-      "high": 73525.44,
-      "low": 72603.57,
-      "change": -352.64,
-      "change_pct": -0.48,
-      "date": "28-Oct-2026"
+      "close": 74151.04,
+      "prev_close": 73246.03,
+      "open": 73268.47,
+      "high": 74166.16,
+      "low": 73181.9,
+      "change": 905.01,
+      "change_pct": 1.24,
+      "date": "29-Oct-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 31553.4,
-      "prev_close": 32189.45,
-      "open": 31438.9,
-      "high": 31597.95,
-      "low": 30928.1,
-      "change": -636.05,
-      "change_pct": -1.98,
-      "date": "28-Oct-2026"
+      "close": 31866.4,
+      "prev_close": 31553.4,
+      "open": 31756.65,
+      "high": 31982.9,
+      "low": 31606.35,
+      "change": 313.0,
+      "change_pct": 0.99,
+      "date": "29-Oct-2026"
     }
   ]
 }
