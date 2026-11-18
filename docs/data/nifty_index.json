@@ -1,53 +1,53 @@
 {
-  "updated_at": "18-Nov-2026 01:31 AM IST",
+  "updated_at": "19-Nov-2026 01:03 AM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 25291.1,
-      "prev_close": 25144.3,
-      "open": 25206.15,
-      "high": 25337.6,
-      "low": 25172.1,
-      "change": 146.8,
-      "change_pct": 0.58,
-      "date": "16-Nov-2026"
+      "close": 25387.4,
+      "prev_close": 25291.1,
+      "open": 25277.3,
+      "high": 25501.35,
+      "low": 25267.3,
+      "change": 96.3,
+      "change_pct": 0.38,
+      "date": "17-Nov-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 61575.9,
-      "prev_close": 61034.1,
-      "open": 61225.65,
-      "high": 61712.8,
-      "low": 61213.2,
-      "change": 541.8,
-      "change_pct": 0.89,
-      "date": "16-Nov-2026"
+      "close": 62273.25,
+      "prev_close": 61575.9,
+      "open": 61559.95,
+      "high": 62442.2,
+      "low": 61488.0,
+      "change": 697.35,
+      "change_pct": 1.13,
+      "date": "17-Nov-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 82104.79,
-      "prev_close": 81592.45,
-      "open": 81810.98,
-      "high": 82311.65,
-      "low": 81762.82,
-      "change": 512.34,
-      "change_pct": 0.63,
-      "date": "16-Nov-2026"
+      "close": 82532.19,
+      "prev_close": 82104.79,
+      "open": 82150.62,
+      "high": 82897.49,
+      "low": 82091.9,
+      "change": 427.4,
+      "change_pct": 0.52,
+      "date": "17-Nov-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 31941.05,
-      "prev_close": 31931.15,
-      "open": 32117.65,
-      "high": 32418.3,
-      "low": 31703.55,
-      "change": 9.9,
-      "change_pct": 0.03,
-      "date": "16-Nov-2026"
+      "close": 31654.1,
+      "prev_close": 31941.05,
+      "open": 31817.5,
+      "high": 32068.9,
+      "low": 31578.9,
+      "change": -286.95,
+      "change_pct": -0.9,
+      "date": "17-Nov-2026"
     }
   ]
 }
