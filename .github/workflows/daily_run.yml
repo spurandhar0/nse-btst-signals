@@ -10,6 +10,15 @@ on:
         required: false
         default: ''
 
+      session_date:
+        description: 'Trading session date in YYYY-MM-DD (defaults to current IST date)'
+        required: false
+        default: ''
+      from_date:
+        description: 'Optional first date for historical bhavcopy backfill (YYYY-MM-DD)'
+        required: false
+        default: ''
+
 permissions:
   contents: write
 
@@ -32,17 +41,33 @@ jobs:
       - name: Install dependencies
         run: pip install pandas numpy requests pyarrow openpyxl
 
-      - name: Download today's bhavcopy
+      - name: Download NSE equity bhavcopies
         env:
           BHAVCOPY_URL: ${{ github.event.inputs.bhavcopy_url }}
+          SESSION_DATE: ${{ github.event.inputs.session_date }}
+          FROM_DATE: ${{ github.event.inputs.from_date }}
         run: |
+          SESSION_DATE=${SESSION_DATE:-$(TZ=Asia/Kolkata date +%F)}
+          if [[ ! "$SESSION_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "Session date must use YYYY-MM-DD."
+            exit 1
+          fi
+          echo "BTST_SESSION_DATE=$SESSION_DATE" >> "$GITHUB_ENV"
+
+          args=(--session-date "$SESSION_DATE")
+          if [ -n "$FROM_DATE" ]; then
+            args+=(--from-date "$FROM_DATE")
+          fi
+
           if [ -n "$BHAVCOPY_URL" ]; then
-            echo "Using custom bhavcopy URL: $BHAVCOPY_URL"
+            if [ -n "$FROM_DATE" ]; then
+              echo "Use the NSE archive for date-range backfills."
+              exit 1
+            fi
             mkdir -p bhav_data
-            DATE=$(date +%Y-%m-%d)
-            curl -fsSL "$BHAVCOPY_URL" -o "bhav_data/${DATE}.csv" && echo "Downloaded from custom URL" || { echo "Custom URL download failed"; exit 1; }
+            curl -fsSL "$BHAVCOPY_URL" -o "bhav_data/${SESSION_DATE}.csv"
           else
-            python src/nse_bhavcopy_fetch.py
+            python src/nse_bhavcopy_fetch.py "${args[@]}"
           fi
 
       - name: Step 1 - Consolidate bhavcopy data
@@ -55,6 +80,20 @@ jobs:
 
       - name: Step 2 - Filter EQ data
         run: python src/02_filter_eq.py
+
+      - name: Verify EQ data includes the requested trading session
+        run: |
+          python - <<'PYTHON'
+          import os
+          from datetime import date
+
+          import pandas as pd
+
+          expected = date.fromisoformat(os.environ["BTST_SESSION_DATE"])
+          dates = pd.to_datetime(pd.read_parquet("db/eq_data.parquet", columns=["DATE1"])["DATE1"])
+          if not dates.eq(pd.Timestamp(expected)).any():
+              raise SystemExit(f"Missing EQ data for {expected}. Latest available date: {dates.max().date()}")
+          PYTHON
 
       - name: Step 3 - Compute ATH
         run: python src/03_find_ath.py
