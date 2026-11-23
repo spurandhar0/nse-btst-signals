@@ -18,6 +18,16 @@ IST     = timezone(timedelta(hours=5, minutes=30))
 NOW_IST = datetime.now(tz=IST)
 BHAV_ROOT = "bhav_data"
 
+# NSE capital market circular NSE/CMTR/71775.
+NSE_HOLIDAYS_2026 = {
+    date(2026, 1, 26), date(2026, 3, 3), date(2026, 3, 26),
+    date(2026, 3, 31), date(2026, 4, 3), date(2026, 4, 14),
+    date(2026, 5, 1), date(2026, 5, 28), date(2026, 6, 26),
+    date(2026, 9, 14), date(2026, 10, 2), date(2026, 10, 20),
+    date(2026, 11, 10), date(2026, 11, 24), date(2026, 12, 25),
+}
+NSE_MUHURAT_2026 = date(2026, 11, 8)
+
 
 def set_gha_output(key, value):
     gha_output = os.environ.get("GITHUB_OUTPUT", "")
@@ -101,7 +111,7 @@ if __name__ == "__main__":
     if day > args.session_date:
         parser.error("--from-date must be on or before --session-date")
     while day < args.session_date:
-        if day.weekday() < 5:
+        if day == NSE_MUHURAT_2026 or (day.weekday() < 5 and day not in NSE_HOLIDAYS_2026):
             fetch_bhav(day, allow_missing=True)
         day += timedelta(days=1)
     fetch_bhav(args.session_date)
