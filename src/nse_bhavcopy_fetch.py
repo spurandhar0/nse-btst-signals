@@ -5,8 +5,14 @@ Downloads today's NSE EQ bhavcopy and saves to bhav_data/
 Outputs GitHub Actions step output: new_file=true/false
 """
 
-import os, glob, requests
-from datetime import datetime, timedelta, timezone
+import argparse
+import csv
+import glob
+import io
+import os
+from datetime import date, datetime, timedelta, timezone
+
+import requests
 
 IST     = timezone(timedelta(hours=5, minutes=30))
 NOW_IST = datetime.now(tz=IST)
@@ -20,11 +26,8 @@ def set_gha_output(key, value):
             f.write(f"{key}={value}\n")
 
 
-def fetch_bhav():
-    dd   = NOW_IST.strftime("%d")
-    mm   = NOW_IST.strftime("%m")
-    yyyy = NOW_IST.strftime("%Y")
-    mon3 = NOW_IST.strftime("%b")
+def fetch_bhav(session_date, *, allow_missing=False):
+    dd, mm, yyyy, mon3 = session_date.strftime("%d %m %Y %b").split()
 
     fname    = f"sec_bhavdata_full_{dd}{mm}{yyyy}.csv"
     savepath = os.path.join(BHAV_ROOT, fname)
@@ -40,7 +43,7 @@ def fetch_bhav():
         print(f"\u26a0\ufe0f  File for {dd}-{mon3}-{yyyy} already exists: {existing[0]}")
         print("\u23ed\ufe0f  Skipping download.")
         set_gha_output("new_file", "false")
-        return False
+        return True
 
     url = (
         f"https://nsearchives.nseindia.com/products/content/"
@@ -54,18 +57,25 @@ def fetch_bhav():
         "Accept": "text/html,application/xhtml+xml,*/*",
         "Accept-Language": "en-US,en;q=0.9",
     }
-    session = requests.Session()
-    print("Getting NSE session cookies...")
-    session.get("https://www.nseindia.com", headers=headers, timeout=20)
-
     print(f"Downloading bhav: {url}")
-    resp = session.get(url, headers=headers, timeout=60)
-
-    if resp.status_code != 200:
-        print(f"\u274c NSE Bhavcopy FAILED \u2014 HTTP {resp.status_code}")
-        print(f"   NSE may not have published today's bhavcopy yet.")
-        set_gha_output("new_file", "false")
+    resp = requests.get(url, headers=headers, timeout=60)
+    if allow_missing and resp.status_code == 404:
+        print(f"No archive file for {session_date}; skipping.")
         return False
+    resp.raise_for_status()
+
+    reader = csv.DictReader(io.StringIO(resp.content.decode("utf-8-sig")))
+    reader.fieldnames = [name.strip().upper() for name in (reader.fieldnames or [])]
+    expected_date = session_date.strftime("%d-%b-%Y").upper()
+    if not {"SYMBOL", "SERIES", "DATE1", "OPEN_PRICE", "HIGH_PRICE",
+            "LOW_PRICE", "CLOSE_PRICE"}.issubset(reader.fieldnames):
+        raise ValueError(f"Unexpected bhavcopy columns for {session_date}")
+    if not any(
+        (row["SERIES"] or "").strip().upper() == "EQ"
+        and (row["DATE1"] or "").strip().upper() == expected_date
+        for row in reader
+    ):
+        raise ValueError(f"Bhavcopy contains no EQ rows for {session_date}")
 
     os.makedirs(BHAV_ROOT, exist_ok=True)
     with open(savepath, "wb") as f:
@@ -83,8 +93,15 @@ def fetch_bhav():
 
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print(f"NSE Bhavcopy Fetch | {NOW_IST.strftime('%d-%b-%Y %H:%M IST')}")
-    print("=" * 50)
-    os.makedirs(BHAV_ROOT, exist_ok=True)
-    fetch_bhav()
+    parser = argparse.ArgumentParser(description="Download NSE equity bhavcopies")
+    parser.add_argument("--session-date", type=date.fromisoformat, default=NOW_IST.date())
+    parser.add_argument("--from-date", type=date.fromisoformat)
+    args = parser.parse_args()
+    day = args.from_date or args.session_date
+    if day > args.session_date:
+        parser.error("--from-date must be on or before --session-date")
+    while day < args.session_date:
+        if day.weekday() < 5:
+            fetch_bhav(day, allow_missing=True)
+        day += timedelta(days=1)
+    fetch_bhav(args.session_date)
